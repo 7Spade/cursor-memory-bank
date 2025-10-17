@@ -1,11 +1,12 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './auth/login.component';
-import { SignupComponent } from './auth/signup.component';
+import { LoginComponent } from './features/user/auth/login.component';
+import { SignupComponent } from './features/user/auth/signup.component';
 
-import { authGuard } from './auth/auth.guard';
-import { roleGuard } from './auth/role.guard';
+import { authGuard } from './features/user/auth/auth.guard';
+import { roleGuard } from './features/user/auth/role.guard';
 
 export const routes: Routes = [
+  // 認證路由
   {
     path: 'login',
     component: LoginComponent
@@ -14,6 +15,26 @@ export const routes: Routes = [
     path: 'signup',
     component: SignupComponent
   },
+  {
+    path: 'unauthorized',
+    loadComponent: () => import('./features/user/auth/unauthorized.component').then(m => m.UnauthorizedComponent)
+  },
+  
+  // 用戶帳戶管理路由
+  {
+    path: 'account',
+    loadChildren: () => import('./features/user/user.routes').then(m => m.userRoutes),
+    canActivate: [authGuard]
+  },
+  
+  // GitHub 對齊的組織管理路由
+  {
+    path: 'organizations',
+    loadChildren: () => import('./features/github-aligned/routes/github-aligned.routes').then(m => m.githubAlignedRoutes),
+    canActivate: [authGuard]
+  },
+  
+  // 角色管理路由
   {
     path: 'admin',
     loadComponent: () => import('./dashboard/admin.component').then(m => m.AdminComponent),
@@ -29,10 +50,8 @@ export const routes: Routes = [
     loadComponent: () => import('./dashboard/viewer.component').then(m => m.ViewerComponent),
     canActivate: [authGuard, roleGuard('viewer')]
   },
-  {
-    path: 'unauthorized',
-    loadComponent: () => import('./auth/unauthorized.component').then(m => m.UnauthorizedComponent)
-  },
+  
+  // 預設路由
   {
     path: '',
     redirectTo: 'login',
