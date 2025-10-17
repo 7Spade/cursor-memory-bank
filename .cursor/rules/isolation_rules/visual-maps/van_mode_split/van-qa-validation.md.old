@@ -188,7 +188,7 @@ function Validate-Configurations {
     foreach ($configFile in $configFiles) {
         if (Test-Path $configFile) {
             if ($configFile -match "\.json$") { try { Get-Content $configFile -Raw | ConvertFrom-Json | Out-Null } catch { $invalidConfigs += "$configFile (JSON)"; continue } }
-            if ($configFile -eq "vite.config.js") { $content = Get-Content $configFile -Raw; if ($content -notmatch "react\(\)") { $incompatibleConfigs += "$configFile (React)" } }
+            if ($configFile -eq "angular.json") { $content = Get-Content $configFile -Raw; if ($content -notmatch "angular") { $incompatibleConfigs += "$configFile (Angular)" } }
         } else { $invalidConfigs += "$configFile (missing)" }
     }
     if ($invalidConfigs.Count -eq 0 -and $incompatibleConfigs.Count -eq 0) { Write-Output "✅ Configs OK"; return $true } else { Write-Output "❌ Configs FAIL"; return $false }
@@ -298,7 +298,7 @@ Issues must be resolved before BUILD mode:
 ## 🧪 COMMON QA VALIDATION FIXES
 
 - **Dependencies:** Install Node/npm, run `npm install`, check versions.
-- **Configuration:** Validate JSON, check required plugins (e.g., React for Vite), ensure TSConfig compatibility.
+- **Configuration:** Validate JSON, check required plugins (e.g., Angular CLI), ensure TSConfig compatibility.
 - **Environment:** Check permissions (Admin/sudo), ensure ports are free, install missing CLI tools (git, etc.).
 - **Build Test:** Check logs for errors, verify minimal config, check path separators.
 
