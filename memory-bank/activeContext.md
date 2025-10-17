@@ -1,29 +1,30 @@
 # Memory Bank: Active Context
 
 ## Current Focus
-營建管理系統文件結構化專案 - Level 4 複雜系統任務
+CREATIVE 模式 - docs 中的對齊 GitHub 設計決策 (Material Design 3)
 
 ## Status
-- ✅ 完成系統架構文件重構
-- ✅ 完成專案結構文件重構
-- 🔄 更新 Memory Bank 文件
-- ⏳ 建立開發指南和標準
+- ✅ VAN 模式初始化完成
+- ✅ PLAN 模式需求分析完成
+- ✅ PLAN 模式組件分析完成
+- ✅ PLAN 模式設計決策完成
+- ✅ PLAN 模式實施策略完成
+- ✅ PLAN 模式測試策略完成
+- ✅ PLAN 模式文件計劃完成
+- 🔄 CREATIVE 模式 UI/UX 設計進行中 (Material Design 3)
+- ⏳ CREATIVE 模式架構設計
+- ⏳ CREATIVE 模式演算法設計
 
 ## Latest Changes
-- 將 SYSTEM_ARCHITECTURE.md 重構為完整的系統架構文件，包含：
-  - 系統概述與目標用戶
-  - 完整的技術架構設計
-  - 核心模組詳細設計
-  - 資料庫設計與實體關係
-  - 安全架構與權限模型
-  - 效能與擴展性策略
-  - 監控與日誌管理
-  - 部署架構與風險評估
-
-- 將 TREE.md 重構為 PROJECT_STRUCTURE.md，包含：
-  - 詳細的專案目錄結構
-  - 功能模組組織方式
-  - 共享模組設計
-  - 核心模組架構
-  - 測試結構規劃
-  - 開發指南與規範
+- 切換到 CREATIVE 模式進行設計決策
+- 確認使用 Material Design 3 作為樣式設計基礎
+- 開始進行 UI/UX 設計決策，專注於：
+  - GitHub 風格的組織管理介面設計
+  - 團隊層級結構的可視化設計
+  - 安全管理器的使用者介面
+  - 組織角色的管理介面
+- 將遵循現代 Angular 20+ 最佳實踐：
+  - Standalone Components
+  - Signals for reactive state
+  - Modern control flow (@if, @for, @switch)
+  - Material Design 3 theming
