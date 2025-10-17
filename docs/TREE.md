@@ -82,11 +82,13 @@ src/
 │   │   │
 │   │   ├── organization/                       # 組織模組 ✨
 │   │   │   ├── components/                     # 組織元件
-│   │   │   │   ├── organization-card.component.ts
+│   │   │   │   ├── organization-card.component.ts ✅
 │   │   │   │   ├── organization-form.component.ts
 │   │   │   │   ├── organization-list.component.ts
-│   │   │   │   ├── team-management.component.ts
-│   │   │   │   ├── member-management.component.ts
+│   │   │   │   ├── team-management.component.ts ✅
+│   │   │   │   ├── member-management.component.ts ✅
+│   │   │   │   ├── security-manager.component.ts ⭐ 新增
+│   │   │   │   ├── organization-roles.component.ts ⭐ 新增
 │   │   │   │   └── project-assignment.component.ts
 │   │   │   ├── pages/                          # 組織頁面
 │   │   │   │   ├── organization-list.page.ts
@@ -94,8 +96,11 @@ src/
 │   │   │   │   └── organization-settings.page.ts
 │   │   │   ├── state/                          # 組織狀態
 │   │   │   │   └── organization-state.service.ts
+│   │   │   ├── services/                       # 組織服務
+│   │   │   │   ├── organization.service.ts ✅
+│   │   │   │   ├── github-aligned-api.service.ts ⭐ 新增
+│   │   │   │   └── permission-calculation.service.ts ⭐ 新增
 │   │   │   ├── organization.model.ts            # 組織模型
-│   │   │   ├── organization.service.ts          # 組織服務
 │   │   │   ├── organization.repository.ts      # 組織資料存取
 │   │   │   ├── organization.routes.ts           # 組織路由
 │   │   │   └── index.ts                        # 匯出檔案
