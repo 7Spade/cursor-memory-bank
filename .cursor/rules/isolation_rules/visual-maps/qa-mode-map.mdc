@@ -284,10 +284,10 @@ This validation point ensures all required packages are correctly installed.
 
 ```bash
 # Check if packages are installed
-npm list react react-dom tailwindcss postcss autoprefixer
+npm list @angular/core @angular/cli @angular/material @angular/cdk
 
 # Verify package versions match requirements
-npm list | grep -E "react|tailwind|postcss"
+npm list | grep -E "angular|material|signals"
 
 # Check for peer dependency warnings
 npm ls --depth=0

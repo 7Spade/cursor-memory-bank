@@ -34,7 +34,7 @@ graph TD
 
 ### Minimal Build Test Implementation:
 ```powershell
-# Example: Perform minimal build test for a React project
+# Example: Perform minimal build test for an Angular project
 function Perform-MinimalBuildTest {
     $buildSuccess = $false
     $testSuccess = $false

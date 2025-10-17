@@ -61,9 +61,9 @@ function Validate-Configurations {
             # Specific configuration compatibility checks
             if ($configFile -eq "vite.config.js") {
                 $content = Get-Content $configFile -Raw
-                # Check for React plugin in Vite config
-                if ($content -notmatch "react\(\)") {
-                    $incompatibleConfigs += "$configFile (Missing React plugin for React project)"
+                # Check for Angular CLI configuration
+                if ($content -notmatch "angular") {
+                    $incompatibleConfigs += "$configFile (Missing Angular configuration)"
                 }
             }
         } else {

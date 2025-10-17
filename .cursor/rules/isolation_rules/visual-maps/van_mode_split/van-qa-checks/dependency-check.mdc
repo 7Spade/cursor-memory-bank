@@ -33,7 +33,7 @@ graph TD
 
 ### Windows (PowerShell) Implementation:
 ```powershell
-# Example: Verify Node.js dependencies for a React project
+# Example: Verify Node.js dependencies for an Angular project
 function Verify-Dependencies {
     $requiredDeps = @{ "node" = ">=14.0.0"; "npm" = ">=6.0.0" }
     $missingDeps = @(); $incompatibleDeps = @()
@@ -84,7 +84,7 @@ function Verify-Dependencies {
 ```bash
 #!/bin/bash
 
-# Example: Verify Node.js dependencies for a React project
+# Example: Verify Node.js dependencies for an Angular project
 verify_dependencies() {
     local missing_deps=()
     local incompatible_deps=()

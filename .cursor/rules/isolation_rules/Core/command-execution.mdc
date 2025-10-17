@@ -70,16 +70,16 @@ Before executing any npm or build command:
 | **Check for parent directory** | `Test-Path "*/package.json"` | `find . -maxdepth 2 -name package.json` | Find potential project directories |
 | **Navigate to project root** | `cd [project-dir]` | `cd [project-dir]` | Move to correct directory before executing commands |
 
-## 📋 REACT-SPECIFIC COMMAND GUIDELINES
+## 📋 MODERN ANGULAR COMMAND GUIDELINES
 
-For React applications, follow these strict guidelines:
+For modern Angular applications, follow these strict guidelines:
 
 | Command | Correct Usage | Incorrect Usage | Notes |
 |---------|---------------|----------------|-------|
-| **npm start** | `cd [project-root] && npm start` | `npm start` (from parent dir) | Must execute from directory with package.json |
-| **npm run build** | `cd [project-root] && npm run build` | `cd [parent-dir] && npm run build` | Must execute from directory with package.json |
-| **npm install** | `cd [project-root] && npm install [pkg]` | `npm install [pkg]` (wrong dir) | Dependencies installed to nearest package.json |
-| **npm create** | `npm create vite@latest my-app -- --template react` | Manually configuring webpack | Use standard tools for project creation |
+| **ng serve** | `cd [project-root] && ng serve` | `ng serve` (from parent dir) | Must execute from directory with angular.json |
+| **ng build** | `cd [project-root] && ng build --configuration=production` | `ng build` (development build) | Use production config for deployment |
+| **ng generate** | `ng generate component --standalone` | `ng generate component` (legacy) | Always use standalone components |
+| **ng add** | `ng add @angular/material` | Manual package installation | Use Angular CLI for adding features |
 
 ## 🔄 COMMAND CHAINING PATTERNS
 
@@ -143,16 +143,16 @@ Examples of efficient command usage:
 | `mkdir dir1`<br>`mkdir dir2`<br>`mkdir dir3` | `mkdir dir1 dir2 dir3` | Uses command's built-in multiple argument capability |
 | `npm install pkg1`<br>`npm install pkg2` | `npm install pkg1 pkg2` | Installs multiple packages in one command |
 
-## 📋 REACT PROJECT INITIALIZATION STANDARDS
+## 📋 MODERN ANGULAR PROJECT INITIALIZATION STANDARDS
 
-Always use these standard approaches for React project creation:
+Always use these modern approaches for Angular project creation:
 
 | Approach | Command | Benefits | Avoids |
 |----------|---------|----------|--------|
-| **Create React App** | `npx create-react-app my-app` | Preconfigured webpack & babel | Manual configuration errors |
-| **Create React App w/TypeScript** | `npx create-react-app my-app --template typescript` | Type safety + preconfigured | Inconsistent module systems |
-| **Vite** | `npm create vite@latest my-app -- --template react` | Faster build times | Complex webpack setups |
-| **Next.js** | `npx create-next-app@latest my-app` | SSR support | Module system conflicts |
+| **Modern Angular CLI** | `ng new my-app --standalone --routing --style=scss` | Standalone components + routing | Legacy NgModule system |
+| **Angular w/SSR** | `ng new my-app --ssr --standalone` | Server-side rendering + modern architecture | Complex SSR setups |
+| **Angular w/Material** | `ng new my-app --standalone && ng add @angular/material` | Material Design 3 + modern components | Manual Material setup |
+| **Angular w/Signals** | `ng new my-app --standalone --routing` | Signals for reactive state management | Legacy RxJS patterns |
 
 ## ⚠️ ERROR HANDLING WORKFLOW
 
@@ -209,7 +209,7 @@ graph TD
 - Outcome verified against expectations? [YES/NO]
 - Errors properly handled (if any)? [YES/NO/NA]
 - For npm/build commands: Executed from project root? [YES/NO/NA]
-- For React projects: Using standard tooling? [YES/NO/NA]
+- For Angular projects: Using Angular CLI? [YES/NO/NA]
 
 → If all YES: Command execution complete
 → If any NO: Address missing elements

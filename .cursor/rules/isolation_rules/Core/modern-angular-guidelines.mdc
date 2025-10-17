@@ -1,0 +1,289 @@
+---
+description: Modern Angular development guidelines and best practices
+globs: modern-angular-guidelines.mdc
+alwaysApply: false
+---
+
+# MODERN ANGULAR DEVELOPMENT GUIDELINES
+
+> **TL;DR:** This document outlines modern Angular development practices, focusing on Angular 20+ features including standalone components, signals, control flow, and Material Design 3.
+
+## 🚀 MODERN ANGULAR ARCHITECTURE
+
+### Standalone Components
+```typescript
+// ✅ Modern: Standalone component
+@Component({
+  selector: 'app-modern-component',
+  standalone: true,
+  imports: [CommonModule, MaterialModule],
+  template: `...`
+})
+export class ModernComponent {}
+
+// ❌ Legacy: NgModule-based component
+@Component({
+  selector: 'app-legacy-component',
+  template: `...`
+})
+export class LegacyComponent {}
+```
+
+### Signals for Reactive State
+```typescript
+// ✅ Modern: Using signals
+@Component({
+  selector: 'app-reactive',
+  standalone: true,
+  template: `
+    <div>{{ count() }}</div>
+    <button (click)="increment()">Increment</button>
+  `
+})
+export class ReactiveComponent {
+  count = signal(0);
+  
+  increment() {
+    this.count.update(c => c + 1);
+  }
+}
+```
+
+### Modern Control Flow
+```typescript
+// ✅ Modern: Control flow syntax
+@Component({
+  template: `
+    @if (isLoading()) {
+      <div>Loading...</div>
+    } @else if (hasError()) {
+      <div>Error occurred</div>
+    } @else {
+      @for (item of items(); track item.id) {
+        <div>{{ item.name }}</div>
+      }
+    }
+  `
+})
+export class ModernTemplateComponent {}
+```
+
+## 🎨 MATERIAL DESIGN 3 INTEGRATION
+
+### Modern Material Setup
+```bash
+# Install Material Design 3
+ng add @angular/material
+
+# Choose Material 3 theme
+ng add @angular/material --theme=material3
+```
+
+### Dynamic Theming
+```typescript
+// ✅ Modern: Dynamic theming with Material 3
+@Component({
+  selector: 'app-theme-toggle',
+  standalone: true,
+  template: `
+    <mat-slide-toggle 
+      [checked]="isDarkMode()" 
+      (change)="toggleTheme()">
+      Dark Mode
+    </mat-slide-toggle>
+  `
+})
+export class ThemeToggleComponent {
+  isDarkMode = signal(false);
+  
+  toggleTheme() {
+    this.isDarkMode.update(mode => !mode);
+  }
+}
+```
+
+## 📱 PROGRESSIVE WEB APP FEATURES
+
+### PWA Configuration
+```bash
+# Add PWA capabilities
+ng add @angular/pwa
+```
+
+### Service Worker Integration
+```typescript
+// ✅ Modern: Service worker with signals
+@Component({
+  selector: 'app-pwa-status',
+  standalone: true,
+  template: `
+    <div>
+      @if (isOnline()) {
+        <span class="online">Online</span>
+      } @else {
+        <span class="offline">Offline</span>
+      }
+    </div>
+  `
+})
+export class PWAStatusComponent {
+  isOnline = signal(navigator.onLine);
+  
+  constructor() {
+    window.addEventListener('online', () => this.isOnline.set(true));
+    window.addEventListener('offline', () => this.isOnline.set(false));
+  }
+}
+```
+
+## 🔧 MODERN DEVELOPMENT WORKFLOW
+
+### Project Structure
+```
+src/
+├── app/
+│   ├── components/          # Standalone components
+│   ├── services/           # Injectable services
+│   ├── models/             # TypeScript interfaces
+│   ├── utils/              # Utility functions
+│   └── app.config.ts       # App configuration
+├── assets/
+│   ├── themes/             # Material Design themes
+│   └── icons/              # Custom icons
+└── styles/
+    ├── material-theme.scss # Material 3 theme
+    └── global.scss         # Global styles
+```
+
+### Modern Build Configuration
+```typescript
+// angular.json
+{
+  "projects": {
+    "my-app": {
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist/my-app",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
+            "polyfills": ["zone.js"],
+            "tsConfig": "tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": ["src/favicon.ico", "src/assets"],
+            "styles": ["src/styles.scss"],
+            "scripts": []
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+## 🧪 MODERN TESTING APPROACHES
+
+### Standalone Component Testing
+```typescript
+// ✅ Modern: Testing standalone components
+describe('ModernComponent', () => {
+  it('should create', () => {
+    TestBed.configureTestingModule({
+      imports: [ModernComponent]
+    });
+    
+    const fixture = TestBed.createComponent(ModernComponent);
+    expect(fixture.componentInstance).toBeTruthy();
+  });
+});
+```
+
+### Signal Testing
+```typescript
+// ✅ Modern: Testing signals
+it('should update count signal', () => {
+  const component = new ReactiveComponent();
+  expect(component.count()).toBe(0);
+  
+  component.increment();
+  expect(component.count()).toBe(1);
+});
+```
+
+## 📊 PERFORMANCE OPTIMIZATION
+
+### Lazy Loading with Standalone Components
+```typescript
+// ✅ Modern: Lazy loading standalone components
+const routes: Routes = [
+  {
+    path: 'feature',
+    loadComponent: () => import('./feature/feature.component').then(m => m.FeatureComponent)
+  }
+];
+```
+
+### OnPush Change Detection
+```typescript
+// ✅ Modern: OnPush with signals
+@Component({
+  selector: 'app-optimized',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `...`
+})
+export class OptimizedComponent {
+  data = signal([]);
+}
+```
+
+## 🔍 MODERN ANGULAR CHECKLIST
+
+### Development Checklist
+- [ ] Using standalone components instead of NgModules
+- [ ] Implementing signals for reactive state management
+- [ ] Using modern control flow syntax (@if, @for, @switch)
+- [ ] Material Design 3 theming implemented
+- [ ] PWA features configured (if applicable)
+- [ ] Lazy loading implemented for routes
+- [ ] OnPush change detection strategy used
+- [ ] Modern testing approaches applied
+- [ ] TypeScript strict mode enabled
+- [ ] ESLint and Prettier configured
+
+### Performance Checklist
+- [ ] Tree-shaking optimized with standalone components
+- [ ] Bundle size analyzed and optimized
+- [ ] Lazy loading implemented for feature modules
+- [ ] Service worker configured for caching
+- [ ] Images optimized and lazy-loaded
+- [ ] Critical CSS inlined
+- [ ] Unused code eliminated
+
+## 🚨 MODERN ANGULAR WARNINGS
+
+### Avoid These Legacy Patterns
+- ❌ Using NgModules for simple components
+- ❌ Using RxJS for simple state management (use signals)
+- ❌ Using *ngIf/*ngFor instead of @if/@for
+- ❌ Manual change detection triggering
+- ❌ Not using OnPush change detection
+- ❌ Not implementing lazy loading
+- ❌ Using Material Design 2 instead of 3
+
+### Migration Strategies
+1. **NgModules → Standalone**: Gradually migrate components to standalone
+2. **RxJS → Signals**: Replace simple observables with signals
+3. **Template Syntax**: Update to modern control flow syntax
+4. **Material 2 → 3**: Migrate to Material Design 3 theming
+5. **Testing**: Update tests to work with standalone components
+
+## 📚 MODERN ANGULAR RESOURCES
+
+- [Angular Standalone Components](https://angular.io/guide/standalone-components)
+- [Angular Signals](https://angular.io/guide/signals)
+- [Angular Control Flow](https://angular.io/guide/control-flow)
+- [Material Design 3](https://m3.material.io/)
+- [Angular PWA](https://angular.io/guide/service-worker-intro)
+- [Angular Universal](https://angular.io/guide/universal)

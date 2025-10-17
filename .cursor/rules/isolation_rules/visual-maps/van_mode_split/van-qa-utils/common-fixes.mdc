@@ -24,8 +24,10 @@ alwaysApply: false
 | Issue | Fix |
 |-------|-----|
 | **Invalid JSON** | Use a JSON validator (e.g., jsonlint) to check syntax |
-| **Missing React plugin** | Add `import react from '@vitejs/plugin-react'` and `plugins: [react()]` to vite.config.js |
-| **Incompatible TypeScript config** | Update `tsconfig.json` with correct React settings |
+| **Missing Angular CLI** | Install Angular CLI globally: `npm install -g @angular/cli` |
+| **Missing Angular Material** | Add Material Design 3: `ng add @angular/material` |
+| **Legacy NgModule** | Migrate to standalone components: `ng generate component --standalone` |
+| **Incompatible TypeScript config** | Update `tsconfig.json` with correct Angular settings |
 | **Mismatched version references** | Ensure consistent versions across configuration files |
 | **Missing entries in config files** | Add required fields to configuration files |
 

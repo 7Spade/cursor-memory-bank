@@ -355,7 +355,7 @@ graph TD
 
 #### Windows (PowerShell) Implementation:
 ```powershell
-# Example: Verify Node.js dependencies for a React project
+# Example: Verify Node.js dependencies for an Angular project
 function Verify-Dependencies {
     $requiredDeps = @{
         "node" = ">=14.0.0"
@@ -413,7 +413,7 @@ function Verify-Dependencies {
 ```bash
 #!/bin/bash
 
-# Example: Verify Node.js dependencies for a React project
+# Example: Verify Node.js dependencies for an Angular project
 verify_dependencies() {
     local missing_deps=()
     local incompatible_deps=()
@@ -516,9 +516,9 @@ function Validate-Configurations {
             # Specific configuration compatibility checks
             if ($configFile -eq "vite.config.js") {
                 $content = Get-Content $configFile -Raw
-                # Check for React plugin in Vite config
-                if ($content -notmatch "react\(\)") {
-                    $incompatibleConfigs += "$configFile (Missing React plugin for React project)"
+                # Check for Angular CLI configuration
+                if ($content -notmatch "angular") {
+                    $incompatibleConfigs += "$configFile (Missing Angular configuration)"
                 }
             }
         } else {
@@ -654,7 +654,7 @@ graph TD
 
 #### Minimal Build Test Implementation:
 ```powershell
-# Example: Perform minimal build test for a React project
+# Example: Perform minimal build test for an Angular project
 function Perform-MinimalBuildTest {
     $buildSuccess = $false
     $testSuccess = $false
@@ -875,8 +875,8 @@ Here are common fixes for issues encountered during QA validation:
 
 ### Configuration Issues:
 - **Invalid JSON**: Use a JSON validator to check syntax
-- **Missing React plugin**: Add `import react from '@vitejs/plugin-react'` and `plugins: [react()]` to vite.config.js
-- **Incompatible TypeScript config**: Update `tsconfig.json` with correct React settings
+- **Missing Angular CLI**: Install Angular CLI globally: `npm install -g @angular/cli`
+- **Incompatible TypeScript config**: Update `tsconfig.json` with correct Angular settings
 
 ### Environment Issues:
 - **Permission denied**: Run terminal as administrator (Windows) or use sudo (Mac/Linux)
