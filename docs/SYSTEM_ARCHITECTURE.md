@@ -180,11 +180,14 @@ interface Organization {
   teams: Team[];
   projects: Project[];
   settings: OrganizationSettings;
+  securityManagers: SecurityManager[];
+  organizationRoles: OrganizationRole[];
 }
 
 interface OrganizationMember {
   userId: string;
   role: 'owner' | 'admin' | 'manager' | 'engineer' | 'supervisor';
+  organizationRoles: string[]; // 支援多個組織角色
   teams: string[];
   permissions: Permission[];
   joinDate: Date;
@@ -194,33 +197,90 @@ interface OrganizationMember {
 interface Team {
   id: string;
   name: string;
+  slug: string; // URL-friendly version of team name
   description: string;
   members: TeamMember[];
   projects: string[];
   leader: string;
+  parentTeamId?: string; // 支援團隊層級結構
+  privacy: 'open' | 'closed'; // 團隊隱私設定
+  notificationSetting: 'all' | 'mentions' | 'secret'; // 通知設定
+  permission: 'read' | 'write' | 'admin'; // 團隊權限等級
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface TeamMember {
+  userId: string;
+  role: 'member' | 'maintainer'; // 簡化為 GitHub 風格的角色
+  state: 'active' | 'pending'; // 成員狀態
+  joinedAt: Date;
+}
+
+interface SecurityManager {
+  id: string;
+  type: 'user' | 'team';
+  entityId: string; // userId 或 teamId
+  permissions: SecurityPermission[];
+  assignedAt: Date;
+  assignedBy: string;
+}
+
+interface OrganizationRole {
+  id: string;
+  name: string;
+  description: string;
+  permissions: Permission[];
+  level: number; // 角色等級
+  isSystemRole: boolean; // 是否為系統預設角色
+  createdAt: Date;
 }
 ```
 
 #### 3.2.3 API 設計
 ```typescript
-// 組織管理 API
-POST /api/organizations
-GET /api/organizations
-GET /api/organizations/:id
-PUT /api/organizations/:id
-DELETE /api/organizations/:id
+// 組織管理 API (對齊 GitHub REST API 模式)
+GET /api/orgs/{org}                    // 獲取組織資訊
+POST /api/orgs                          // 創建組織
+PUT /api/orgs/{org}                     // 更新組織
+DELETE /api/orgs/{org}                  // 刪除組織
 
-// 成員管理 API
-GET /api/organizations/:id/members
-POST /api/organizations/:id/members
-PUT /api/organizations/:id/members/:userId
-DELETE /api/organizations/:id/members/:userId
+// 組織成員管理 API
+GET /api/orgs/{org}/members             // 獲取組織成員列表
+POST /api/orgs/{org}/members             // 邀請成員加入組織
+PUT /api/orgs/{org}/members/{username}   // 更新成員角色
+DELETE /api/orgs/{org}/members/{username} // 移除組織成員
+GET /api/orgs/{org}/memberships/{username} // 獲取成員資格詳情
+PATCH /api/orgs/{org}/memberships/{username} // 更新成員資格狀態
 
 // 團隊管理 API
-GET /api/organizations/:id/teams
-POST /api/organizations/:id/teams
-PUT /api/organizations/:id/teams/:teamId
-DELETE /api/organizations/:id/teams/:teamId
+GET /api/orgs/{org}/teams               // 獲取組織團隊列表
+POST /api/orgs/{org}/teams               // 創建團隊
+GET /api/orgs/{org}/teams/{team_slug}    // 獲取團隊詳情
+PATCH /api/orgs/{org}/teams/{team_slug}  // 更新團隊資訊
+DELETE /api/orgs/{org}/teams/{team_slug} // 刪除團隊
+
+// 團隊成員管理 API
+GET /api/orgs/{org}/teams/{team_slug}/members // 獲取團隊成員列表
+PUT /api/orgs/{org}/teams/{team_slug}/memberships/{username} // 添加或更新團隊成員
+DELETE /api/orgs/{org}/teams/{team_slug}/memberships/{username} // 移除團隊成員
+GET /api/orgs/{org}/teams/{team_slug}/memberships/{username} // 獲取團隊成員資格
+GET /api/orgs/{org}/teams/{team_slug}/invitations // 獲取待處理的團隊邀請
+
+// 安全管理器 API
+GET /api/orgs/{org}/security-managers    // 獲取安全管理器列表
+PUT /api/orgs/{org}/security-managers/users/{username} // 添加用戶為安全管理器
+PUT /api/orgs/{org}/security-managers/teams/{team_slug} // 添加團隊為安全管理器
+DELETE /api/orgs/{org}/security-managers/users/{username} // 移除用戶安全管理器
+DELETE /api/orgs/{org}/security-managers/teams/{team_slug} // 移除團隊安全管理器
+
+// 組織角色管理 API
+GET /api/orgs/{org}/organization-roles  // 獲取組織角色列表
+POST /api/orgs/{org}/organization-roles  // 創建組織角色
+PUT /api/orgs/{org}/organization-roles/users/{username}/{role_id} // 分配角色給用戶
+PUT /api/orgs/{org}/organization-roles/teams/{team_slug}/{role_id} // 分配角色給團隊
+DELETE /api/orgs/{org}/organization-roles/users/{username}/{role_id} // 移除用戶角色
+DELETE /api/orgs/{org}/organization-roles/teams/{team_slug}/{role_id} // 移除團隊角色
 ```
 
 ### 3.3 專案模組 (Project Module)
@@ -375,10 +435,22 @@ erDiagram
     User ||--o{ Certificate : "has"
     User ||--o{ SocialConnection : "follows"
     User ||--o{ UserAchievement : "earns"
+    User ||--o{ UserOrganizationRole : "assigned"
+    User ||--o{ SecurityManager : "manages"
     
     Organization ||--o{ OrganizationMember : "has"
     Organization ||--o{ Team : "contains"
     Organization ||--o{ Project : "owns"
+    Organization ||--o{ SecurityManager : "has"
+    Organization ||--o{ OrganizationRole : "defines"
+    
+    Team ||--o{ TeamMember : "includes"
+    Team ||--o{ Project : "assigned to"
+    Team ||--o{ Team : "parent of"  // 支援團隊層級結構
+    Team ||--o{ TeamOrganizationRole : "assigned"
+    
+    OrganizationRole ||--o{ UserOrganizationRole : "assigned to users"
+    OrganizationRole ||--o{ TeamOrganizationRole : "assigned to teams"
     
     Project ||--o{ Milestone : "has"
     Project ||--o{ Task : "contains"
@@ -391,9 +463,6 @@ erDiagram
     Project ||--o{ WeatherLog : "records"
     Project ||--o{ Comment : "receives"
     Project ||--|| CostControl : "tracks"
-    
-    Team ||--o{ TeamMember : "includes"
-    Team ||--o{ Project : "assigned to"
     
     Achievement ||--o{ AchievementRule : "defined by"
     Achievement ||--o{ UserAchievement : "awarded to"
@@ -445,6 +514,7 @@ CREATE TABLE certificates (
 CREATE TABLE organizations (
     id UUID PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL, -- URL-friendly version
     type VARCHAR(50) NOT NULL,
     profile JSONB,
     settings JSONB,
@@ -460,17 +530,81 @@ CREATE TABLE organization_members (
     role VARCHAR(50) NOT NULL,
     permissions JSONB,
     join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(20) DEFAULT 'active'
+    status VARCHAR(20) DEFAULT 'active',
+    UNIQUE(organization_id, user_id)
 );
 
--- 團隊表
+-- 團隊表 (支援層級結構)
 CREATE TABLE teams (
     id UUID PRIMARY KEY,
     organization_id UUID REFERENCES organizations(id),
     name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL, -- URL-friendly version
     description TEXT,
-    leader_id UUID REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    parent_team_id UUID REFERENCES teams(id), -- 支援團隊層級結構
+    privacy VARCHAR(20) DEFAULT 'closed', -- 'open' or 'closed'
+    notification_setting VARCHAR(20) DEFAULT 'all', -- 'all', 'mentions', 'secret'
+    permission VARCHAR(20) DEFAULT 'read', -- 'read', 'write', 'admin'
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(organization_id, slug)
+);
+
+-- 團隊成員表 (簡化角色系統)
+CREATE TABLE team_members (
+    id UUID PRIMARY KEY,
+    team_id UUID REFERENCES teams(id),
+    user_id UUID REFERENCES users(id),
+    role VARCHAR(20) NOT NULL, -- 'member' or 'maintainer'
+    state VARCHAR(20) DEFAULT 'active', -- 'active' or 'pending'
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(team_id, user_id)
+);
+
+-- 安全管理器表
+CREATE TABLE security_managers (
+    id UUID PRIMARY KEY,
+    organization_id UUID REFERENCES organizations(id),
+    type VARCHAR(20) NOT NULL, -- 'user' or 'team'
+    entity_id UUID NOT NULL, -- user_id or team_id
+    permissions JSONB,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    assigned_by UUID REFERENCES users(id)
+);
+
+-- 組織角色表
+CREATE TABLE organization_roles (
+    id UUID PRIMARY KEY,
+    organization_id UUID REFERENCES organizations(id),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    permissions JSONB,
+    level INTEGER DEFAULT 1,
+    is_system_role BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(organization_id, name)
+);
+
+-- 用戶組織角色關聯表
+CREATE TABLE user_organization_roles (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    organization_id UUID REFERENCES organizations(id),
+    role_id UUID REFERENCES organization_roles(id),
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    assigned_by UUID REFERENCES users(id),
+    UNIQUE(user_id, organization_id, role_id)
+);
+
+-- 團隊組織角色關聯表
+CREATE TABLE team_organization_roles (
+    id UUID PRIMARY KEY,
+    team_id UUID REFERENCES teams(id),
+    organization_id UUID REFERENCES organizations(id),
+    role_id UUID REFERENCES organization_roles(id),
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    assigned_by UUID REFERENCES users(id),
+    UNIQUE(team_id, organization_id, role_id)
 );
 ```
 
@@ -548,6 +682,15 @@ enum Permission {
   ORG_WRITE = 'organization:write',
   ORG_DELETE = 'organization:delete',
   ORG_MANAGE_MEMBERS = 'organization:manage_members',
+  ORG_MANAGE_TEAMS = 'organization:manage_teams',
+  ORG_MANAGE_ROLES = 'organization:manage_roles',
+  
+  // 團隊權限
+  TEAM_READ = 'team:read',
+  TEAM_WRITE = 'team:write',
+  TEAM_DELETE = 'team:delete',
+  TEAM_MANAGE_MEMBERS = 'team:manage_members',
+  TEAM_MANAGE_PROJECTS = 'team:manage_projects',
   
   // 專案權限
   PROJECT_READ = 'project:read',
@@ -556,15 +699,38 @@ enum Permission {
   PROJECT_MANAGE_TASKS = 'project:manage_tasks',
   PROJECT_MANAGE_COST = 'project:manage_cost',
   
+  // 安全管理權限 (新增)
+  SECURITY_MANAGE_USERS = 'security:manage_users',
+  SECURITY_MANAGE_TEAMS = 'security:manage_teams',
+  SECURITY_VIEW_AUDIT_LOGS = 'security:view_audit_logs',
+  SECURITY_MANAGE_PERMISSIONS = 'security:manage_permissions',
+  SECURITY_APPROVE_REQUESTS = 'security:approve_requests',
+  
   // 系統權限
   SYSTEM_ADMIN = 'system:admin',
   SYSTEM_MODERATOR = 'system:moderator'
+}
+
+enum SecurityPermission {
+  MANAGE_SECURITY_SETTINGS = 'manage_security_settings',
+  VIEW_SECURITY_REPORTS = 'view_security_reports',
+  MANAGE_ACCESS_CONTROL = 'manage_access_control',
+  APPROVE_SECURITY_REQUESTS = 'approve_security_requests',
+  MANAGE_SECURITY_POLICIES = 'manage_security_policies'
 }
 
 interface Role {
   name: string;
   permissions: Permission[];
   level: number;
+  isSystemRole: boolean;
+}
+
+interface SecurityRole {
+  name: string;
+  permissions: SecurityPermission[];
+  level: number;
+  scope: 'organization' | 'team' | 'project';
 }
 ```
 

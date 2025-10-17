@@ -288,23 +288,33 @@ src/app/features/organization/
 │   ├── organization-form.component.ts
 │   ├── organization-list.component.ts
 │   ├── team-management.component.ts
+│   ├── team-hierarchy.component.ts        # 新增：團隊層級管理
 │   ├── member-management.component.ts
 │   ├── project-assignment.component.ts
 │   ├── organization-settings.component.ts
-│   └── organization-stats.component.ts
+│   ├── organization-stats.component.ts
+│   ├── security-manager.component.ts       # 新增：安全管理器
+│   ├── role-management.component.ts       # 新增：角色管理
+│   └── team-member-management.component.ts # 新增：團隊成員管理
 │
 ├── pages/                                 # 組織頁面
 │   ├── organization-list.page.ts
 │   ├── organization-detail.page.ts
 │   ├── organization-settings.page.ts
 │   ├── organization-members.page.ts
-│   └── organization-teams.page.ts
+│   ├── organization-teams.page.ts
+│   ├── organization-security.page.ts       # 新增：安全管理頁面
+│   ├── organization-roles.page.ts         # 新增：角色管理頁面
+│   └── team-hierarchy.page.ts            # 新增：團隊層級頁面
 │
 ├── services/                              # 組織服務
 │   ├── organization.service.ts
 │   ├── organization-domain.service.ts
 │   ├── team.service.ts
+│   ├── team-hierarchy.service.ts          # 新增：團隊層級服務
 │   ├── member.service.ts
+│   ├── security-manager.service.ts        # 新增：安全管理器服務
+│   ├── organization-role.service.ts       # 新增：組織角色服務
 │   └── firestore-organization.repository.ts
 │
 ├── commands/                              # CQRS 命令
@@ -313,30 +323,50 @@ src/app/features/organization/
 │   ├── add-member.command.ts
 │   ├── remove-member.command.ts
 │   ├── create-team.command.ts
-│   └── assign-project.command.ts
+│   ├── create-nested-team.command.ts      # 新增：創建嵌套團隊
+│   ├── assign-project.command.ts
+│   ├── add-security-manager.command.ts    # 新增：添加安全管理器
+│   ├── remove-security-manager.command.ts # 新增：移除安全管理器
+│   ├── create-organization-role.command.ts # 新增：創建組織角色
+│   └── assign-team-member-role.command.ts # 新增：分配團隊成員角色
 │
 ├── queries/                               # CQRS 查詢
 │   ├── get-organizations.query.ts
 │   ├── get-organization-by-id.query.ts
 │   ├── get-organization-members.query.ts
-│   └── get-organization-teams.query.ts
+│   ├── get-organization-teams.query.ts
+│   ├── get-team-hierarchy.query.ts        # 新增：獲取團隊層級
+│   ├── get-security-managers.query.ts     # 新增：獲取安全管理器
+│   ├── get-organization-roles.query.ts   # 新增：獲取組織角色
+│   └── get-team-members.query.ts         # 新增：獲取團隊成員
 │
 ├── events/                                # CQRS 事件
 │   ├── organization-created.event.ts
 │   ├── member-added.event.ts
 │   ├── team-created.event.ts
-│   └── project-assigned.event.ts
+│   ├── nested-team-created.event.ts      # 新增：嵌套團隊創建事件
+│   ├── project-assigned.event.ts
+│   ├── security-manager-added.event.ts   # 新增：安全管理器添加事件
+│   ├── team-member-role-changed.event.ts # 新增：團隊成員角色變更事件
+│   └── organization-role-created.event.ts # 新增：組織角色創建事件
 │
 ├── models/                                # 組織模型
 │   ├── organization.model.ts
 │   ├── organization-member.model.ts
 │   ├── team.model.ts
+│   ├── team-member.model.ts               # 新增：團隊成員模型
+│   ├── team-hierarchy.model.ts           # 新增：團隊層級模型
+│   ├── security-manager.model.ts         # 新增：安全管理器模型
+│   ├── organization-role.model.ts        # 新增：組織角色模型
 │   └── organization-settings.model.ts
 │
 ├── state/                                 # 狀態管理
 │   ├── organization-state.service.ts
 │   ├── team-state.service.ts
-│   └── member-state.service.ts
+│   ├── team-hierarchy-state.service.ts   # 新增：團隊層級狀態
+│   ├── member-state.service.ts
+│   ├── security-manager-state.service.ts # 新增：安全管理器狀態
+│   └── organization-role-state.service.ts # 新增：組織角色狀態
 │
 ├── routes/                                # 組織路由
 │   └── organization.routes.ts
