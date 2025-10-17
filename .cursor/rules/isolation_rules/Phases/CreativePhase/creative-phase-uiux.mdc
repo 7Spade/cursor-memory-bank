@@ -7,7 +7,7 @@ Okay, I've updated the style guide location to `memory-bank/style-guide.md` and 
 
 # Creative Phase: UI/UX Design Guidelines
 
-**Document Purpose:** This document outlines the structured approach for UI/UX design decisions during the Creative Phase. It ensures user-centric designs, exploration of multiple options, adherence to a style guide (if available or created), and clear documentation of UI/UX choices, aligning with Angular/Material Design best practices.
+**Document Purpose:** This document outlines the structured approach for UI/UX design decisions during the Creative Phase. It ensures user-centric designs, exploration of multiple options, adherence to a style guide (if available or created), and clear documentation of UI/UX choices, aligning with modern Angular/Material Design 3 best practices.
 
 ## 🎨 UI/UX Design Philosophy
 
@@ -43,7 +43,7 @@ graph TD
 
     Understand --> InfoArch["Information Architecture<br>(Structure, Navigation, Content Hierarchy)"]
     InfoArch --> Interaction["Interaction Design<br>(User Flows, Wireframes, Prototypes - Conceptual)"]
-    Interaction --> VisualDesign["Visual Design<br>(APPLY STYLE GUIDE, Leverage Angular/Material Design, Mockups - Conceptual)"]
+    Interaction --> VisualDesign["Visual Design<br>(APPLY STYLE GUIDE, Leverage Angular Material 3, Standalone Components, Mockups - Conceptual)"]
     VisualDesign --> Options["Explore UI/UX Options<br>(Generate 2-3 distinct solutions)"]
     Options --> Evaluate["Evaluate Options<br>(Usability, Feasibility, A11y, Aesthetics, <b>Style Guide Alignment</b>)"]
     Evaluate --> Decision["Make & Document UI/UX Decision<br>(Use Optimized Creative Template)"]
@@ -51,7 +51,7 @@ graph TD
     Validate --> UIUX_Complete["UI/UX Design Complete for Component"]
 
     InfoArch_NoGuide --> Interaction_NoGuide["Interaction Design"]
-    Interaction_NoGuide --> VisualDesign_NoGuide["Visual Design<br>(Leverage Angular/Material Design, Aim for Internal Consistency)"]
+    Interaction_NoGuide --> VisualDesign_NoGuide["Visual Design<br>(Leverage Angular Material 3, Standalone Components, Aim for Internal Consistency)"]
     VisualDesign_NoGuide --> Options_NoGuide["Explore UI/UX Options"]
     Options_NoGuide --> Evaluate_NoGuide["Evaluate Options<br>(Usability, Feasibility, A11y, Aesthetics)"]
     Evaluate_NoGuide --> Decision_NoGuide["Make & Document UI/UX Decision"]
@@ -158,7 +158,7 @@ graph TD
 ### 4. Visual Design (Strictly follow `memory-bank/style-guide.md`)
 * **Style Guide Adherence**: **CRITICAL** - All visual choices **MUST** conform to `memory-bank/style-guide.md`.
 * **Visual Hierarchy**: Use the Style Guide's typography and spacing to guide the user.
-* **Layout & Composition**: Arrange elements effectively using Angular Material and Style Guide spacing.
+* **Layout & Composition**: Arrange elements effectively using Angular Material 3, standalone components, and Style Guide spacing.
 * **Typography**: Apply defined font families, sizes, and weights from the Style Guide.
 * **Color Palette**: Exclusively use colors defined in the Style Guide.
 * **Imagery & Iconography**: Use icons and images that match the Style Guide's defined style.
@@ -176,6 +176,22 @@ graph TD
 * **Responsive Design**: Ensure UI adapts to screen sizes using Style Guide's responsive principles (if defined).
 * **Platform Conventions**: Adhere to UI patterns for the target platform(s).
 
+## 🚀 MODERN ANGULAR UI/UX CONSIDERATIONS
+
+### Modern Angular Features for UI/UX
+* **Standalone Components**: Use standalone components for better tree-shaking and performance
+* **Signals**: Implement reactive state management with Angular Signals
+* **Control Flow**: Use new `@if`, `@for`, `@switch` template syntax
+* **Material Design 3**: Leverage latest Material Design system with dynamic theming
+* **Angular Universal**: Consider SSR for better performance and SEO
+* **Web Components**: Use Angular Elements for framework-agnostic components
+
+### Modern Angular UI Patterns
+* **Component Composition**: Build complex UIs using standalone component composition
+* **Reactive Forms**: Use reactive forms with signals for better performance
+* **Lazy Loading**: Implement lazy loading with standalone components
+* **Progressive Web App**: Consider PWA features for mobile-first design
+
 ## 🛠️ UI/UX Option Evaluation & Decision Making
 
 Reference the project's `optimized-creative-template.mdc`. Key evaluation criteria **must** include:
@@ -185,9 +201,10 @@ Reference the project's `optimized-creative-template.mdc`. Key evaluation criter
 * Efficiency
 * Accessibility
 * Aesthetics (as defined by `memory-bank/style-guide.md`)
-* Feasibility (Angular/Material Design)
+* Feasibility (Modern Angular/Material Design 3)
 * Alignment with Requirements
 * **Adherence to `memory-bank/style-guide.md` (CRITICAL if guide exists)**
+* **Modern Angular Architecture Compliance**
 
 ```mermaid
 graph TD
@@ -197,7 +214,7 @@ graph TD
         C3["Efficiency"]
         C4["Accessibility (A11y)"]
         C5["Aesthetics (Per Style Guide)"]
-        C6["Feasibility (Angular/Material Design)"]
+        C6["Feasibility (Modern Angular/Material Design 3)"]
         C7["Alignment with Requirements"]
         C8["<b>Style Guide Adherence</b>"]
     end
@@ -221,7 +238,7 @@ graph TD
 * [ ] Accessibility standards met?
 * [ ] Responsive design addressed?
 * [ ] Design decisions documented with rationale and Style Guide references?
-* [ ] Alignment with Angular/Material Design best practices and Style Guide considered?
+* [ ] Alignment with modern Angular/Material Design 3 best practices and Style Guide considered?
 
 ## 🔄 Integration with Other Creative Phases
 
