@@ -3,6 +3,30 @@
 ## 概述
 Memory Bank System 使用多個專門的 AI 代理來處理開發過程的不同階段。每個代理都有特定的角色和職責，共同構成一個協調的開發系統。
 
+## Agent 記憶體檢查指令
+
+### 記憶體初始化指令
+每個 Agent 在開始工作前都必須執行記憶體檢查：
+
+**通用指令：**
+- `MEMORY.CHECK` - 檢查 memory.json 狀態
+- `MEMORY.LOAD` - 載入記憶體上下文
+- `MEMORY.UPDATE` - 更新記憶體內容
+
+**Agent 特定指令：**
+- `VAN.MEMORY` - VAN Agent 記憶體檢查
+- `PLAN.MEMORY` - PLAN Agent 記憶體檢查
+- `CREATIVE.MEMORY` - CREATIVE Agent 記憶體檢查
+- `IMPLEMENT.MEMORY` - IMPLEMENT Agent 記憶體檢查
+- `REFLECT.MEMORY` - REFLECT Agent 記憶體檢查
+- `ARCHIVE.MEMORY` - ARCHIVE Agent 記憶體檢查
+
+### 記憶體檢查流程
+1. 執行 `MEMORY.CHECK` 驗證記憶體完整性
+2. 執行 `MEMORY.LOAD` 載入相關上下文
+3. 基於記憶體內容建立對話基線
+4. 開始 Agent 特定工作流程
+
 ## 代理架構
 
 ### 1. VAN Agent (🔍 初始化代理)
