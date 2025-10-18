@@ -8,5 +8,9 @@ export const environment = {
     messagingSenderId: "7807661688",
     appId: "1:7807661688:web:29a373231a5fa5ae1d1f8d",
     measurementId: "G-YZHBTZSY91"
+  },
+  appCheck: {
+    // reCAPTCHA Enterprise site key for production
+    recaptchaSiteKey: "6LeGl-wrAAAAALTgTmQN5XbGLB2hVKhcySGyBIXI"
   }
 };

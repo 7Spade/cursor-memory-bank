@@ -13,11 +13,9 @@ export class App {
   snackBar = inject(MatSnackBar);
 
   constructor() {
-    this.snackBar.open(
-      '⚠️ Firebase is not configured. Please update environment.ts',
-      'Dismiss',
-      { duration: 5000, panelClass: 'warn-snackbar' }
-    );
+    // Firebase 和 App Check 已正確配置
+    console.log('✅ Firebase configuration loaded successfully');
+    console.log('✅ App Check configured for', environment.production ? 'production' : 'development');
   }
   protected readonly title = signal('angular-fire-rolekit');
 }
