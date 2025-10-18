@@ -1,271 +1,184 @@
 ---
-description: Detailed VAN mode instructions for comprehensive project analysis and complexity determination
+description: Zero-cognition VAN mode for project analysis
 globs: "**/van-mode-detailed*/**"
 alwaysApply: false
 ---
 
-# VAN MODE - 詳細專案分析指令
+# VAN MODE - 零認知專案分析
 
-> **TL;DR:** 提供詳細的專案分析、複雜度確定和技術評估流程，專注於專案結構分析而不包含系統初始化。
+> **零認知原則**: 自動化專案分析，智能複雜度確定，隱藏技術細節
 
 ```mermaid
 graph TD
-    %% Main Command Detection
-    Start["User Command"] --> CommandDetect{"Command<br>Type?"}
+    Start["🔍 VAN"] --> AutoAnalysis["⚡ 自動專案分析"]
+    AutoAnalysis --> Structure["📁 目錄結構掃描"]
+    AutoAnalysis --> TechStack["🔧 技術棧識別"]
+    AutoAnalysis --> Complexity["🧩 複雜度確定"]
     
-    CommandDetect -->|"VAN"| VAN["VAN Mode"]
-    CommandDetect -->|"PLAN"| Plan["PLAN Mode"]
-    CommandDetect -->|"CREATIVE"| Creative["CREATIVE Mode"]
-    CommandDetect -->|"IMPLEMENT"| Implement["IMPLEMENT Mode"]
-    CommandDetect -->|"QA"| QA["QA Mode"]
+    Structure --> Assessment["📊 評估報告"]
+    TechStack --> Assessment
+    Complexity --> Assessment
     
-    %% Immediate Response Node
-    VAN --> VanResp["Respond: OK VAN"]
-    Plan --> PlanResp["Respond: OK PLAN"]
-    Creative --> CreativeResp["Respond: OK CREATIVE"]
-    Implement --> ImplResp["Respond: OK IMPLEMENT"]
-    QA --> QAResp["Respond: OK QA"]
+    Assessment --> Level{"📋 任務級別?"}
+    Level -->|"Level 1"| L1["⚡ 快速修復"]
+    Level -->|"Level 2"| L2["🔨 簡單增強"]
+    Level -->|"Level 3"| L3["🏗️ 中級功能"]
+    Level -->|"Level 4"| L4["🚀 複雜系統"]
     
-    %% Project Analysis (VAN specific)
-    VanResp --> ProjectAnalysis["Project Structure<br>Analysis"]
-    ProjectAnalysis --> TechStack["Technology Stack<br>Identification"]
-    TechStack --> Complexity["Complexity<br>Determination"]
-    Complexity --> TaskLevel["Task Level<br>Assessment"]
-    TaskLevel --> ContextSetup["Project Context<br>Setup"]
+    L1 --> Next1["⏭️ → IMPLEMENT"]
+    L2 --> Next2["⏭️ → PLAN"]
+    L3 --> Next3["⏭️ → PLAN"]
+    L4 --> Next4["⏭️ → PLAN"]
     
-    %% Graph Bank Updates
-    ContextSetup --> UpdateGB_Van["Update Graph Bank<br>& tasks.md"]
-    
-    %% Rule Loading for other modes
-    PlanResp --> CheckGB_Plan["Check Graph Bank<br>& tasks.md Status"]
-    CreativeResp --> CheckGB_Creative["Check Graph Bank<br>& tasks.md Status"]
-    ImplResp --> CheckGB_Impl["Check Graph Bank<br>& tasks.md Status"]
-    QAResp --> CheckGB_QA["Check Graph Bank<br>& tasks.md Status"]
-    
-    CheckGB_Plan --> LoadPlan["Load Rule:<br>isolation_rules/visual-maps/plan-mode-map"]
-    CheckGB_Creative --> LoadCreative["Load Rule:<br>isolation_rules/visual-maps/creative-mode-map"]
-    CheckGB_Impl --> LoadImpl["Load Rule:<br>isolation_rules/visual-maps/implement-mode-map"]
-    CheckGB_QA --> LoadQA["Load Rule:<br>isolation_rules/visual-maps/qa-mode-map"]
-    
-    %% Rule Execution
-    LoadPlan --> ExecPlan["Execute Process<br>in Rule"]
-    LoadCreative --> ExecCreative["Execute Process<br>in Rule"]
-    LoadImpl --> ExecImpl["Execute Process<br>in Rule"]
-    LoadQA --> ExecQA["Execute Process<br>in Rule"]
-    
-    %% Graph Bank Updates
-    ExecPlan --> UpdateGB_Plan["Update Graph Bank<br>& tasks.md"]
-    ExecCreative --> UpdateGB_Creative["Update Graph Bank<br>& tasks.md"]
-    ExecImpl --> UpdateGB_Impl["Update Graph Bank<br>& tasks.md"]
-    ExecQA --> UpdateGB_QA["Update Graph Bank<br>& tasks.md"]
-    
-    %% Verification
-    UpdateGB_Van --> VerifyVan{"Analysis<br>Complete?"}
-    UpdateGB_Plan --> VerifyPlan{"Process<br>Complete?"}
-    UpdateGB_Creative --> VerifyCreative{"Process<br>Complete?"}
-    UpdateGB_Impl --> VerifyImpl{"Process<br>Complete?"}
-    UpdateGB_QA --> VerifyQA{"Process<br>Complete?"}
-    
-    %% Outcomes
-    VerifyVan -->|"Yes"| CompleteVan["VAN Analysis<br>Complete"]
-    VerifyVan -->|"No"| RetryVan["Resume<br>VAN Analysis"]
-    RetryVan --> ProjectAnalysis
-    
-    VerifyPlan -->|"Yes"| CompletePlan["PLAN Process<br>Complete"]
-    VerifyPlan -->|"No"| RetryPlan["Resume<br>PLAN Process"]
-    RetryPlan --> ExecPlan
-    
-    VerifyCreative -->|"Yes"| CompleteCreative["CREATIVE Process<br>Complete"]
-    VerifyCreative -->|"No"| RetryCreative["Resume<br>CREATIVE Process"]
-    RetryCreative --> ExecCreative
-    
-    VerifyImpl -->|"Yes"| CompleteImpl["IMPLEMENT Process<br>Complete"]
-    VerifyImpl -->|"No"| RetryImpl["Resume<br>IMPLEMENT Process"]
-    RetryImpl --> ExecImpl
-    
-    VerifyQA -->|"Yes"| CompleteQA["QA Process<br>Complete"]
-    VerifyQA -->|"No"| RetryQA["Resume<br>QA Process"]
-    RetryQA --> ExecQA
-    
-    %% Mode Transitions
-    CompleteVan -->|"Level 1"| TransToImpl["→ IMPLEMENT Mode"]
-    CompleteVan -->|"Level 2-4"| TransToPlan["→ PLAN Mode"]
-    CompletePlan --> TransToCreative["→ CREATIVE Mode"]
-    CompleteCreative --> TransToImpl["→ IMPLEMENT Mode"]
-    CompleteImpl --> TransToReflect["→ REFLECT Mode"]
-    CompleteQA --> TransToNext["→ Next Mode"]
-    
-    %% Styling
-    style VAN fill:#4da6ff,stroke:#0066cc,color:white
-    style ProjectAnalysis fill:#ffa64d,stroke:#cc7a30,color:white
-    style TechStack fill:#4dbb5f,stroke:#36873f,color:white
-    style Complexity fill:#d94dbb,stroke:#a3378a,color:white
-    style TaskLevel fill:#4dbbbb,stroke:#368787,color:white
-    style CompleteVan fill:#71c2ff,stroke:#3b8ac2,color:white
+    style Start fill:#4da6ff,stroke:#0066cc,color:white
+    style AutoAnalysis fill:#ffa64d,stroke:#cc7a30,color:white
+    style Assessment fill:#4dbb5f,stroke:#36873f,color:white
 ```
 
-## 🔍 VAN 模式核心功能
+## ⚡ 自動化分析流程
 
-### 📋 專案結構分析
-
-#### 1. 目錄結構掃描
+### 📁 目錄結構掃描
 ```markdown
-## 專案目錄分析
-- [ ] 掃描專案根目錄結構
-- [ ] 識別主要文件和目錄
-- [ ] 分析文件組織模式
-- [ ] 檢查配置文件存在性
-- [ ] 評估專案規模
+✓ 自動掃描項目
+- 專案根目錄結構
+- 主要文件和目錄
+- 文件組織模式
+- 配置文件存在性
+- 專案規模評估
 ```
 
-#### 2. 技術棧識別
+### 🔧 技術棧識別
 ```markdown
-## 技術棧分析
-- [ ] 識別前端框架 (Angular, React, Vue 等)
-- [ ] 檢查後端技術 (Node.js, Python, Java 等)
-- [ ] 分析數據庫技術 (MongoDB, PostgreSQL 等)
-- [ ] 識別構建工具 (Webpack, Vite, Angular CLI 等)
-- [ ] 檢查測試框架 (Jest, Karma, Jasmine 等)
+✓ 自動識別技術
+- 前端框架 (Angular, React, Vue)
+- 後端技術 (Node.js, Python, Java)
+- 數據庫技術 (MongoDB, PostgreSQL)
+- 構建工具 (Webpack, Vite, Angular CLI)
+- 測試框架 (Jest, Karma, Jasmine)
 ```
 
-#### 3. 依賴關係分析
+### 🧩 複雜度確定
 ```markdown
-## 依賴關係評估
-- [ ] 分析 package.json 依賴
-- [ ] 識別核心依賴和開發依賴
-- [ ] 檢查依賴版本兼容性
-- [ ] 評估依賴複雜度
-- [ ] 識別潛在衝突
+✓ 自動評估複雜度
+- 文件數量和代碼行數
+- 組件複雜度分析
+- 架構複雜度評估
+- 代碼質量指標
+- 技術債務識別
 ```
 
-### 🎯 複雜度確定
+## 🎯 零認知任務級別
 
-#### 1. 代碼複雜度評估
-```markdown
-## 代碼複雜度分析
-- [ ] 計算文件數量和代碼行數
-- [ ] 分析組件複雜度
-- [ ] 評估架構複雜度
-- [ ] 檢查代碼質量指標
-- [ ] 識別技術債務
-```
-
-#### 2. 任務級別分類
-```markdown
-## 任務級別評估
 ### Level 1 - 快速修復
+```markdown
+⚡ 自動識別特徵
 - 簡單的 bug 修復
 - 小的樣式調整
 - 配置變更
 - 文檔更新
+- 單一組件修改
+```
 
 ### Level 2 - 簡單增強
+```markdown
+🔨 自動識別特徵
 - 新功能添加
 - 組件修改
 - 服務整合
 - 測試添加
+- 多組件協作
+```
 
 ### Level 3 - 中級功能
+```markdown
+🏗️ 自動識別特徵
 - 複雜功能開發
 - 架構重構
 - 多組件整合
 - 性能優化
+- 系統級變更
+```
 
 ### Level 4 - 複雜系統
+```markdown
+🚀 自動識別特徵
 - 大型功能開發
 - 系統架構設計
 - 多模塊整合
 - 企業級解決方案
+- 跨系統整合
 ```
 
-### 📊 專案上下文建立
+## 📊 智能評估報告
 
-#### 1. 專案背景分析
+### 自動生成報告
 ```markdown
-## 專案背景評估
-- [ ] 識別專案類型 (Web 應用、移動應用、桌面應用等)
-- [ ] 分析目標用戶群體
-- [ ] 評估業務需求複雜度
-- [ ] 檢查專案成熟度
-- [ ] 識別關鍵功能模塊
+## 📋 VAN 分析報告
+- 專案類型: [Web應用/移動應用/桌面應用]
+- 技術棧: [主要技術列表]
+- 複雜度: [Level 1-4]
+- 任務級別: [建議的處理級別]
+- 下一步: [推薦的模式轉換]
+
+## 🔄 自動模式轉換
+- Level 1: → IMPLEMENT 模式
+- Level 2: → PLAN 模式
+- Level 3: → PLAN 模式
+- Level 4: → PLAN 模式
 ```
 
-#### 2. 技術環境評估
+## 🔄 零認知整合
+
+### 自動上下文傳遞
 ```markdown
-## 技術環境分析
-- [ ] 評估開發環境配置
-- [ ] 檢查部署環境要求
-- [ ] 分析性能需求
-- [ ] 評估安全要求
-- [ ] 識別整合需求
-```
-
-## 🔄 與其他模式的整合
-
-### INIT 模式整合
-```markdown
-## 系統初始化準備
-VAN 模式假設 INIT 模式已完成：
-- 系統健康檢查通過
-- MCP Memory Server 正常運行
-- Graph Bank 文件結構完整
-- 開發環境配置正確
-
-VAN 模式專注於專案分析，不再重複系統檢查
-```
-
-### 後續模式準備
-```markdown
-## 模式轉換準備
-- Level 1 任務: → IMPLEMENT 模式
-- Level 2 任務: → PLAN 模式
-- Level 3-4 任務: → PLAN 模式
-
-VAN 模式為後續模式提供：
+VAN 完成後，其他模式自動獲得：
 - 專案結構理解
-- 技術棧識別
+- 技術棧識別結果
 - 複雜度評估
 - 任務級別確定
+- 專案背景分析
+
+無需重複分析，直接進入專項工作
 ```
 
 ## 📝 使用指南
 
-### 何時使用 VAN 模式
-- 開始新專案分析時
-- 需要重新評估專案狀態時
-- 專案結構發生重大變化時
-- 需要確定任務複雜度時
-- 準備進入其他開發模式時
+### 何時使用
+- 開始新專案分析
+- 重新評估專案狀態
+- 專案結構重大變化
+- 確定任務複雜度
+- 準備進入其他開發模式
 
-### VAN 模式分析清單
+### 零認知檢查清單
 ```markdown
-## VAN 模式執行清單
-- [ ] 執行專案結構分析
-- [ ] 識別技術棧和框架
-- [ ] 分析依賴關係
-- [ ] 評估代碼複雜度
-- [ ] 確定任務級別
-- [ ] 建立專案上下文
-- [ ] 更新 Graph Bank 文件
-- [ ] 生成分析報告
-- [ ] 提供模式轉換建議
+✓ VAN 模式執行清單
+- [ ] 自動專案結構分析
+- [ ] 自動技術棧識別
+- [ ] 自動依賴關係分析
+- [ ] 自動代碼複雜度評估
+- [ ] 自動任務級別確定
+- [ ] 自動專案上下文建立
+- [ ] 自動 Graph Bank 文件更新
+- [ ] 自動分析報告生成
+- [ ] 自動模式轉換建議
 ```
 
 ## 🎯 成功標準
 
-### VAN 模式成功完成標誌
-- 專案結構分析完成
-- 技術棧識別準確
-- 複雜度評估正確
-- 任務級別確定
-- 專案上下文建立
-- Graph Bank 文件更新
-- 分析報告生成
-- 模式轉換建議提供
+### 零認知完成標誌
+- 專案結構分析自動完成
+- 技術棧識別自動準確
+- 複雜度評估自動正確
+- 任務級別自動確定
+- 專案上下文自動建立
+- Graph Bank 文件自動更新
+- 分析報告自動生成
+- 模式轉換建議自動提供
 
-### 輸出成果
+### 自動輸出成果
 ```markdown
-## VAN 模式輸出
+## 📊 VAN 模式自動輸出
 - 專案結構圖
 - 技術棧清單
 - 複雜度評估報告
@@ -277,16 +190,16 @@ VAN 模式為後續模式提供：
 
 ## 🔄 持續改進
 
-### 分析優化
-- 改進專案結構識別算法
-- 增強技術棧檢測準確性
-- 優化複雜度評估模型
-- 完善任務級別分類標準
-- 提升分析報告質量
+### 自動化優化
+- 自動改進專案結構識別算法
+- 自動增強技術棧檢測準確性
+- 自動優化複雜度評估模型
+- 自動完善任務級別分類標準
+- 自動提升分析報告質量
 
-### 整合優化
-- 改善與 INIT 模式的協作
-- 優化與後續模式的轉換
-- 增強 Graph Bank 整合
-- 完善錯誤處理機制
-- 提升用戶體驗
+### 智能整合
+- 自動改善與 INIT 模式的協作
+- 自動優化與後續模式的轉換
+- 自動增強 Graph Bank 整合
+- 自動完善錯誤處理機制
+- 自動提升用戶體驗

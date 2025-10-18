@@ -206,9 +206,8 @@ export class LoginComponent {
     }
 
     try {
-      // 這裡應該實現 email/password 登入
-      // 目前只支援 Google 登入
-      this.authService.setError('目前只支援 Google 登入，請使用 Google 登入按鈕');
+      await this.authService.signInWithEmailAndPassword(this.email, this.password);
+      this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Login error:', error);
     }

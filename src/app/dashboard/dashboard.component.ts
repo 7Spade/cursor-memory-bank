@@ -46,11 +46,11 @@ import { AuthService } from '../core/services/auth.service';
               <div class="info-grid">
                 <div class="info-item">
                   <mat-icon>person</mat-icon>
-                  <span><strong>Name:</strong> {{ currentAccount()?.profile.name }}</span>
+                  <span><strong>Name:</strong> {{ currentAccount()?.profile?.name || 'N/A' }}</span>
                 </div>
                 <div class="info-item">
                   <mat-icon>email</mat-icon>
-                  <span><strong>Email:</strong> {{ currentAccount()?.profile.email }}</span>
+                  <span><strong>Email:</strong> {{ currentAccount()?.profile?.email || 'N/A' }}</span>
                 </div>
                 <div class="info-item">
                   <mat-icon>badge</mat-icon>
@@ -58,7 +58,7 @@ import { AuthService } from '../core/services/auth.service';
                 </div>
                 <div class="info-item">
                   <mat-icon>security</mat-icon>
-                  <span><strong>Roles:</strong> {{ currentAccount()?.permissions.roles.join(', ') }}</span>
+                  <span><strong>Roles:</strong> {{ currentAccount()?.permissions?.roles?.join(', ') || 'N/A' }}</span>
                 </div>
               </div>
             </div>

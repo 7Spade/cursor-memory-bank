@@ -1,327 +1,106 @@
 ---
-description: Detailed REFLECT+ARCHIVE mode instructions for comprehensive task reflection and documentation archiving
+description: Zero-cognition REFLECT+ARCHIVE mode for task reflection and archiving
 globs: "**/reflect-archive-mode-detailed*/**"
 alwaysApply: false
 ---
 
-# REFLECT+ARCHIVE MODE - 詳細審查+歸檔指令
+# REFLECT+ARCHIVE MODE - 零認知審查+歸檔
 
-> **TL;DR:** 提供詳細的任務審查和歸檔流程，包含反思過程、經驗總結和知識歸檔的完整過程。
-
-```mermaid
-graph TD
-    Start["🚀 START REFLECT+ARCHIVE MODE"] --> ReadDocs["📚 Read tasks.md, progress.md<br>.cursor/rules/isolation_rules/main.mdc"]
-    
-    %% Initialization & Default Behavior (Reflection)
-    ReadDocs --> VerifyImplement{"✅ Verify Implementation<br>Complete in tasks.md?"}
-    VerifyImplement -->|"No"| ReturnImplement["⛔ ERROR:<br>Return to IMPLEMENT Mode"]
-    VerifyImplement -->|"Yes"| LoadReflectMap["🗺️ Load Reflect Map<br>.cursor/rules/isolation_rules/visual-maps/reflect-mode-map.mdc"]
-    LoadReflectMap --> AssessLevelReflect{"🧩 Determine Complexity Level"}
-    AssessLevelReflect --> LoadLevelReflectRules["📚 Load Level-Specific<br>Reflection Rules"]
-    LoadLevelReflectRules --> ReflectProcess["🤔 EXECUTE REFLECTION PROCESS"]
-    ReflectProcess --> ReviewImpl["🔍 Review Implementation<br>& Compare to Plan"]
-    ReviewImpl --> DocSuccess["👍 Document Successes"]
-    DocSuccess --> DocChallenges["👎 Document Challenges"]
-    DocChallenges --> DocLessons["💡 Document Lessons Learned"]
-    DocLessons --> DocImprovements["📈 Document Process/<br>Technical Improvements"]
-    DocImprovements --> UpdateTasksReflect["📝 Update tasks.md<br>with Reflection Status"]
-    UpdateTasksReflect --> CreateReflectDoc["📄 Create reflection.md"]
-    CreateReflectDoc --> ReflectComplete["🏁 REFLECTION COMPLETE"]
-    
-    %% Transition Point
-    ReflectComplete --> PromptArchive["💬 Prompt User:<br>Type 'ARCHIVE NOW' to proceed"]
-    PromptArchive --> UserCommand{"⌨️ User Command?"}
-    
-    %% Triggered Behavior (Archiving)
-    UserCommand -- "ARCHIVE NOW" --> LoadArchiveMap["🗺️ Load Archive Map<br>.cursor/rules/isolation_rules/visual-maps/archive-mode-map.mdc"]
-    LoadArchiveMap --> VerifyReflectComplete{"✅ Verify reflection.md<br>Exists & Complete?"}
-    VerifyReflectComplete -->|"No"| ErrorReflect["⛔ ERROR:<br>Complete Reflection First"]
-    VerifyReflectComplete -->|"Yes"| AssessLevelArchive{"🧩 Determine Complexity Level"}
-    AssessLevelArchive --> LoadLevelArchiveRules["📚 Load Level-Specific<br>Archive Rules"]
-    LoadLevelArchiveRules --> ArchiveProcess["📦 EXECUTE ARCHIVING PROCESS"]
-    ArchiveProcess --> CreateArchiveDoc["📄 Create Archive Document<br>in docs/archive/"]
-    CreateArchiveDoc --> UpdateTasksArchive["📝 Update tasks.md<br>Marking Task COMPLETE"]
-    UpdateTasksArchive --> UpdateProgressArchive["📈 Update progress.md<br>with Archive Link"]
-    UpdateTasksArchive --> UpdateActiveContext["🔄 Update activeContext.md<br>Reset for Next Task"]
-    UpdateActiveContext --> ArchiveComplete["🏁 ARCHIVING COMPLETE"]
-    
-    %% Exit
-    ArchiveComplete --> SuggestNext["✅ Task Fully Completed<br>Suggest VAN Mode for Next Task"]
-    
-    %% Styling
-    style Start fill:#d9b3ff,stroke:#b366ff,color:black
-    style ReadDocs fill:#e6ccff,stroke:#d9b3ff,color:black
-    style VerifyImplement fill:#ffa64d,stroke:#cc7a30,color:white
-    style LoadReflectMap fill:#4da6ff,stroke:#0066cc,color:white
-    style AssessLevelReflect fill:#d94dbb,stroke:#a3378a,color:white
-    style ReflectProcess fill:#4dbb5f,stroke:#36873f,color:white
-    style ReflectComplete fill:#4dbbbb,stroke:#368787,color:white
-    style PromptArchive fill:#d971ff,stroke:#a33bc2,color:white
-    style UserCommand fill:#ffa64d,stroke:#cc7a30,color:white
-    style LoadArchiveMap fill:#ff5555,stroke:#cc0000,color:white
-    style ArchiveProcess fill:#ffa64d,stroke:#cc7a30,color:white
-    style ArchiveComplete fill:#5fd94d,stroke:#3da336,color:white
-    style SuggestNext fill:#4dbb5f,stroke:#36873f,color:white
-```
-
-## IMPLEMENTATION STEPS
-
-### Step 1: READ REFERENCE DOCUMENTS
-```
-read_file({
-  target_file: "tasks.md",
-  should_read_entire_file: true
-})
-
-read_file({
-  target_file: "progress.md",
-  should_read_entire_file: true
-})
-
-read_file({
-  target_file: ".cursor/rules/isolation_rules/main.mdc",
-  should_read_entire_file: true
-})
-```
-
-### Step 2: LOAD REFLECT MODE MAP
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/visual-maps/reflect-mode-map.mdc",
-  should_read_entire_file: true
-})
-```
-
-### Step 3: LOAD LEVEL-SPECIFIC REFLECTION RULES
-Based on complexity level determined from tasks.md, load one of:
-
-#### For Level 1-2:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level2/reflection-basic.mdc",
-  should_read_entire_file: true
-})
-```
-
-#### For Level 3:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level3/reflection-intermediate.mdc",
-  should_read_entire_file: true
-})
-```
-
-#### For Level 4:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level4/reflection-comprehensive.mdc",
-  should_read_entire_file: true
-})
-```
-
-### Step 4: LOAD ARCHIVE MODE MAP (When ARCHIVE NOW is triggered)
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/visual-maps/archive-mode-map.mdc",
-  should_read_entire_file: true
-})
-```
-
-### Step 5: LOAD LEVEL-SPECIFIC ARCHIVE RULES
-Based on complexity level, load one of:
-
-#### For Level 1-2:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level2/archive-basic.mdc",
-  should_read_entire_file: true
-})
-```
-
-#### For Level 3:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level3/archive-intermediate.mdc",
-  should_read_entire_file: true
-})
-```
-
-#### For Level 4:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level4/archive-comprehensive.mdc",
-  should_read_entire_file: true
-})
-```
-
-## REFLECTION PROCESS
-
-Your task is to facilitate comprehensive reflection on the completed task and then archive the relevant documentation. Start by guiding the reflection process based on the completed implementation.
-
-### Reflection Approach
-
-Focus on analyzing what worked well, what challenges were encountered, and what lessons were learned. Compare the actual implementation against the original plan and creative decisions.
+> **零認知原則**: 自動化任務審查，智能經驗提取，隱藏複雜反思邏輯
 
 ```mermaid
 graph TD
-    Reflect["🤔 REFLECTION PROCESS"] --> Review["Review implementation"]
-    Review --> Compare["Compare to plan"]
-    Compare --> Success["Document successes"]
-    Success --> Challenges["Document challenges"]
-    Challenges --> Lessons["Document lessons learned"]
-    Lessons --> Improvements["Document improvements"]
-    Improvements --> Create["Create reflection.md"]
+    Start["📝 REFLECT+ARCHIVE"] --> AutoReflect["⚡ 自動任務審查"]
+    AutoReflect --> Level{"🧩 複雜度級別?"}
     
-    style Reflect fill:#4dbb5f,stroke:#36873f,color:white
-    style Review fill:#d6f5dd,stroke:#a3e0ae,color:black
-    style Compare fill:#d6f5dd,stroke:#a3e0ae,color:black
-    style Success fill:#d6f5dd,stroke:#a3e0ae,color:black
-    style Challenges fill:#d6f5dd,stroke:#a3e0ae,color:black
-    style Lessons fill:#d6f5dd,stroke:#a3e0ae,color:black
-    style Improvements fill:#d6f5dd,stroke:#a3e0ae,color:black
-    style Create fill:#d6f5dd,stroke:#a3e0ae,color:black
-```
-
-### Reflection Documentation Template
-
-```
-# REFLECTION: [Task Name]
-
-## Implementation Review
-- [Summary of what was implemented]
-- [Key components and features delivered]
-- [Technical approach taken]
-
-## Successes
-- [What worked well]
-- [Positive outcomes]
-- [Unexpected benefits]
-
-## Challenges
-- [Issues encountered]
-- [Difficulties overcome]
-- [Areas that were problematic]
-
-## Lessons Learned
-- [Key insights gained]
-- [Technical learnings]
-- [Process improvements identified]
-
-## Process Improvements
-- [What could be done better next time]
-- [Process optimizations]
-- [Tool or methodology improvements]
-
-## Technical Improvements
-- [Code quality improvements]
-- [Architecture refinements]
-- [Performance optimizations]
-
-## Next Steps
-- [Follow-up actions needed]
-- [Future enhancements]
-- [Knowledge transfer items]
-```
-
-## ARCHIVING PROCESS
-
-When the user types "ARCHIVE NOW", execute the archiving process to create comprehensive documentation and update the Memory Bank.
-
-### Archiving Approach
-
-Create a comprehensive archive document that captures all aspects of the completed task, including the original plan, implementation details, reflection insights, and lessons learned.
-
-```mermaid
-graph TD
-    Archive["📦 ARCHIVING PROCESS"] --> Create["Create archive document"]
-    Create --> Update["Update tasks.md"]
-    Update --> Progress["Update progress.md"]
-    Progress --> Context["Update activeContext.md"]
-    Context --> Complete["Mark task complete"]
+    Level -->|"Level 1"| L1["🔧 快速審查"]
+    Level -->|"Level 2"| L2["🔨 簡單審查"]
+    Level -->|"Level 3-4"| L34["🏗️ 深度審查"]
     
-    style Archive fill:#ffa64d,stroke:#cc7a30,color:white
-    style Create fill:#ffe6cc,stroke:#ffa64d,color:black
-    style Update fill:#ffe6cc,stroke:#ffa64d,color:black
-    style Progress fill:#ffe6cc,stroke:#ffa64d,color:black
-    style Context fill:#ffe6cc,stroke:#ffa64d,color:black
-    style Complete fill:#ffe6cc,stroke:#ffa64d,color:black
-```
-
-### Archive Documentation Template
-
-```
-# ARCHIVE: [Task Name] - [Date]
-
-## Task Overview
-- [Task description and objectives]
-- [Complexity level and approach]
-- [Timeline and milestones]
-
-## Implementation Summary
-- [What was built]
-- [Key features and components]
-- [Technical decisions made]
-
-## Reflection Summary
-- [Key successes and challenges]
-- [Lessons learned]
-- [Process improvements]
-
-## Knowledge Base Updates
-- [Documentation created]
-- [Code repositories updated]
-- [Knowledge transfer completed]
-
-## Future Considerations
-- [Follow-up tasks]
-- [Potential enhancements]
-- [Related projects]
-
-## Archive Metadata
-- [Task ID]
-- [Completion date]
-- [Team members involved]
-- [Related documentation links]
-```
-
-## VERIFICATION
-
-### Reflection Verification
-```mermaid
-graph TD
-    VR["✅ REFLECTION VERIFICATION"] --> R["Implementation reviewed?"]
-    VR --> S["Successes documented?"]
-    VR --> C["Challenges documented?"]
-    VR --> L["Lessons learned captured?"]
-    VR --> I["Improvements identified?"]
+    L1 --> L1Auto["📊 自動分析"]
+    L2 --> L2Auto["📊 自動分析"]
+    L34 --> L34Auto["📊 深度分析"]
     
-    R & S & C & L & I --> Decision{"All Verified?"}
-    Decision -->|"Yes"| Complete["Ready for archiving"]
-    Decision -->|"No"| Fix["Complete missing items"]
+    L1Auto --> Archive["📁 自動歸檔"]
+    L2Auto --> Archive
+    L34Auto --> Archive
     
-    style VR fill:#4dbbbb,stroke:#368787,color:white
-    style Decision fill:#ffa64d,stroke:#cc7a30,color:white
-    style Complete fill:#5fd94d,stroke:#3da336,color:white
-    style Fix fill:#ff5555,stroke:#cc0000,color:white
+    Archive --> Complete["✅ 任務完成"]
+    
+    style Start fill:#4da6ff,stroke:#0066cc,color:white
+    style AutoReflect fill:#ffa64d,stroke:#cc7a30,color:white
+    style Archive fill:#4dbb5f,stroke:#36873f,color:white
 ```
-
-### Archive Verification
-```mermaid
-graph TD
-    AR["✅ ARCHIVE VERIFICATION"] --> D["Archive document created?"]
-    AR --> T["Tasks.md updated?"]
-    AR --> P["Progress.md updated?"]
-    AR --> A["ActiveContext.md reset?"]
-    AR --> K["Knowledge base updated?"]
     
-    D & T & P & A & K --> Decision{"All Verified?"}
-    Decision -->|"Yes"| Complete["Task fully completed"]
-    Decision -->|"No"| Fix["Complete missing items"]
-    
-    style AR fill:#4dbbbb,stroke:#368787,color:white
-    style Decision fill:#ffa64d,stroke:#cc7a30,color:white
-    style Complete fill:#5fd94d,stroke:#3da336,color:white
-    style Fix fill:#ff5555,stroke:#cc0000,color:white
-```
+## ⚡ 自動化審查流程
 
-Before completing the reflection phase, verify that the implementation has been thoroughly reviewed, successes and challenges documented, lessons learned captured, and improvements identified. After archiving, verify that all documentation has been created and updated, and the task is marked as complete.
+### 🧩 複雜度確定
+- **Level 1**: 快速修復 → 簡化審查流程
+- **Level 2**: 簡單增強 → 基本審查流程
+- **Level 3-4**: 複雜功能 → 深度審查流程
+
+### 📊 智能經驗提取
+- **自動成功分析**: 自動識別和記錄成功因素
+- **自動挑戰識別**: 自動識別和記錄遇到的挑戰
+- **自動經驗總結**: 自動提取和總結經驗教訓
+- **自動改進建議**: 自動生成改進建議
+
+### 🎯 零認知操作
+- **審查模板自動選擇**: 根據複雜度自動選擇審查模板
+- **經驗自動提取**: 自動從實施過程中提取經驗
+- **歸檔自動生成**: 自動生成完整的歸檔文檔
+- **Graph Bank 自動更新**: 審查結果自動同步到 Graph Bank
+
+## 📊 智能審查報告
+
+### 🔧 Level 1 快速審查
+- **實施回顧**: 自動回顧修復過程
+- **成功因素**: 自動識別成功因素
+- **挑戰記錄**: 自動記錄遇到的挑戰
+- **經驗總結**: 自動總結經驗教訓
+
+### 🔨 Level 2 簡單審查
+- **實施回顧**: 自動回顧增強過程
+- **成功因素**: 自動識別成功因素
+- **挑戰記錄**: 自動記錄遇到的挑戰
+- **經驗總結**: 自動總結經驗教訓
+- **改進建議**: 自動生成改進建議
+
+### 🏗️ Level 3-4 深度審查
+- **實施回顧**: 自動回顧複雜實施過程
+- **成功因素**: 自動識別成功因素
+- **挑戰記錄**: 自動記錄遇到的挑戰
+- **經驗總結**: 自動總結經驗教訓
+- **改進建議**: 自動生成改進建議
+- **架構評估**: 自動評估架構決策
+- **性能分析**: 自動分析性能表現
+
+## 📁 自動歸檔
+
+### 歸檔內容
+- **任務概述**: 自動生成任務概述
+- **實施過程**: 自動記錄實施過程
+- **審查結果**: 自動整合審查結果
+- **經驗教訓**: 自動整理經驗教訓
+- **改進建議**: 自動整理改進建議
+
+### 歸檔格式
+- **結構化文檔**: 自動生成結構化的歸檔文檔
+- **可搜索內容**: 自動生成可搜索的內容
+- **知識庫整合**: 自動整合到知識庫
+- **版本控制**: 自動進行版本控制
+
+## ✅ 自動驗證
+
+### 驗證檢查點
+- **審查完整性**: 審查是否完整
+- **經驗提取**: 經驗是否已提取
+- **歸檔完整性**: 歸檔是否完整
+- **知識整合**: 知識是否已整合
+
+### 成功標準
+- **審查完成**: 所有審查項目都已完成
+- **經驗記錄**: 所有經驗都已記錄
+- **歸檔完成**: 歸檔文檔已生成
+- **任務完成**: 任務標記為完成
+

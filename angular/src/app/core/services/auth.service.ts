@@ -6,6 +6,9 @@ import {
   authState, 
   signInWithPopup, 
   signOut,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
   GoogleAuthProvider,
   User as FirebaseUser
 } from '@angular/fire/auth';
@@ -96,6 +99,46 @@ export class AuthService {
       await signOut(this.auth);
     } catch (error) {
       this.accountState.setError(`登出失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this.accountState.setLoading(false);
+    }
+  }
+
+  async signInWithEmailAndPassword(email: string, password: string) {
+    try {
+      this.accountState.setLoading(true);
+      this.accountState.clearError();
+      
+      const credential = await signInWithEmailAndPassword(this.auth, email, password);
+      await this.syncUserProfile(credential.user);
+      
+      return credential;
+    } catch (error) {
+      this.accountState.setError(`登入失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this.accountState.setLoading(false);
+    }
+  }
+
+  async createUserWithEmailAndPassword(email: string, password: string, displayName?: string) {
+    try {
+      this.accountState.setLoading(true);
+      this.accountState.clearError();
+      
+      const credential = await createUserWithEmailAndPassword(this.auth, email, password);
+      
+      // 如果提供了顯示名稱，更新用戶資料
+      if (displayName && credential.user) {
+        await updateProfile(credential.user, { displayName });
+      }
+      
+      await this.syncUserProfile(credential.user);
+      
+      return credential;
+    } catch (error) {
+      this.accountState.setError(`註冊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
       throw error;
     } finally {
       this.accountState.setLoading(false);

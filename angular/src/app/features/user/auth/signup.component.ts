@@ -144,9 +144,8 @@ export class SignupComponent {
     }
 
     try {
-      // 這裡應該實現 email/password 註冊
-      // 目前只支援 Google 登入
-      this.authService.setError('目前只支援 Google 登入，請使用登入頁面');
+      await this.authService.createUserWithEmailAndPassword(this.email, this.password);
+      this.router.navigate(['/dashboard']);
     } catch (error) {
       console.error('Signup error:', error);
     }
