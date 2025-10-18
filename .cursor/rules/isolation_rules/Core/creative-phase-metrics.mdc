@@ -14,182 +14,536 @@ alwaysApply: false
 
 ```mermaid
 graph TD
-    subgraph "CREATIVE PHASE METRICS"
-    M1["Documentation<br>Quality"]
-    M2["Decision<br>Coverage"]
-    M3["Option<br>Analysis"]
-    M4["Impact<br>Assessment"]
-    M5["Verification<br>Score"]
+    subgraph "DYNAMIC SCORING SYSTEM"
+        subgraph "Base Metrics"
+            M1["Documentation<br>Quality"]
+            M2["Decision<br>Coverage"]
+            M3["Option<br>Analysis"]
+            M4["Impact<br>Assessment"]
+            M5["Verification<br>Score"]
+        end
+        
+        subgraph "Complexity Factors"
+            C1["Task<br>Complexity"]
+            C2["Technical<br>Risk"]
+            C3["Business<br>Impact"]
+            C4["Team<br>Size"]
+        end
+        
+        subgraph "Weight Configuration"
+            W1["Dynamic<br>Weights"]
+            W2["Weight<br>Templates"]
+            W3["Weight<br>Validation"]
+        end
+        
+        M1 --> W1
+        M2 --> W1
+        M3 --> W1
+        M4 --> W1
+        M5 --> W1
+        
+        C1 --> W2
+        C2 --> W2
+        C3 --> W2
+        C4 --> W2
+        
+        W1 --> Score["Adjusted<br>Score"]
+        W2 --> Score
+        W3 --> Score
     end
     
-    M1 --> Score["Quality<br>Score"]
-    M2 --> Score
-    M3 --> Score
-    M4 --> Score
-    M5 --> Score
+    subgraph "Score Analysis"
+        Score --> A1["Trend<br>Analysis"]
+        Score --> A2["Comparison<br>Report"]
+        Score --> A3["Improvement<br>Suggestions"]
+    end
     
-    style M1 fill:#4dbb5f,stroke:#36873f,color:white
-    style M2 fill:#ffa64d,stroke:#cc7a30,color:white
-    style M3 fill:#d94dbb,stroke:#a3378a,color:white
-    style M4 fill:#4dbbbb,stroke:#368787,color:white
-    style M5 fill:#d971ff,stroke:#a33bc2,color:white
-    style Score fill:#ff71c2,stroke:#c23b8a,color:white
+    style M1,M2,M3,M4,M5 fill:#4dbb5f,stroke:#36873f,color:white
+    style C1,C2,C3,C4 fill:#ffa64d,stroke:#cc7a30,color:white
+    style W1,W2,W3 fill:#d94dbb,stroke:#a3378a,color:white
+    style Score fill:#4dbbbb,stroke:#368787,color:white
+    style A1,A2,A3 fill:#d971ff,stroke:#a33bc2,color:white
 ```
 
-## 📋 QUALITY METRICS SCORECARD
+## 📋 DYNAMIC SCORING SYSTEM
 
 ```markdown
 # Creative Phase Quality Assessment
 
-## 1. Documentation Quality [0-10]
-- [ ] Clear problem statement (2 points)
-- [ ] Well-defined objectives (2 points)
-- [ ] Comprehensive requirements list (2 points)
-- [ ] Proper formatting and structure (2 points)
-- [ ] Cross-references to related documents (2 points)
+## Task Complexity Analysis
+- Level: [1-4]
+- Technical Risk: [Low/Medium/High]
+- Business Impact: [Low/Medium/High]
+- Team Size: [Small/Medium/Large]
 
-## 2. Decision Coverage [0-10]
-- [ ] All required decisions identified (2 points)
-- [ ] Each decision point documented (2 points)
-- [ ] Dependencies mapped (2 points)
-- [ ] Impact analysis included (2 points)
-- [ ] Future considerations noted (2 points)
+## Base Metrics
 
-## 3. Option Analysis [0-10]
-- [ ] Multiple options considered (2 points)
-- [ ] Pros/cons documented (2 points)
-- [ ] Technical feasibility assessed (2 points)
-- [ ] Resource requirements estimated (2 points)
-- [ ] Risk factors identified (2 points)
+### 1. Documentation Quality [Weight: Dynamic]
+Base Points: 0-10
+Complexity Multiplier: [0.8-1.5]
+- [ ] Clear problem statement (Dynamic points)
+- [ ] Well-defined objectives (Dynamic points)
+- [ ] Comprehensive requirements (Dynamic points)
+- [ ] Proper formatting (Dynamic points)
+- [ ] Cross-references (Dynamic points)
 
-## 4. Impact Assessment [0-10]
-- [ ] System impact documented (2 points)
-- [ ] Performance implications assessed (2 points)
-- [ ] Security considerations addressed (2 points)
-- [ ] Maintenance impact evaluated (2 points)
-- [ ] Cost implications analyzed (2 points)
+### 2. Decision Coverage [Weight: Dynamic]
+Base Points: 0-10
+Complexity Multiplier: [0.8-1.5]
+- [ ] Decisions identified (Dynamic points)
+- [ ] Decision points documented (Dynamic points)
+- [ ] Dependencies mapped (Dynamic points)
+- [ ] Impact analysis (Dynamic points)
+- [ ] Future considerations (Dynamic points)
 
-## 5. Verification Score [0-10]
-- [ ] Requirements traced (2 points)
-- [ ] Constraints validated (2 points)
-- [ ] Test scenarios defined (2 points)
-- [ ] Review feedback incorporated (2 points)
-- [ ] Final verification completed (2 points)
+### 3. Option Analysis [Weight: Dynamic]
+Base Points: 0-10
+Complexity Multiplier: [0.8-1.5]
+- [ ] Options considered (Dynamic points)
+- [ ] Pros/cons documented (Dynamic points)
+- [ ] Technical feasibility (Dynamic points)
+- [ ] Resource requirements (Dynamic points)
+- [ ] Risk factors (Dynamic points)
 
-Total Score: [Sum of all categories] / 50
-Minimum Required Score: 40/50 (80%)
+### 4. Impact Assessment [Weight: Dynamic]
+Base Points: 0-10
+Complexity Multiplier: [0.8-1.5]
+- [ ] System impact (Dynamic points)
+- [ ] Performance implications (Dynamic points)
+- [ ] Security considerations (Dynamic points)
+- [ ] Maintenance impact (Dynamic points)
+- [ ] Cost implications (Dynamic points)
+
+### 5. Verification Score [Weight: Dynamic]
+Base Points: 0-10
+Complexity Multiplier: [0.8-1.5]
+- [ ] Requirements traced (Dynamic points)
+- [ ] Constraints validated (Dynamic points)
+- [ ] Test scenarios (Dynamic points)
+- [ ] Review feedback (Dynamic points)
+- [ ] Final verification (Dynamic points)
+
+## Weight Configuration
+### Current Template: [Template Name]
+- Documentation Quality: [Weight %]
+- Decision Coverage: [Weight %]
+- Option Analysis: [Weight %]
+- Impact Assessment: [Weight %]
+- Verification Score: [Weight %]
+
+### Complexity Adjustments
+- Task Level Modifier: [%]
+- Technical Risk Modifier: [%]
+- Business Impact Modifier: [%]
+- Team Size Modifier: [%]
+
+## Score Analysis
+### Raw Score: [Sum of base points]
+### Weighted Score: [Adjusted by weights]
+### Final Score: [Including complexity adjustments]
+
+### Historical Comparison
+- Previous Similar Tasks: [Scores]
+- Team Average: [Score]
+- Project Average: [Score]
+
+### Trend Analysis
+- Score Trend: [Improving/Stable/Declining]
+- Key Improvements: [List]
+- Areas for Focus: [List]
+
+### Recommendations
+1. [Specific improvement suggestion]
+2. [Process adjustment recommendation]
+3. [Training or resource suggestion]
+
+## Minimum Requirements
+Base Minimum: [Dynamic based on complexity]
+Adjusted Minimum: [Including modifiers]
+Current Status: [Pass/Fail/Needs Improvement]
 ```
 
-## 📈 QUALITY THRESHOLDS
+## 📈 DYNAMIC THRESHOLDS
 
 ```mermaid
 graph TD
-    subgraph "QUALITY GATES"
-    T1["Minimum<br>40/50 (80%)"]
-    T2["Target<br>45/50 (90%)"]
-    T3["Excellent<br>48/50 (96%)"]
+    subgraph "COMPLEXITY-BASED THRESHOLDS"
+        subgraph "Level 1 Task"
+            L1M["Minimum:<br>70%"]
+            L1T["Target:<br>80%"]
+            L1E["Excellent:<br>90%"]
+        end
+        
+        subgraph "Level 2 Task"
+            L2M["Minimum:<br>75%"]
+            L2T["Target:<br>85%"]
+            L2E["Excellent:<br>92%"]
+        end
+        
+        subgraph "Level 3 Task"
+            L3M["Minimum:<br>80%"]
+            L3T["Target:<br>88%"]
+            L3E["Excellent:<br>94%"]
+        end
+        
+        subgraph "Level 4 Task"
+            L4M["Minimum:<br>85%"]
+            L4T["Target:<br>90%"]
+            L4E["Excellent:<br>96%"]
+        end
     end
     
-    Score["Quality<br>Score"] --> Check{"Meets<br>Threshold?"}
-    Check -->|"< 80%"| Block["⛔ BLOCKED<br>Improvements Required"]
-    Check -->|"≥ 80%"| Pass["✓ PASSED<br>Can Proceed"]
+    subgraph "THRESHOLD ADJUSTMENTS"
+        A1["Risk<br>Modifier"]
+        A2["Impact<br>Modifier"]
+        A3["Team Size<br>Modifier"]
+    end
     
-    style T1 fill:#4dbb5f,stroke:#36873f,color:white
-    style T2 fill:#ffa64d,stroke:#cc7a30,color:white
-    style T3 fill:#d94dbb,stroke:#a3378a,color:white
-    style Score fill:#4dbbbb,stroke:#368787,color:white
-    style Check fill:#d971ff,stroke:#a33bc2,color:white
+    Score["Quality<br>Score"] --> Adjust["Apply<br>Adjustments"]
+    
+    Adjust --> Check{"Meets Adjusted<br>Threshold?"}
+    Check -->|No| Block["⛔ BLOCKED<br>Improvements Required"]
+    Check -->|Yes| Pass["✓ PASSED<br>Can Proceed"]
+    
+    A1 --> Adjust
+    A2 --> Adjust
+    A3 --> Adjust
+    
+    Pass --> Analysis["Score Analysis"]
+    Analysis --> T1["Trend<br>Analysis"]
+    Analysis --> T2["Historical<br>Comparison"]
+    Analysis --> T3["Improvement<br>Suggestions"]
+    
+    style L1M,L2M,L3M,L4M fill:#4dbb5f,stroke:#36873f,color:white
+    style L1T,L2T,L3T,L4T fill:#ffa64d,stroke:#cc7a30,color:white
+    style L1E,L2E,L3E,L4E fill:#d94dbb,stroke:#a3378a,color:white
+    style A1,A2,A3 fill:#4dbbbb,stroke:#368787,color:white
+    style Score,Adjust fill:#d971ff,stroke:#a33bc2,color:white
+    style Analysis,T1,T2,T3 fill:#ff71c2,stroke:#c23b8a,color:white
 ```
 
-## 🎯 METRIC EVALUATION PROCESS
+## 🎯 DYNAMIC EVALUATION PROCESS
 
 ```mermaid
 graph TD
-    Start["Start<br>Evaluation"] --> Doc["1. Score<br>Documentation"]
-    Doc --> Dec["2. Assess<br>Decisions"]
-    Dec --> Opt["3. Review<br>Options"]
-    Opt --> Imp["4. Evaluate<br>Impact"]
-    Imp --> Ver["5. Verify<br>Completeness"]
-    Ver --> Total["Calculate<br>Total Score"]
-    Total --> Check{"Meets<br>Threshold?"}
-    Check -->|No| Return["Return for<br>Improvements"]
+    Start["Start<br>Evaluation"] --> Complex["Analyze<br>Complexity"]
+    
+    Complex --> Factors["Determine<br>Factors"]
+    Factors --> F1["Task Level"]
+    Factors --> F2["Technical Risk"]
+    Factors --> F3["Business Impact"]
+    Factors --> F4["Team Size"]
+    
+    F1 --> Weight["Configure<br>Weights"]
+    F2 --> Weight
+    F3 --> Weight
+    F4 --> Weight
+    
+    Weight --> Template["Select Weight<br>Template"]
+    Template --> Adjust["Apply<br>Adjustments"]
+    
+    Adjust --> Eval["Begin<br>Evaluation"]
+    
+    Eval --> Track1["Documentation<br>Track"]
+    Eval --> Track2["Decisions<br>Track"]
+    Eval --> Track3["Options<br>Track"]
+    Eval --> Track4["Impact<br>Track"]
+    Eval --> Track5["Verification<br>Track"]
+    
+    Track1 --> Score1["Calculate<br>Weighted Score"]
+    Track2 --> Score2["Calculate<br>Weighted Score"]
+    Track3 --> Score3["Calculate<br>Weighted Score"]
+    Track4 --> Score4["Calculate<br>Weighted Score"]
+    Track5 --> Score5["Calculate<br>Weighted Score"]
+    
+    Score1 --> Final["Calculate<br>Final Score"]
+    Score2 --> Final
+    Score3 --> Final
+    Score4 --> Final
+    Score5 --> Final
+    
+    Final --> Analysis["Score<br>Analysis"]
+    Analysis --> Trend["Trend<br>Analysis"]
+    Analysis --> Hist["Historical<br>Comparison"]
+    Analysis --> Suggest["Generate<br>Suggestions"]
+    
+    Suggest --> Check{"Meets Adjusted<br>Threshold?"}
+    Check -->|No| Improve["Identify<br>Improvements"]
     Check -->|Yes| Proceed["Proceed to<br>Next Phase"]
     
+    Improve --> Track1
+    Improve --> Track2
+    Improve --> Track3
+    Improve --> Track4
+    Improve --> Track5
+    
     style Start fill:#4da6ff,stroke:#0066cc,color:white
-    style Doc fill:#ffa64d,stroke:#cc7a30,color:white
-    style Dec fill:#4dbb5f,stroke:#36873f,color:white
-    style Opt fill:#d94dbb,stroke:#a3378a,color:white
-    style Imp fill:#4dbbbb,stroke:#368787,color:white
-    style Ver fill:#d971ff,stroke:#a33bc2,color:white
+    style Complex,Factors fill:#ffa64d,stroke:#cc7a30,color:white
+    style F1,F2,F3,F4 fill:#4dbb5f,stroke:#36873f,color:white
+    style Weight,Template,Adjust fill:#d94dbb,stroke:#a3378a,color:white
+    style Eval fill:#4dbbbb,stroke:#368787,color:white
+    style Track1,Track2,Track3,Track4,Track5 fill:#d971ff,stroke:#a33bc2,color:white
+    style Score1,Score2,Score3,Score4,Score5 fill:#ff71c2,stroke:#c23b8a,color:white
+    style Final,Analysis fill:#4da6ff,stroke:#0066cc,color:white
+    style Trend,Hist,Suggest fill:#ffa64d,stroke:#cc7a30,color:white
+    style Check fill:#4dbb5f,stroke:#36873f,color:white
+    style Improve fill:#d94dbb,stroke:#a3378a,color:white
+    style Proceed fill:#4dbbbb,stroke:#368787,color:white
 ```
 
-## 📊 IMPROVEMENT RECOMMENDATIONS
-
-For scores below threshold:
+## 📊 DYNAMIC IMPROVEMENT RECOMMENDATIONS
 
 ```markdown
-## Documentation Quality Improvements
-- Add clear problem statements
-- Include specific objectives
-- List all requirements
-- Improve formatting
-- Add cross-references
+# Improvement Recommendations
 
-## Decision Coverage Improvements
-- Identify missing decisions
-- Document all decision points
-- Map dependencies
-- Add impact analysis
-- Consider future implications
+## Complexity-Based Suggestions
+### Level 1 Tasks
+- Focus on essential documentation
+- Streamline decision process
+- Quick impact assessment
+- Basic verification
 
-## Option Analysis Improvements
-- Consider more alternatives
-- Detail pros/cons
-- Assess technical feasibility
-- Estimate resource needs
-- Identify risks
+### Level 2 Tasks
+- Detailed problem statements
+- Clear decision rationale
+- Comprehensive testing
+- Standard documentation
 
-## Impact Assessment Improvements
-- Document system impact
-- Assess performance
-- Address security
-- Evaluate maintenance
-- Analyze costs
+### Level 3 Tasks
+- In-depth analysis
+- Multiple alternatives
+- Detailed impact study
+- Thorough verification
 
-## Verification Improvements
-- Trace requirements
-- Validate constraints
-- Define test scenarios
-- Incorporate feedback
-- Complete verification
+### Level 4 Tasks
+- Extensive documentation
+- Complex decision mapping
+- Comprehensive analysis
+- Rigorous verification
+
+## Risk-Based Improvements
+### High Risk Areas
+- Enhanced documentation
+- Additional review cycles
+- Detailed risk analysis
+- Extended testing
+
+### Technical Complexity
+- Architecture documentation
+- Technical feasibility study
+- Performance analysis
+- Security assessment
+
+### Business Impact
+- Stakeholder analysis
+- Cost-benefit study
+- Market impact assessment
+- Timeline analysis
+
+## Team Size Adjustments
+### Small Team (1-3)
+- Streamlined process
+- Quick iterations
+- Direct communication
+- Focused documentation
+
+### Medium Team (4-7)
+- Standard process
+- Regular reviews
+- Team coordination
+- Shared documentation
+
+### Large Team (8+)
+- Detailed process
+- Formal reviews
+- Cross-team coordination
+- Comprehensive docs
+
+## Track-Specific Improvements
+
+### Documentation Track
+- Template utilization
+- Clear structure
+- Cross-references
+- Version control
+- Review cycles
+
+### Decisions Track
+- Decision framework
+- Dependency mapping
+- Impact analysis
+- Future considerations
+- Review process
+
+### Options Track
+- Alternative analysis
+- Pros/cons matrix
+- Feasibility study
+- Resource planning
+- Risk assessment
+
+### Impact Track
+- System analysis
+- Performance metrics
+- Security review
+- Maintenance plan
+- Cost analysis
+
+### Verification Track
+- Test planning
+- Constraint validation
+- Scenario coverage
+- Feedback loops
+- Final verification
+
+## Historical Learning
+- Review past successes
+- Learn from failures
+- Apply best practices
+- Adapt processes
+
+## Trend-Based Suggestions
+- Address declining areas
+- Reinforce improvements
+- Focus on patterns
+- Optimize workflow
+
+## Action Items
+1. [Specific improvement task]
+2. [Process adjustment]
+3. [Tool or template update]
+4. [Training recommendation]
+5. [Resource allocation]
+
+## Timeline
+- Immediate actions
+- Short-term improvements
+- Long-term optimization
+- Continuous monitoring
+
+## Success Metrics
+- Quality indicators
+- Progress tracking
+- Improvement validation
+- Team feedback
 ```
 
-## ✅ METRICS VERIFICATION CHECKLIST
+## ✅ DYNAMIC METRICS VERIFICATION
 
 ```markdown
-## Pre-Review Verification
-- [ ] All sections scored
-- [ ] Calculations verified
-- [ ] Supporting evidence attached
-- [ ] Improvement areas identified
-- [ ] Review feedback incorporated
+# Metrics Verification Checklist
 
-## Final Metrics Verification
-- [ ] Minimum score achieved
-- [ ] All categories passed
+## Complexity Analysis
+- [ ] Task level determined
+- [ ] Technical risk assessed
+- [ ] Business impact evaluated
+- [ ] Team size considered
+- [ ] Complexity factors documented
+
+## Weight Configuration
+- [ ] Base weights defined
+- [ ] Complexity adjustments applied
+- [ ] Template selected
+- [ ] Custom adjustments documented
+- [ ] Final weights validated
+
+## Track Verification
+### Documentation Track
+- [ ] Base score calculated
+- [ ] Weight applied
+- [ ] Adjustments made
+- [ ] Final score validated
+- [ ] Improvements noted
+
+### Decisions Track
+- [ ] Base score calculated
+- [ ] Weight applied
+- [ ] Adjustments made
+- [ ] Final score validated
+- [ ] Improvements noted
+
+### Options Track
+- [ ] Base score calculated
+- [ ] Weight applied
+- [ ] Adjustments made
+- [ ] Final score validated
+- [ ] Improvements noted
+
+### Impact Track
+- [ ] Base score calculated
+- [ ] Weight applied
+- [ ] Adjustments made
+- [ ] Final score validated
+- [ ] Improvements noted
+
+### Verification Track
+- [ ] Base score calculated
+- [ ] Weight applied
+- [ ] Adjustments made
+- [ ] Final score validated
+- [ ] Improvements noted
+
+## Analysis Verification
+- [ ] Raw scores recorded
+- [ ] Weighted scores calculated
+- [ ] Adjustments applied
+- [ ] Final score computed
+- [ ] Threshold comparison made
+
+## Historical Analysis
+- [ ] Previous scores retrieved
+- [ ] Trends analyzed
+- [ ] Comparisons made
+- [ ] Patterns identified
+- [ ] Insights documented
+
+## Improvement Planning
+- [ ] Areas identified
+- [ ] Suggestions generated
+- [ ] Actions planned
+- [ ] Timeline defined
+- [ ] Resources allocated
+
+## Final Verification
+- [ ] All tracks verified
+- [ ] Calculations double-checked
 - [ ] Documentation complete
-- [ ] Improvements addressed
-- [ ] Final approval obtained
+- [ ] Improvements planned
+- [ ] Approvals obtained
+
+## Success Criteria
+- [ ] Meets complexity requirements
+- [ ] Achieves adjusted thresholds
+- [ ] Addresses all tracks
+- [ ] Shows improvement
+- [ ] Ready for next phase
 ```
 
 ## 🔄 DOCUMENT MANAGEMENT
 
 ```mermaid
 graph TD
-    Current["Current Document"] --> Active["Active:<br>- creative-phase-metrics.md"]
-    Current --> Related["Related:<br>- creative-phase-enforcement.md<br>- creative-phase-architecture.md"]
+    Current["Current Document"] --> Active["Active Documents"]
+    Current --> Related["Related Documents"]
+    
+    Active --> A1["creative-phase-metrics.md"]
+    Active --> A2["weight-templates.md"]
+    Active --> A3["score-analysis.md"]
+    
+    Related --> R1["Complexity:<br>complexity-analysis.md"]
+    Related --> R2["Weights:<br>weight-configuration.md"]
+    Related --> R3["Tracking:<br>score-tracking.md"]
+    Related --> R4["History:<br>historical-analysis.md"]
+    
+    R1 --> T1["task-tracking-intermediate.md"]
+    R2 --> T1
+    R3 --> T1
+    R4 --> T1
     
     style Current fill:#4da6ff,stroke:#0066cc,color:white
     style Active fill:#4dbb5f,stroke:#36873f,color:white
     style Related fill:#ffa64d,stroke:#cc7a30,color:white
+    style A1,A2,A3 fill:#d94dbb,stroke:#a3378a,color:white
+    style R1,R2,R3,R4 fill:#4dbbbb,stroke:#368787,color:white
+    style T1 fill:#d971ff,stroke:#a33bc2,color:white
 ``` 

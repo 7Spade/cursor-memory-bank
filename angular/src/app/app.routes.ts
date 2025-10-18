@@ -1,12 +1,20 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './features/user/auth/login.component';
 import { SignupComponent } from './features/user/auth/signup.component';
+import { LandingComponent } from './landing/landing.component';
 
 import { authGuard } from './features/user/auth/auth.guard';
 import { roleGuard, orgRoleGuard, permissionGuard } from './features/user/auth/role.guard';
 import { orgAdminGuard, orgOwnerGuard } from './core/guards/permission.guard';
 
 export const routes: Routes = [
+  // 首頁路由 - Landing Page
+  {
+    path: '',
+    component: LandingComponent,
+    title: 'Angular Fire RoleKit - GitHub 式權限系統'
+  },
+  
   // 認證路由
   {
     path: 'login',
@@ -66,14 +74,9 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   
-  // 預設路由
-  {
-    path: '',
-    redirectTo: 'login',
-    pathMatch: 'full'
-  },
+  // 預設重定向
   {
     path: '**',
-    redirectTo: 'login'
+    redirectTo: ''
   }
 ];

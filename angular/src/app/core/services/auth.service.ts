@@ -1,6 +1,7 @@
 // src/app/core/services/auth.service.ts
 
-import { Injectable, inject, signal, computed, effect } from '@angular/core';
+import { Injectable, inject, signal, computed, effect, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { 
   Auth, 
   authState, 
@@ -21,9 +22,10 @@ import {
   query,
   where,
   setDoc,
+  writeBatch,
   DocumentData
 } from '@angular/fire/firestore';
-import { Observable, of, switchMap, map, combineLatest } from 'rxjs';
+import { Observable, of, switchMap, map, combineLatest, firstValueFrom } from 'rxjs';
 import { 
   User, 
   Organization, 
@@ -39,6 +41,7 @@ import { ValidationUtils } from '../utils/validation.utils';
 export class AuthService {
   private auth = inject(Auth);
   private firestore = inject(Firestore);
+  private destroyRef = inject(DestroyRef);
   
   // 使用 Signals 管理狀態
   private accountState = new AccountState();
@@ -64,15 +67,15 @@ export class AuthService {
 
   constructor() {
     // 監聽 Firebase Auth 狀態變化
-    effect(() => {
-      authState(this.auth).subscribe(firebaseUser => {
+    authState(this.auth)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(firebaseUser => {
         if (firebaseUser) {
           this.loadUserAccount(firebaseUser.uid);
         } else {
           this.accountState.setAccount(null);
         }
       });
-    });
   }
 
   async signInWithGoogle() {
@@ -86,7 +89,8 @@ export class AuthService {
       
       return credential;
     } catch (error) {
-      this.accountState.setError(`登入失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      const errorMessage = this.getFirebaseAuthErrorMessage(error);
+      this.accountState.setError(`Google 登入失敗: ${errorMessage}`);
       throw error;
     } finally {
       this.accountState.setLoading(false);
@@ -105,6 +109,30 @@ export class AuthService {
     }
   }
 
+  private getFirebaseAuthErrorMessage(error: any): string {
+    if (!(error instanceof Error)) return '未知錯誤';
+    
+    // Firebase Auth 錯誤代碼對應的中文訊息
+    const errorMessages: { [key: string]: string } = {
+      'auth/invalid-email': '無效的電子郵件格式',
+      'auth/user-disabled': '此帳號已被停用',
+      'auth/user-not-found': '找不到此帳號',
+      'auth/wrong-password': '密碼錯誤',
+      'auth/email-already-in-use': '此電子郵件已被使用',
+      'auth/operation-not-allowed': '此登入方式未啟用',
+      'auth/weak-password': '密碼強度不足',
+      'auth/invalid-credential': '無效的登入憑證',
+      'auth/account-exists-with-different-credential': '此電子郵件已使用其他登入方式',
+      'auth/popup-blocked': '登入視窗被封鎖',
+      'auth/popup-closed-by-user': '登入視窗被關閉',
+      'auth/network-request-failed': '網路連線失敗',
+      'auth/too-many-requests': '登入嘗試次數過多，請稍後再試'
+    };
+
+    const code = (error as any).code;
+    return errorMessages[code] || error.message || '未知錯誤';
+  }
+
   async signInWithEmailAndPassword(email: string, password: string) {
     try {
       this.accountState.setLoading(true);
@@ -115,7 +143,8 @@ export class AuthService {
       
       return credential;
     } catch (error) {
-      this.accountState.setError(`登入失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      const errorMessage = this.getFirebaseAuthErrorMessage(error);
+      this.accountState.setError(`登入失敗: ${errorMessage}`);
       throw error;
     } finally {
       this.accountState.setLoading(false);
@@ -138,7 +167,8 @@ export class AuthService {
       
       return credential;
     } catch (error) {
-      this.accountState.setError(`註冊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      const errorMessage = this.getFirebaseAuthErrorMessage(error);
+      this.accountState.setError(`註冊失敗: ${errorMessage}`);
       throw error;
     } finally {
       this.accountState.setLoading(false);
@@ -150,14 +180,16 @@ export class AuthService {
       this.accountState.setLoading(true);
       
       const userDoc = doc(this.firestore, `accounts/${uid}`);
-      const userData = await docData(userDoc, { idField: 'id' }).pipe(
-        map(data => {
-          if (data && (data as any)['type'] === 'user') {
-            return data as User;
-          }
-          return null;
-        })
-      ).toPromise();
+      const userData = await firstValueFrom(
+        docData(userDoc, { idField: 'id' }).pipe(
+          map(data => {
+            if (data && (data as any)['type'] === 'user') {
+              return data as User;
+            }
+            return null;
+          })
+        )
+      );
       
       this.accountState.setAccount(userData || null);
     } catch (error) {
@@ -170,16 +202,19 @@ export class AuthService {
   private async syncUserProfile(firebaseUser: FirebaseUser) {
     try {
       const userRef = doc(this.firestore, `accounts/${firebaseUser.uid}`);
+      
+      // 檢查用戶是否已存在
+      const userDoc = await firstValueFrom(docData(userRef, { idField: 'id' }));
       const login = firebaseUser.email?.split('@')[0] || firebaseUser.uid;
       
-      // 建立 ProfileVO
+      // 建立或更新 ProfileVO
       const profile: ProfileVO = {
         name: firebaseUser.displayName || login,
         email: firebaseUser.email || '',
         avatar: firebaseUser.photoURL || undefined,
-        bio: undefined,
-        location: undefined,
-        website: undefined
+        bio: userDoc?.profile?.bio,
+        location: userDoc?.profile?.location,
+        website: userDoc?.profile?.website
       };
       
       // 驗證 Profile
@@ -188,8 +223,8 @@ export class AuthService {
         throw new Error(`Profile validation failed: ${profileErrors.join(', ')}`);
       }
       
-      // 建立 PermissionVO
-      const permissions: PermissionVO = {
+      // 建立或保留現有的 PermissionVO
+      const permissions: PermissionVO = userDoc?.permissions || {
         roles: ['user'],
         abilities: [
           { action: 'read', resource: 'organization' },
@@ -198,38 +233,71 @@ export class AuthService {
         ]
       };
       
-      // 建立 SettingsVO
-      const settings: SettingsVO = {
+      // 建立或保留現有的 SettingsVO
+      const settings: SettingsVO = userDoc?.settings || {
         language: 'zh-TW',
         theme: 'light',
         notifications: { email: true, push: true, sms: false },
         privacy: { profilePublic: true, showEmail: false }
       };
       
-      await setDoc(userRef, {
+      // 準備用戶資料
+      const userData = {
         id: firebaseUser.uid,
         type: 'user',
         login: login,
         profile: profile,
         permissions: permissions,
         settings: settings,
-        projectsOwned: [],
+        projectsOwned: userDoc?.projectsOwned || [],
         uid: firebaseUser.uid,
         displayName: firebaseUser.displayName || login,
         photoURL: firebaseUser.photoURL,
-        certificates: [],
-        socialRelations: {
+        certificates: userDoc?.certificates || [],
+        socialRelations: userDoc?.socialRelations || {
           followers: [],
           following: [],
           connections: []
         },
-        organizationMemberships: {},
-        createdAt: new Date(),
+        organizationMemberships: userDoc?.organizationMemberships || {},
         updatedAt: new Date()
-      }, { merge: true });
+      };
+      
+      // 如果是新用戶，添加創建時間
+      if (!userDoc) {
+        userData['createdAt'] = new Date();
+      }
+      
+      // 使用事務確保資料一致性
+      const batch = writeBatch(this.firestore);
+      
+      // 更新用戶資料
+      batch.set(userRef, userData, { merge: true });
+      
+      // 如果是新用戶，創建默認的個人設定
+      if (!userDoc) {
+        const settingsRef = doc(this.firestore, `accounts/${firebaseUser.uid}/settings/default`);
+        batch.set(settingsRef, {
+          theme: 'light',
+          language: 'zh-TW',
+          emailNotifications: true,
+          createdAt: new Date()
+        });
+      }
+      
+      // 提交事務
+      await batch.commit();
+      
+      // 更新本地狀態
+      this.accountState.setAccount(userData as User);
       
     } catch (error) {
       console.error('Failed to sync user profile:', error);
+      
+      // 回滾本地狀態
+      this.accountState.setAccount(null);
+      
+      // 重新拋出錯誤
       throw new Error(`User profile sync failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }

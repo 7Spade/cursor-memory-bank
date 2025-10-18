@@ -28,11 +28,13 @@ export const appConfig: ApplicationConfig = {
     ScreenTrackingService,
     UserTrackingService,
     provideAppCheck(() => {
+      const app = initializeApp(environment.firebase);
+      
       // 根據環境選擇 App Check provider
       if (environment.production) {
         // 生產環境使用 reCAPTCHA Enterprise
         const provider = new ReCaptchaEnterpriseProvider(environment.appCheck.recaptchaSiteKey);
-        return initializeAppCheck(undefined, { 
+        return initializeAppCheck(app, { 
           provider, 
           isTokenAutoRefreshEnabled: true 
         });
@@ -47,7 +49,7 @@ export const appConfig: ApplicationConfig = {
             };
           }
         });
-        return initializeAppCheck(undefined, { 
+        return initializeAppCheck(app, { 
           provider: debugProvider, 
           isTokenAutoRefreshEnabled: true 
         });

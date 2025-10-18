@@ -8,9 +8,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { RouterModule } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
+import { Nl2brPipe } from '../../../shared/pipes/nl2br.pipe';
 
 @Component({
   selector: 'app-signup',
@@ -24,7 +27,10 @@ import { Router } from '@angular/router';
     MatCardModule,
     MatToolbarModule,
     MatIconModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatCheckboxModule,
+    RouterModule,
+    Nl2brPipe
   ],
   template: `
     <div class="signup-wrapper">
@@ -39,22 +45,51 @@ import { Router } from '@angular/router';
 
         <form (ngSubmit)="onSignup()">
           <mat-form-field appearance="outline" class="field">
-            <mat-label>Email</mat-label>
-            <input matInput [(ngModel)]="email" name="email" required />
+            <mat-label>顯示名稱</mat-label>
+            <input matInput [(ngModel)]="displayName" name="displayName" required />
+            <mat-hint>這是您在系統中顯示的名稱</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="field">
-            <mat-label>Password</mat-label>
-            <input matInput type="password" [(ngModel)]="password" name="password" required />
+            <mat-label>電子郵件</mat-label>
+            <input matInput [(ngModel)]="email" name="email" required type="email" />
+            <mat-hint>請使用有效的電子郵件地址</mat-hint>
           </mat-form-field>
+
+          <mat-form-field appearance="outline" class="field">
+            <mat-label>密碼</mat-label>
+            <input matInput type="password" [(ngModel)]="password" name="password" required />
+            <mat-hint>密碼需要包含大小寫字母、數字和特殊字元</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="field">
+            <mat-label>確認密碼</mat-label>
+            <input matInput type="password" [(ngModel)]="confirmPassword" name="confirmPassword" required />
+            <mat-hint>請再次輸入密碼</mat-hint>
+          </mat-form-field>
+
+          <mat-checkbox [(ngModel)]="agreeToTerms" name="agreeToTerms" class="terms-checkbox">
+            我同意 <a href="/terms" target="_blank">使用條款</a> 和 <a href="/privacy" target="_blank">隱私政策</a>
+          </mat-checkbox>
 
           <button mat-stroked-button color="primary" class="action-btn" type="submit" [disabled]="isLoading()">
             @if (!isLoading()) {
-              Sign Up
+              建立帳號
             } @else {
               <mat-spinner diameter="24"></mat-spinner>
             }
           </button>
+
+          @if (error()) {
+            <div class="error-message">
+              <mat-icon>error</mat-icon>
+              <span [innerHTML]="error() | nl2br"></span>
+            </div>
+          }
+
+          <div class="login-link">
+            已經有帳號？<a routerLink="/login">登入</a>
+          </div>
         </form>
       </mat-card>
     </div>
@@ -124,11 +159,53 @@ import { Router } from '@angular/router';
     mat-icon {
       margin-right: 8px;
     }
+
+    .error-message {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 12px;
+      background-color: #ffebee;
+      border: 1px solid #f44336;
+      border-radius: 8px;
+      color: #d32f2f;
+      font-size: 14px;
+    }
+
+    .error-message mat-icon {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .terms-checkbox {
+      display: block;
+      margin: 16px 0;
+    }
+
+    .login-link {
+      margin-top: 16px;
+      text-align: center;
+      color: #666;
+    }
+
+    .login-link a {
+      color: #1976d2;
+      text-decoration: none;
+      margin-left: 8px;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
   `]
 })
 export class SignupComponent {
   email = '';
   password = '';
+  confirmPassword = '';
+  displayName = '';
+  agreeToTerms = false;
 
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -137,16 +214,97 @@ export class SignupComponent {
   readonly isLoading = this.authService.isLoading;
   readonly error = this.authService.error;
 
+  // 密碼強度要求
+  private readonly passwordRequirements = {
+    minLength: 8,
+    requireUppercase: true,
+    requireLowercase: true,
+    requireNumber: true,
+    requireSpecialChar: true
+  };
+
+  validateEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  validatePassword(password: string): string[] {
+    const errors: string[] = [];
+    
+    if (password.length < this.passwordRequirements.minLength) {
+      errors.push(`密碼長度至少需要 ${this.passwordRequirements.minLength} 個字元`);
+    }
+    
+    if (this.passwordRequirements.requireUppercase && !/[A-Z]/.test(password)) {
+      errors.push('密碼需要包含大寫字母');
+    }
+    
+    if (this.passwordRequirements.requireLowercase && !/[a-z]/.test(password)) {
+      errors.push('密碼需要包含小寫字母');
+    }
+    
+    if (this.passwordRequirements.requireNumber && !/[0-9]/.test(password)) {
+      errors.push('密碼需要包含數字');
+    }
+    
+    if (this.passwordRequirements.requireSpecialChar && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push('密碼需要包含特殊字元');
+    }
+    
+    return errors;
+  }
+
+  validateForm(): string[] {
+    const errors: string[] = [];
+    
+    if (!this.email) {
+      errors.push('請輸入電子郵件');
+    } else if (!this.validateEmail(this.email)) {
+      errors.push('請輸入有效的電子郵件格式');
+    }
+    
+    if (!this.password) {
+      errors.push('請輸入密碼');
+    } else {
+      const passwordErrors = this.validatePassword(this.password);
+      errors.push(...passwordErrors);
+    }
+    
+    if (!this.confirmPassword) {
+      errors.push('請確認密碼');
+    } else if (this.password !== this.confirmPassword) {
+      errors.push('密碼與確認密碼不符');
+    }
+    
+    if (!this.displayName) {
+      errors.push('請輸入顯示名稱');
+    }
+    
+    if (!this.agreeToTerms) {
+      errors.push('請同意使用條款和隱私政策');
+    }
+    
+    return errors;
+  }
+
   async onSignup() {
-    if (!this.email || !this.password) {
-      this.authService.setError('請輸入電子郵件和密碼');
+    this.authService.clearError();
+    
+    const errors = this.validateForm();
+    if (errors.length > 0) {
+      this.authService.setError(errors.join('\n'));
       return;
     }
 
     try {
-      await this.authService.createUserWithEmailAndPassword(this.email, this.password);
+      await this.authService.createUserWithEmailAndPassword(
+        this.email,
+        this.password,
+        this.displayName
+      );
       this.router.navigate(['/dashboard']);
     } catch (error) {
+      // 錯誤處理已經在 AuthService 中完成
       console.error('Signup error:', error);
     }
   }

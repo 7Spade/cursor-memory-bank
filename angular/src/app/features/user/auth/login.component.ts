@@ -68,6 +68,13 @@ import { Router } from '@angular/router';
             <mat-icon>login</mat-icon>
             <span>使用 Google 登入</span>
           </button>
+
+          @if (error()) {
+            <div class="error-message">
+              <mat-icon>error</mat-icon>
+              <span>{{ error() }}</span>
+            </div>
+          }
         </form>
       </mat-card>
     </div>
@@ -186,6 +193,24 @@ import { Router } from '@angular/router';
       margin: 0;
       color: #4285f4;
     }
+
+    .error-message {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 12px;
+      background-color: #ffebee;
+      border: 1px solid #f44336;
+      border-radius: 8px;
+      color: #d32f2f;
+      font-size: 14px;
+    }
+
+    .error-message mat-icon {
+      margin: 0;
+      font-size: 20px;
+    }
   `]
 })
 export class LoginComponent {
@@ -200,6 +225,8 @@ export class LoginComponent {
   readonly error = this.authService.error;
 
   async onLogin() {
+    this.authService.clearError();
+    
     if (!this.email || !this.password) {
       this.authService.setError('請輸入電子郵件和密碼');
       return;
@@ -209,15 +236,19 @@ export class LoginComponent {
       await this.authService.signInWithEmailAndPassword(this.email, this.password);
       this.router.navigate(['/dashboard']);
     } catch (error) {
+      // 錯誤處理已經在 AuthService 中完成
       console.error('Login error:', error);
     }
   }
 
   async onGoogleLogin() {
+    this.authService.clearError();
+    
     try {
       await this.authService.signInWithGoogle();
       this.router.navigate(['/dashboard']);
     } catch (error) {
+      // 錯誤處理已經在 AuthService 中完成
       console.error('Google login error:', error);
     }
   }
