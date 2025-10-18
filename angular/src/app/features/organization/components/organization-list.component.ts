@@ -31,8 +31,7 @@ import { OrganizationCreatedEvent } from '../../../core/models/organization-crea
     MatDialogModule,
     MatProgressSpinnerModule,
     MatGridListModule,
-    OrganizationCardComponent,
-    OrganizationCreateDialogComponent
+    OrganizationCardComponent
   ],
   template: `
     <div class="organization-list-container">

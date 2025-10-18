@@ -44,6 +44,42 @@ export class ValidationService {
   }
 
   /**
+   * 驗證登入名稱 (通用方法)
+   * @param login 登入名稱
+   * @returns 驗證結果
+   */
+  validateLogin(login: string): ValidationResult {
+    const errors: string[] = [];
+    
+    if (!login || login.trim().length === 0) {
+      errors.push('登入名稱不能為空');
+    }
+    
+    if (login && login.length < 2) {
+      errors.push('登入名稱至少需要2個字符');
+    }
+    
+    if (login && login.length > 39) {
+      errors.push('登入名稱不能超過39個字符');
+    }
+    
+    if (login && !/^[a-zA-Z0-9\-_]+$/.test(login)) {
+      errors.push('登入名稱只能包含字母、數字、連字符和下劃線');
+    }
+    
+    if (login && (login.startsWith('-') || login.endsWith('-'))) {
+      errors.push('登入名稱不能以連字符開頭或結尾');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      field: 'login',
+      value: login
+    };
+  }
+
+  /**
    * 驗證組織登入名稱
    * @param login 組織登入名稱
    * @returns 驗證結果

@@ -1,10 +1,44 @@
 // src/app/core/guards/permission.guard.ts
 
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
+import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router';
 import { PermissionService } from '../services/permission.service';
 import { AuthService } from '../services/auth.service';
 import { OrgRole } from '../models/auth.model';
+
+/**
+ * 通用權限守衛
+ * 從路由數據中讀取權限配置
+ */
+export const permissionGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
+  const permissionService = inject(PermissionService);
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  const currentAccount = authService.currentAccount();
+  
+  if (!currentAccount) {
+    router.navigate(['/login']);
+    return false;
+  }
+
+  // 從路由數據中獲取權限配置
+  const permission = route.data['permission'] as { action: string; resource: string };
+  
+  if (!permission) {
+    console.warn('No permission configuration found in route data');
+    return true; // 如果沒有權限配置，允許訪問
+  }
+
+  // 檢查權限
+  if (permissionService.can(permission.action, permission.resource)) {
+    return true;
+  }
+
+  // 沒有權限，重定向到未授權頁面
+  router.navigate(['/unauthorized']);
+  return false;
+};
 
 /**
  * 權限守衛工廠函數
@@ -12,7 +46,7 @@ import { OrgRole } from '../models/auth.model';
  * @param resource 資源類型 (organization, team, repository, member)
  * @returns CanActivateFn
  */
-export function permissionGuard(action: string, resource: string): CanActivateFn {
+export function createPermissionGuard(action: string, resource: string): CanActivateFn {
   return () => {
     const permissionService = inject(PermissionService);
     const authService = inject(AuthService);

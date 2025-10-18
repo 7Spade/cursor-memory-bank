@@ -2,32 +2,27 @@ import { Routes } from '@angular/router';
 
 /**
  * 組織模組的路由配置
- * 對齊 TREE.md 的組織管理路由結構
+ * 對齊 docs/account.md 的組織管理路由結構
+ * 支援完整的組織層級管理
  */
 export const organizationRoutes: Routes = [
   {
-    path: 'organizations',
-    loadComponent: () => import('../components/organization-card.component').then(m => m.OrganizationCardComponent),
+    path: '',
+    loadComponent: () => import('../components/organization-list.component').then(m => m.OrganizationListComponent),
     title: '組織管理'
   },
+  
+  // 建立組織路由
   {
-    path: 'teams',
-    loadComponent: () => import('../components/team-management.component').then(m => m.TeamHierarchyComponent),
-    title: '團隊管理'
+    path: 'new',
+    loadComponent: () => import('../components/organization-create.component').then(m => m.OrganizationCreateComponent),
+    title: '建立組織'
   },
-  {
-    path: 'security',
-    loadComponent: () => import('../components/security-manager.component').then(m => m.SecurityManagerComponent),
-    title: '安全管理器'
-  },
-  {
-    path: 'roles',
-    loadComponent: () => import('../components/organization-roles.component').then(m => m.OrganizationRolesComponent),
-    title: '組織角色系統'
-  },
+  
+  // 預設重定向
   {
     path: '',
-    redirectTo: 'organizations',
+    redirectTo: '',
     pathMatch: 'full'
   }
 ];

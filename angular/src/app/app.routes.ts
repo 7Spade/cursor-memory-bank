@@ -36,10 +36,17 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   
-  // 組織管理路由
+  // 組織管理路由 - 支援完整的組織層級結構
   {
     path: 'organizations',
     loadChildren: () => import('./features/organization/routes/organization.routes').then(m => m.organizationRoutes),
+    canActivate: [authGuard]
+  },
+  
+  // 特定組織的詳細路由
+  {
+    path: 'organizations/:orgId',
+    loadChildren: () => import('./features/organization/routes/organization-detail.routes').then(m => m.organizationDetailRoutes),
     canActivate: [authGuard]
   },
   
