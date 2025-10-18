@@ -60,11 +60,11 @@ export const routes: Routes = [
   },
   
   // 儀表板路由
-  // {
-  //   path: 'dashboard',
-  //   loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
-  //   canActivate: [authGuard]
-  // },
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
+    canActivate: [authGuard]
+  },
   
   // 預設路由
   {
