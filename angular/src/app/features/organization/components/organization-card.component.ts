@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-import { GitHubAlignedOrganization } from '../../models/github-aligned-organization.model';
+import { GitHubAlignedOrganization } from '../models/github-aligned-organization.model';
 
 /**
  * 組織卡片組件

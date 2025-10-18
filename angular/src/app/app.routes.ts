@@ -27,10 +27,10 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   
-  // GitHub 對齊的組織管理路由
+  // 組織管理路由
   {
     path: 'organizations',
-    loadChildren: () => import('./features/github-aligned/routes/github-aligned.routes').then(m => m.githubAlignedRoutes),
+    loadChildren: () => import('./features/organization/routes/organization.routes').then(m => m.organizationRoutes),
     canActivate: [authGuard]
   },
   
