@@ -3,7 +3,8 @@ import { LoginComponent } from './features/user/auth/login.component';
 import { SignupComponent } from './features/user/auth/signup.component';
 
 import { authGuard } from './features/user/auth/auth.guard';
-import { roleGuard, permissionGuard } from './features/user/auth/role.guard';
+import { roleGuard, orgRoleGuard, permissionGuard } from './features/user/auth/role.guard';
+import { orgAdminGuard, orgOwnerGuard } from './core/guards/permission.guard';
 
 export const routes: Routes = [
   // 認證路由
@@ -31,7 +32,7 @@ export const routes: Routes = [
   {
     path: 'organizations',
     loadChildren: () => import('./features/organization/routes/organization.routes').then(m => m.organizationRoutes),
-    canActivate: [authGuard]
+    canActivate: [authGuard, permissionGuard('read', 'organization')]
   },
   
   // Repository 管理路由

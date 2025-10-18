@@ -1,11 +1,13 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { PermissionService } from '../../../core/services/permission.service';
 import { OrgRole } from '../../../core/models/auth.model';
 
 export function roleGuard(expectedRole: string): CanActivateFn {
   return () => {
     const authService = inject(AuthService);
+    const permissionService = inject(PermissionService);
     const router = inject(Router);
 
     const currentAccount = authService.currentAccount();
@@ -40,6 +42,7 @@ export function roleGuard(expectedRole: string): CanActivateFn {
 export function orgRoleGuard(expectedRole: OrgRole): CanActivateFn {
   return () => {
     const authService = inject(AuthService);
+    const permissionService = inject(PermissionService);
     const router = inject(Router);
 
     const currentAccount = authService.currentAccount();
@@ -53,10 +56,14 @@ export function orgRoleGuard(expectedRole: OrgRole): CanActivateFn {
     if (currentAccount.type === 'user') {
       const user = currentAccount;
       
-      // 這裡應該檢查用戶在特定組織中的角色
-      // 為了簡化，暫時返回 true
-      // 實際實現時需要檢查組織成員資格
-      return true;
+      // 檢查組織角色
+      if (permissionService.hasOrgRole(expectedRole)) {
+        return true;
+      }
+      
+      // 沒有權限，重定向到未授權頁面
+      router.navigate(['/unauthorized']);
+      return false;
     }
 
     // 組織帳戶不支援此守衛
@@ -69,6 +76,7 @@ export function orgRoleGuard(expectedRole: OrgRole): CanActivateFn {
 export function permissionGuard(action: string, resource: string): CanActivateFn {
   return () => {
     const authService = inject(AuthService);
+    const permissionService = inject(PermissionService);
     const router = inject(Router);
 
     const currentAccount = authService.currentAccount();
@@ -79,7 +87,7 @@ export function permissionGuard(action: string, resource: string): CanActivateFn
     }
 
     // 檢查權限
-    if (authService.can(action, resource)) {
+    if (permissionService.can(action, resource)) {
       return true;
     }
 

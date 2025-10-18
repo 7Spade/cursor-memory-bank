@@ -1,7 +1,16 @@
 # Memory Bank: Active Context
 
 ## Current Focus
-BUILD 模式完成 - Phase 1: 基礎清理與現代化完成
+BUILD 模式完成 - Phase 2: 核心服務現代化完成
+
+## BUILD 模式完成摘要
+- ✅ Phase 2: 核心服務現代化 (6個任務) 全部完成
+- ✅ task-2-1: 建立 core/services/permission.service.ts
+- ✅ task-2-2: 建立 core/guards/permission.guard.ts
+- ✅ task-2-3: 更新 core/services/organization.service.ts
+- ✅ task-2-4: 修改 features/user/auth/role.guard.ts
+- ✅ task-2-5: 更新所有路由使用 Permission 守衛
+- ✅ task-2-6: 更新所有服務使用 Signals 狀態管理
 
 ## BUILD 模式完成摘要
 - ✅ Phase 1: 基礎清理與現代化 (8個任務) 全部完成
