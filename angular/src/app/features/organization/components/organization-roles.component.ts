@@ -12,8 +12,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatBadgeModule } from '@angular/material/badge';
 
-import { OrganizationRole, Permission } from '../../models/github-aligned-organization.model';
-import { PermissionCalculationService } from '../../services/permission-calculation.service';
+import { OrganizationRole, Permission } from '../models/github-aligned-organization.model';
+import { PermissionCalculationService } from '../services/permission-calculation.service';
 
 /**
  * 組織角色系統組件
