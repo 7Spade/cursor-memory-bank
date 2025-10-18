@@ -393,7 +393,7 @@ export class OrganizationDetailComponent implements OnInit {
       this.organization.set(org || null);
       
       if (!org) {
-        this.error.set('組織不存在');
+        this.error.set('組織不存在或無法載入');
         return;
       }
 

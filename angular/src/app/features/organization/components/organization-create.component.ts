@@ -185,7 +185,7 @@ export class OrganizationCreateComponent implements OnInit {
 
   // Signals
   isSubmitting = signal(false);
-  errors: { [key: string]: string | undefined } = {};
+  errors: { [key: string]: string } = {};
 
   // Form data
   formData = {
@@ -216,15 +216,15 @@ export class OrganizationCreateComponent implements OnInit {
     switch (field) {
       case 'name':
         const nameResult = this.validationService.validateOrganizationName(this.formData.name);
-        this.errors['name'] = nameResult.errors[0] || undefined;
+        this.errors['name'] = nameResult.errors[0] || '';
         break;
       case 'slug':
         const slugResult = this.validationService.validateLogin(this.formData.slug);
-        this.errors['slug'] = slugResult.errors[0] || undefined;
+        this.errors['slug'] = slugResult.errors[0] || '';
         break;
       case 'description':
         const descResult = this.validationService.validateOrganizationDescription(this.formData.description);
-        this.errors['description'] = descResult.errors[0] || undefined;
+        this.errors['description'] = descResult.errors[0] || '';
         break;
     }
   }

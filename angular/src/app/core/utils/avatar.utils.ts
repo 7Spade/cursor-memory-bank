@@ -13,7 +13,7 @@ export class AvatarUtils {
    * @returns 完整的頭像 URL
    */
   static getAvatarUrl(avatar: string | undefined | null): string {
-    if (!avatar) {
+    if (!avatar || avatar.trim() === '') {
       // 使用預設頭像
       return `${this.STORAGE_BASE_URL}/${this.DEFAULT_AVATAR}?alt=media`;
     }

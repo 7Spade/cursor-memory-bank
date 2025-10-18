@@ -16,7 +16,7 @@ import {
   getDoc,
   DocumentData
 } from '@angular/fire/firestore';
-import { Observable, map, switchMap, combineLatest, of } from 'rxjs';
+import { Observable, map, switchMap, combineLatest, of, catchError, throwError } from 'rxjs';
 import { 
   Repository, 
   RepositoryCollaborator, 
@@ -108,14 +108,18 @@ export class RepositoryService {
     }
   }
 
-  getRepository(repoId: string): Observable<Repository | undefined> {
+  getRepository(repoId: string): Observable<Repository> {
     const repoDoc = doc(this.firestore, `repositories/${repoId}`);
     return docData(repoDoc, { idField: 'id' }).pipe(
       map(data => {
         if (data) {
           return data as Repository;
         }
-        return undefined;
+        throw new Error(`倉庫不存在: ${repoId}`);
+      }),
+      catchError((error: any) => {
+        console.error('獲取倉庫失敗:', error);
+        return throwError(() => new Error('無法載入倉庫資訊，請稍後再試'));
       })
     );
   }

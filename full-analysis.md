@@ -646,7 +646,7 @@ import {
   getDoc,
   DocumentData
 } from '@angular/fire/firestore';
-import { Observable, map, switchMap, combineLatest, of } from 'rxjs';
+import { Observable, map, switchMap, combineLatest, of, catchError, throwError } from 'rxjs';
 import { 
   Repository, 
   RepositoryCollaborator, 
@@ -738,14 +738,18 @@ export class RepositoryService {
     }
   }
 
-  getRepository(repoId: string): Observable<Repository | undefined> {
+  getRepository(repoId: string): Observable<Repository> {
     const repoDoc = doc(this.firestore, `repositories/${repoId}`);
     return docData(repoDoc, { idField: 'id' }).pipe(
       map(data => {
         if (data) {
           return data as Repository;
         }
-        return undefined;
+        throw new Error(`倉庫不存在: ${repoId}`);
+      }),
+      catchError((error: any) => {
+        console.error('獲取倉庫失敗:', error);
+        return throwError(() => new Error('無法載入倉庫資訊，請稍後再試'));
       })
     );
   }
@@ -1062,7 +1066,7 @@ export class AvatarUtils {
    * @returns 完整的頭像 URL
    */
   static getAvatarUrl(avatar: string | undefined | null): string {
-    if (!avatar) {
+    if (!avatar || avatar.trim() === '') {
       // 使用預設頭像
       return `${this.STORAGE_BASE_URL}/${this.DEFAULT_AVATAR}?alt=media`;
     }
@@ -2667,286 +2671,6 @@ export class MembersListComponent implements OnInit {
 }
 ```
 
-## File: angular/src/app/features/organization/components/organization-create.component.ts
-```typescript
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
-import { OrganizationService } from '../../../core/services/organization.service';
-import { PermissionService } from '../../../core/services/permission.service';
-import { NotificationService } from '../../../core/services/notification.service';
-import { ValidationService } from '../../../core/services/validation.service';
-
-/**
- * 組織建立組件
- * 允許用戶建立新的組織
- */
-@Component({
-  selector: 'app-organization-create',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatProgressSpinnerModule
-  ],
-  template: `
-    <div class="organization-create-container">
-      <mat-card class="create-card">
-        <mat-card-header>
-          <mat-card-title>建立新組織</mat-card-title>
-          <mat-card-subtitle>建立一個新的組織來管理您的專案和團隊</mat-card-subtitle>
-        </mat-card-header>
-
-        <mat-card-content>
-          <form class="create-form" (ngSubmit)="onSubmit()">
-            <!-- 組織名稱 -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>組織名稱</mat-label>
-              <input 
-                matInput 
-                [(ngModel)]="formData.name" 
-                name="name"
-                required
-                [disabled]="isSubmitting()"
-                (input)="validateField('name')"
-                (blur)="validateField('name')">
-              <mat-icon matSuffix>business</mat-icon>
-              @if (errors['name']) {
-                <mat-error>{{ errors['name'] }}</mat-error>
-              }
-            </mat-form-field>
-
-            <!-- 組織 Slug -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>組織 Slug</mat-label>
-              <input 
-                matInput 
-                [(ngModel)]="formData.slug" 
-                name="slug"
-                required
-                [disabled]="isSubmitting()"
-                (input)="validateField('slug')"
-                (blur)="validateField('slug')">
-              <mat-icon matSuffix>link</mat-icon>
-              <mat-hint>用於 URL 的唯一識別碼</mat-hint>
-              @if (errors['slug']) {
-                <mat-error>{{ errors['slug'] }}</mat-error>
-              }
-            </mat-form-field>
-
-            <!-- 組織描述 -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>組織描述</mat-label>
-              <textarea 
-                matInput 
-                [(ngModel)]="formData.description" 
-                name="description"
-                rows="3"
-                [disabled]="isSubmitting()"
-                (input)="validateField('description')"
-                (blur)="validateField('description')">
-              </textarea>
-              <mat-icon matSuffix>description</mat-icon>
-              <mat-hint>簡短描述組織的用途和目標</mat-hint>
-              @if (errors['description']) {
-                <mat-error>{{ errors['description'] }}</mat-error>
-              }
-            </mat-form-field>
-
-            <!-- 組織隱私設定 -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>組織隱私</mat-label>
-              <mat-select 
-                [(ngModel)]="formData.privacy" 
-                name="privacy"
-                [disabled]="isSubmitting()">
-                <mat-option value="public">公開</mat-option>
-                <mat-option value="private">私有</mat-option>
-              </mat-select>
-              <mat-icon matSuffix>visibility</mat-icon>
-              <mat-hint>控制組織的公開可見性</mat-hint>
-            </mat-form-field>
-          </form>
-        </mat-card-content>
-
-        <mat-card-actions>
-          <button 
-            mat-button 
-            (click)="goBack()"
-            [disabled]="isSubmitting()">
-            <mat-icon>arrow_back</mat-icon>
-            取消
-          </button>
-          
-          <div class="spacer"></div>
-          
-          <button 
-            mat-raised-button 
-            color="primary"
-            (click)="onSubmit()"
-            [disabled]="isSubmitting() || !isFormValid()">
-            @if (isSubmitting()) {
-              <mat-spinner diameter="20"></mat-spinner>
-            } @else {
-              <mat-icon>add</mat-icon>
-            }
-            建立組織
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .organization-create-container {
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .create-card {
-      .create-form {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .full-width {
-        width: 100%;
-      }
-
-      .spacer {
-        flex: 1;
-      }
-
-      mat-card-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .organization-create-container {
-        padding: 16px;
-      }
-    }
-  `]
-})
-export class OrganizationCreateComponent implements OnInit {
-  private router = inject(Router);
-  private orgService = inject(OrganizationService);
-  private permissionService = inject(PermissionService);
-  private notificationService = inject(NotificationService);
-  private validationService = inject(ValidationService);
-
-  // Signals
-  isSubmitting = signal(false);
-  errors: { [key: string]: string | undefined } = {};
-
-  // Form data
-  formData = {
-    name: '',
-    slug: '',
-    description: '',
-    privacy: 'private' as 'public' | 'private'
-  };
-
-  ngOnInit() {
-    // 檢查用戶是否已登入
-    if (!this.permissionService.hasRole('user')) {
-      this.notificationService.showError('請先登入以建立組織');
-      this.router.navigate(['/login']);
-      return;
-    }
-  }
-
-  isFormValid(): boolean {
-    return this.formData.name.trim().length > 0 && 
-           this.formData.slug.trim().length > 0 &&
-           !this.errors['name'] &&
-           !this.errors['slug'] &&
-           !this.errors['description'];
-  }
-
-  validateField(field: string): void {
-    switch (field) {
-      case 'name':
-        const nameResult = this.validationService.validateOrganizationName(this.formData.name);
-        this.errors['name'] = nameResult.errors[0] || undefined;
-        break;
-      case 'slug':
-        const slugResult = this.validationService.validateLogin(this.formData.slug);
-        this.errors['slug'] = slugResult.errors[0] || undefined;
-        break;
-      case 'description':
-        const descResult = this.validationService.validateOrganizationDescription(this.formData.description);
-        this.errors['description'] = descResult.errors[0] || undefined;
-        break;
-    }
-  }
-
-  async onSubmit() {
-    if (!this.isFormValid() || this.isSubmitting()) {
-      return;
-    }
-
-    // 驗證所有字段
-    this.validateField('name');
-    this.validateField('slug');
-    this.validateField('description');
-
-    if (!this.isFormValid()) {
-      this.notificationService.showValidationErrors([
-        this.errors['name'],
-        this.errors['slug'],
-        this.errors['description']
-      ].filter(error => error) as string[]);
-      return;
-    }
-
-    try {
-      this.isSubmitting.set(true);
-      
-      // TODO: 實作建立組織的邏輯
-      // const orgId = await this.orgService.createOrganization(
-      //   this.formData.name.trim(),
-      //   this.formData.slug.trim(),
-      //   'current-user-id', // 需要從 AuthService 獲取
-      //   undefined, // email
-      //   this.formData.description.trim()
-      // );
-      
-      this.notificationService.showSuccess('組織已成功建立');
-      this.router.navigate(['/organizations']);
-      
-    } catch (error) {
-      this.notificationService.showError(`建立組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-    } finally {
-      this.isSubmitting.set(false);
-    }
-  }
-
-  goBack() {
-    this.router.navigate(['/organizations']);
-  }
-}
-```
-
 ## File: angular/src/app/features/organization/components/organization-detail.component.ts
 ```typescript
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
@@ -3344,7 +3068,7 @@ export class OrganizationDetailComponent implements OnInit {
       this.organization.set(org || null);
       
       if (!org) {
-        this.error.set('組織不存在');
+        this.error.set('組織不存在或無法載入');
         return;
       }
 
@@ -3659,7 +3383,7 @@ export class OrganizationSettingsComponent implements OnInit {
       const org = await this.orgService.getOrganization(this.orgId).toPromise();
       
       if (!org) {
-        this.error.set('組織不存在');
+        this.error.set('組織不存在或無法載入');
         return;
       }
 
@@ -9371,7 +9095,7 @@ import {
   getDoc,
   DocumentData
 } from '@angular/fire/firestore';
-import { Observable, map, switchMap, combineLatest, of } from 'rxjs';
+import { Observable, map, switchMap, combineLatest, of, catchError, throwError } from 'rxjs';
 import { 
   Organization, 
   OrganizationMember, 
@@ -9434,10 +9158,10 @@ export class OrganizationService {
       const profile: ProfileVO = {
         name: name,
         email: '', // 組織沒有電子郵件
-        avatar: undefined,
-        bio: description,
-        location: undefined,
-        website: undefined
+        avatar: 'https://firebasestorage.googleapis.com/v0/b/elite-chiller-455712-c4.firebasestorage.app/o/avatar.jpg?alt=media&token=e1474080-6528-4f01-a719-411ea3447060',
+        bio: description || '',
+        location: '',
+        website: ''
       };
 
       // 建立 PermissionVO
@@ -9476,7 +9200,7 @@ export class OrganizationService {
         permissions,
         settings,
         projectsOwned: [],
-        description,
+        description: description || '',
         ownerId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -9492,14 +9216,18 @@ export class OrganizationService {
     }
   }
 
-  getOrganization(orgId: string): Observable<Organization | undefined> {
+  getOrganization(orgId: string): Observable<Organization> {
     const orgDoc = doc(this.firestore, `accounts/${orgId}`);
     return docData(orgDoc, { idField: 'id' }).pipe(
       map(data => {
         if (data && (data as DocumentData)['type'] === 'organization') {
           return data as Organization;
         }
-        return undefined;
+        throw new Error(`組織不存在或類型不正確: ${orgId}`);
+      }),
+      catchError((error: any) => {
+        console.error('獲取組織失敗:', error);
+        return throwError(() => new Error('無法載入組織資訊，請稍後再試'));
       })
     );
   }
@@ -9549,7 +9277,7 @@ export class OrganizationService {
         userId,
         role,
         joinedAt: new Date(),
-        invitedBy
+        invitedBy: invitedBy || '系統自動添加'
       });
     } catch (error) {
       this._error.set(`添加組織成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
@@ -10166,403 +9894,282 @@ export class OrganizationCardComponent {
 }
 ```
 
-## File: angular/src/app/features/organization/components/organization-create-dialog.component.ts
+## File: angular/src/app/features/organization/components/organization-create.component.ts
 ```typescript
-import { Component, inject, signal, computed, Output, EventEmitter, effect } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
 
 import { OrganizationService } from '../../../core/services/organization.service';
-import { ValidationService } from '../../../core/services/validation.service';
+import { PermissionService } from '../../../core/services/permission.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { 
-  OrganizationCreateRequest, 
-  OrganizationCreateFormState,
-  OrganizationCreatedEvent 
-} from '../models/organization-create.model';
+import { ValidationService } from '../../../core/services/validation.service';
 
 /**
- * 組織建立對話框組件
- * 單一職責：處理組織建立的用戶界面和表單提交
- * 遵循單一職責原則：只負責組織建立的 UI 和用戶交互
+ * 組織建立組件
+ * 允許用戶建立新的組織
  */
 @Component({
-  selector: 'app-organization-create-dialog',
+  selector: 'app-organization-create',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
-    MatDialogModule,
+    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
     MatSelectModule,
-    MatProgressSpinnerModule,
-    MatCardModule,
-    MatDividerModule
+    MatProgressSpinnerModule
   ],
   template: `
-    <div class="dialog-container">
-      <div class="dialog-header">
-        <h2 mat-dialog-title>
-          <mat-icon>business</mat-icon>
-          建立新組織
-        </h2>
-        <button mat-icon-button (click)="onCancel()" class="close-button">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
+    <div class="organization-create-container">
+      <mat-card class="create-card">
+        <mat-card-header>
+          <mat-card-title>建立新組織</mat-card-title>
+          <mat-card-subtitle>建立一個新的組織來管理您的專案和團隊</mat-card-subtitle>
+        </mat-card-header>
 
-      <mat-divider></mat-divider>
+        <mat-card-content>
+          <form class="create-form" (ngSubmit)="onSubmit()">
+            <!-- 組織名稱 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>組織名稱</mat-label>
+              <input 
+                matInput 
+                [(ngModel)]="formData.name" 
+                name="name"
+                required
+                [disabled]="isSubmitting()"
+                (input)="validateField('name')"
+                (blur)="validateField('name')">
+              <mat-icon matSuffix>business</mat-icon>
+              @if (errors['name']) {
+                <mat-error>{{ errors['name'] }}</mat-error>
+              }
+            </mat-form-field>
 
-      <div class="dialog-content">
-        <form (ngSubmit)="onSubmit()" #organizationForm="ngForm">
-          <mat-card class="form-card">
-            <mat-card-content>
-              <!-- 組織名稱 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織名稱 *</mat-label>
-                <input 
-                  matInput 
-                  [(ngModel)]="formState.values.name"
-                  name="name"
-                  placeholder="輸入組織名稱"
-                  required
-                  (input)="onInputChange()"
-                  (blur)="validateField('name')"
-                  [class.error]="formState.errors.name">
-                <mat-hint>組織的顯示名稱</mat-hint>
-                @if (formState.errors.name) {
-                  <mat-error>{{ formState.errors.name }}</mat-error>
-                }
-              </mat-form-field>
+            <!-- 組織 Slug -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>組織 Slug</mat-label>
+              <input 
+                matInput 
+                [(ngModel)]="formData.slug" 
+                name="slug"
+                required
+                [disabled]="isSubmitting()"
+                (input)="validateField('slug')"
+                (blur)="validateField('slug')">
+              <mat-icon matSuffix>link</mat-icon>
+              <mat-hint>用於 URL 的唯一識別碼</mat-hint>
+              @if (errors['slug']) {
+                <mat-error>{{ errors['slug'] }}</mat-error>
+              }
+            </mat-form-field>
 
-              <!-- 組織登入名稱 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織標識符 *</mat-label>
-                <input 
-                  matInput 
-                  [(ngModel)]="formState.values.login"
-                  name="login"
-                  placeholder="輸入組織標識符"
-                  required
-                  (input)="onInputChange()"
-                  (blur)="validateField('login')"
-                  [class.error]="formState.errors.login">
-                <mat-hint>用於 URL 的唯一標識符</mat-hint>
-                @if (formState.errors.login) {
-                  <mat-error>{{ formState.errors.login }}</mat-error>
-                }
-              </mat-form-field>
+            <!-- 組織描述 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>組織描述</mat-label>
+              <textarea 
+                matInput 
+                [(ngModel)]="formData.description" 
+                name="description"
+                rows="3"
+                [disabled]="isSubmitting()"
+                (input)="validateField('description')"
+                (blur)="validateField('description')">
+              </textarea>
+              <mat-icon matSuffix>description</mat-icon>
+              <mat-hint>簡短描述組織的用途和目標</mat-hint>
+              @if (errors['description']) {
+                <mat-error>{{ errors['description'] }}</mat-error>
+              }
+            </mat-form-field>
 
-              <!-- 組織描述 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織描述</mat-label>
-                <textarea 
-                  matInput 
-                  [(ngModel)]="formState.values.description"
-                  name="description"
-                  placeholder="描述組織的用途和目標"
-                  rows="3"
-                  (input)="onInputChange()"
-                  (blur)="validateField('description')"
-                  [class.error]="formState.errors.description">
-                </textarea>
-                <mat-hint>可選的描述信息</mat-hint>
-                @if (formState.errors.description) {
-                  <mat-error>{{ formState.errors.description }}</mat-error>
-                }
-              </mat-form-field>
+            <!-- 組織隱私設定 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>組織隱私</mat-label>
+              <mat-select 
+                [(ngModel)]="formData.privacy" 
+                name="privacy"
+                [disabled]="isSubmitting()">
+                <mat-option value="public">公開</mat-option>
+                <mat-option value="private">私有</mat-option>
+              </mat-select>
+              <mat-icon matSuffix>visibility</mat-icon>
+              <mat-hint>控制組織的公開可見性</mat-hint>
+            </mat-form-field>
+          </form>
+        </mat-card-content>
 
-              <!-- 隱私設定 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>隱私設定 *</mat-label>
-                <mat-select 
-                  [(ngModel)]="formState.values.privacy"
-                  name="privacy"
-                  required>
-                  <mat-option value="public">公開</mat-option>
-                  <mat-option value="private">私有</mat-option>
-                </mat-select>
-                <mat-hint>選擇組織的可見性</mat-hint>
-              </mat-form-field>
-            </mat-card-content>
-          </mat-card>
-        </form>
-      </div>
-
-      <mat-divider></mat-divider>
-
-      <div class="dialog-actions">
-        <button 
-          mat-button 
-          type="button" 
-          (click)="onCancel()"
-          [disabled]="formState.isSubmitting">
-          取消
-        </button>
-        <button 
-          mat-raised-button 
-          color="primary" 
-          type="button"
-          (click)="onSubmit()"
-          [disabled]="!formState.isValid || formState.isSubmitting">
-          @if (formState.isSubmitting) {
-            <mat-spinner diameter="20"></mat-spinner>
-            建立中...
-          } @else {
-            <ng-container>
+        <mat-card-actions>
+          <button 
+            mat-button 
+            (click)="goBack()"
+            [disabled]="isSubmitting()">
+            <mat-icon>arrow_back</mat-icon>
+            取消
+          </button>
+          
+          <div class="spacer"></div>
+          
+          <button 
+            mat-raised-button 
+            color="primary"
+            (click)="onSubmit()"
+            [disabled]="isSubmitting() || !isFormValid()">
+            @if (isSubmitting()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
               <mat-icon>add</mat-icon>
-              建立組織
-            </ng-container>
-          }
-        </button>
-      </div>
+            }
+            建立組織
+          </button>
+        </mat-card-actions>
+      </mat-card>
     </div>
   `,
   styles: [`
-    .dialog-container {
-      min-width: 500px;
-      max-width: 600px;
-    }
-
-    .dialog-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px 0 24px;
-    }
-
-    .dialog-header h2 {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 500;
-    }
-
-    .close-button {
-      margin-left: auto;
-    }
-
-    .dialog-content {
+    .organization-create-container {
       padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
     }
 
-    .form-card {
-      box-shadow: none;
-      border: 1px solid #e0e0e0;
-    }
+    .create-card {
+      .create-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
 
-    .full-width {
-      width: 100%;
-      margin-bottom: 16px;
-    }
+      .full-width {
+        width: 100%;
+      }
 
-    .dialog-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding: 16px 24px;
-    }
+      .spacer {
+        flex: 1;
+      }
 
-    .error {
-      border-color: #f44336 !important;
-    }
-
-    mat-spinner {
-      margin-right: 8px;
+      mat-card-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
     }
 
     @media (max-width: 600px) {
-      .dialog-container {
-        min-width: 300px;
-        max-width: 90vw;
-      }
-      
-      .dialog-content {
-        padding: 16px;
-      }
-      
-      .dialog-actions {
+      .organization-create-container {
         padding: 16px;
       }
     }
   `]
 })
-export class OrganizationCreateDialogComponent {
-  // 服務注入
-  private organizationService = inject(OrganizationService);
-  private validationService = inject(ValidationService);
+export class OrganizationCreateComponent implements OnInit {
+  private router = inject(Router);
+  private orgService = inject(OrganizationService);
+  private permissionService = inject(PermissionService);
   private notificationService = inject(NotificationService);
-  private authService = inject(AuthService);
-  private dialogRef = inject(MatDialogRef<OrganizationCreateDialogComponent>);
+  private validationService = inject(ValidationService);
 
-  // 事件發射器
-  @Output() organizationCreated = new EventEmitter<OrganizationCreatedEvent>();
+  // Signals
+  isSubmitting = signal(false);
+  errors: { [key: string]: string } = {};
 
-  // 表單狀態
-  formState: OrganizationCreateFormState = {
-    isSubmitting: false,
-    isValid: false,
-    errors: {},
-    values: {
-      name: '',
-      login: '',
-      description: '',
-      privacy: 'private'
-    }
+  // Form data
+  formData = {
+    name: '',
+    slug: '',
+    description: '',
+    privacy: 'private' as 'public' | 'private'
   };
 
-  // 計算屬性
-  readonly isFormValid = computed(() => {
-    return this.formState.values.name.trim().length > 0 &&
-           this.formState.values.login.trim().length > 0 &&
-           !this.formState.errors.name &&
-           !this.formState.errors.login &&
-           !this.formState.errors.description;
-  });
-
-  constructor() {
-    // 初始化表單有效性
-    this.updateFormValidity();
+  ngOnInit() {
+    // 檢查用戶是否已登入
+    if (!this.permissionService.hasRole('user')) {
+      this.notificationService.showError('請先登入以建立組織');
+      this.router.navigate(['/login']);
+      return;
+    }
   }
 
-  /**
-   * 驗證單個字段
-   */
+  isFormValid(): boolean {
+    return this.formData.name.trim().length > 0 && 
+           this.formData.slug.trim().length > 0 &&
+           !this.errors['name'] &&
+           !this.errors['slug'] &&
+           !this.errors['description'];
+  }
+
   validateField(field: string): void {
     switch (field) {
       case 'name':
-        const nameResult = this.validationService.validateOrganizationName(this.formState.values.name);
-        this.formState.errors.name = nameResult.errors[0] || undefined;
+        const nameResult = this.validationService.validateOrganizationName(this.formData.name);
+        this.errors['name'] = nameResult.errors[0] || '';
         break;
-      case 'login':
-        const loginResult = this.validationService.validateOrganizationLogin(this.formState.values.login);
-        this.formState.errors.login = loginResult.errors[0] || undefined;
+      case 'slug':
+        const slugResult = this.validationService.validateLogin(this.formData.slug);
+        this.errors['slug'] = slugResult.errors[0] || '';
         break;
       case 'description':
-        const descResult = this.validationService.validateOrganizationDescription(this.formState.values.description);
-        this.formState.errors.description = descResult.errors[0] || undefined;
+        const descResult = this.validationService.validateOrganizationDescription(this.formData.description);
+        this.errors['description'] = descResult.errors[0] || '';
         break;
     }
-    
-    this.updateFormValidity();
   }
 
-  /**
-   * 更新表單有效性
-   */
-  private updateFormValidity(): void {
-    // 直接計算表單有效性，不依賴 computed signal
-    this.formState.isValid = this.formState.values.name.trim().length > 0 &&
-                            this.formState.values.login.trim().length > 0 &&
-                            !this.formState.errors.name &&
-                            !this.formState.errors.login &&
-                            !this.formState.errors.description;
-  }
-
-  /**
-   * 處理輸入變化
-   */
-  onInputChange(): void {
-    this.updateFormValidity();
-  }
-
-  /**
-   * 提交表單
-   */
-  async onSubmit(): Promise<void> {
-    if (!this.formState.isValid || this.formState.isSubmitting) {
+  async onSubmit() {
+    if (!this.isFormValid() || this.isSubmitting()) {
       return;
     }
 
     // 驗證所有字段
     this.validateField('name');
-    this.validateField('login');
+    this.validateField('slug');
     this.validateField('description');
 
-    if (!this.formState.isValid) {
+    if (!this.isFormValid()) {
       this.notificationService.showValidationErrors([
-        this.formState.errors.name,
-        this.formState.errors.login,
-        this.formState.errors.description
+        this.errors['name'],
+        this.errors['slug'],
+        this.errors['description']
       ].filter(error => error) as string[]);
       return;
     }
 
-    this.formState.isSubmitting = true;
-
     try {
-      const currentUser = this.authService.currentAccount();
-      if (!currentUser) {
-        throw new Error('用戶未登入');
-      }
-
-      const request: OrganizationCreateRequest = {
-        name: this.formState.values.name.trim(),
-        login: this.formState.values.login.trim(),
-        description: this.formState.values.description.trim(),
-        privacy: this.formState.values.privacy,
-        ownerId: currentUser.id
-      };
-
-      const organizationId = await this.organizationService.createOrganization(
-        request.name,
-        request.login,
-        request.ownerId,
-        request.description
-      );
-
-      // 發射成功事件
-      this.organizationCreated.emit({
-        organization: {
-          id: organizationId,
-          name: request.name,
-          login: request.login,
-          description: request.description,
-          privacy: request.privacy,
-          ownerId: request.ownerId,
-          createdAt: new Date()
-        },
-        success: true
-      });
-
-      this.notificationService.showOrganizationCreatedSuccess(request.name);
-      this.dialogRef.close({ success: true, organizationId });
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      this.isSubmitting.set(true);
       
-      this.organizationCreated.emit({
-        organization: {} as any,
-        success: false,
-        error: errorMessage
-      });
-
-      this.notificationService.showOrganizationCreatedError(errorMessage);
+      // TODO: 實作建立組織的邏輯
+      // const orgId = await this.orgService.createOrganization(
+      //   this.formData.name.trim(),
+      //   this.formData.slug.trim(),
+      //   'current-user-id', // 需要從 AuthService 獲取
+      //   undefined, // email
+      //   this.formData.description.trim()
+      // );
+      
+      this.notificationService.showSuccess('組織已成功建立');
+      this.router.navigate(['/organizations']);
+      
+    } catch (error) {
+      this.notificationService.showError(`建立組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
     } finally {
-      this.formState.isSubmitting = false;
+      this.isSubmitting.set(false);
     }
   }
 
-  /**
-   * 取消操作
-   */
-  onCancel(): void {
-    this.dialogRef.close({ success: false });
+  goBack() {
+    this.router.navigate(['/organizations']);
   }
 }
 ```
@@ -12442,6 +12049,407 @@ export class ValidationUtils {
       isValid: errors.length === 0,
       errors
     };
+  }
+}
+```
+
+## File: angular/src/app/features/organization/components/organization-create-dialog.component.ts
+```typescript
+import { Component, inject, signal, computed, Output, EventEmitter, effect } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+
+import { OrganizationService } from '../../../core/services/organization.service';
+import { ValidationService } from '../../../core/services/validation.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { 
+  OrganizationCreateRequest, 
+  OrganizationCreateFormState,
+  OrganizationCreatedEvent 
+} from '../models/organization-create.model';
+
+/**
+ * 組織建立對話框組件
+ * 單一職責：處理組織建立的用戶界面和表單提交
+ * 遵循單一職責原則：只負責組織建立的 UI 和用戶交互
+ */
+@Component({
+  selector: 'app-organization-create-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSelectModule,
+    MatProgressSpinnerModule,
+    MatCardModule,
+    MatDividerModule
+  ],
+  template: `
+    <div class="dialog-container">
+      <div class="dialog-header">
+        <h2 mat-dialog-title>
+          <mat-icon>business</mat-icon>
+          建立新組織
+        </h2>
+        <button mat-icon-button (click)="onCancel()" class="close-button">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="dialog-content">
+        <form (ngSubmit)="onSubmit()" #organizationForm="ngForm">
+          <mat-card class="form-card">
+            <mat-card-content>
+              <!-- 組織名稱 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>組織名稱 *</mat-label>
+                <input 
+                  matInput 
+                  [(ngModel)]="formState.values.name"
+                  name="name"
+                  placeholder="輸入組織名稱"
+                  required
+                  (input)="onInputChange()"
+                  (blur)="validateField('name')"
+                  [class.error]="formState.errors.name">
+                <mat-hint>組織的顯示名稱</mat-hint>
+                @if (formState.errors.name) {
+                  <mat-error>{{ formState.errors.name }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 組織登入名稱 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>組織標識符 *</mat-label>
+                <input 
+                  matInput 
+                  [(ngModel)]="formState.values.login"
+                  name="login"
+                  placeholder="輸入組織標識符"
+                  required
+                  (input)="onInputChange()"
+                  (blur)="validateField('login')"
+                  [class.error]="formState.errors.login">
+                <mat-hint>用於 URL 的唯一標識符</mat-hint>
+                @if (formState.errors.login) {
+                  <mat-error>{{ formState.errors.login }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 組織描述 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>組織描述</mat-label>
+                <textarea 
+                  matInput 
+                  [(ngModel)]="formState.values.description"
+                  name="description"
+                  placeholder="描述組織的用途和目標"
+                  rows="3"
+                  (input)="onInputChange()"
+                  (blur)="validateField('description')"
+                  [class.error]="formState.errors.description">
+                </textarea>
+                <mat-hint>可選的描述信息</mat-hint>
+                @if (formState.errors.description) {
+                  <mat-error>{{ formState.errors.description }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 隱私設定 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>隱私設定 *</mat-label>
+                <mat-select 
+                  [(ngModel)]="formState.values.privacy"
+                  name="privacy"
+                  required>
+                  <mat-option value="public">公開</mat-option>
+                  <mat-option value="private">私有</mat-option>
+                </mat-select>
+                <mat-hint>選擇組織的可見性</mat-hint>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+        </form>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="dialog-actions">
+        <button 
+          mat-button 
+          type="button" 
+          (click)="onCancel()"
+          [disabled]="formState.isSubmitting">
+          取消
+        </button>
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="button"
+          (click)="onSubmit()"
+          [disabled]="!formState.isValid || formState.isSubmitting">
+          @if (formState.isSubmitting) {
+            <mat-spinner diameter="20"></mat-spinner>
+            建立中...
+          } @else {
+            <ng-container>
+              <mat-icon>add</mat-icon>
+              建立組織
+            </ng-container>
+          }
+        </button>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .dialog-container {
+      min-width: 500px;
+      max-width: 600px;
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px 0 24px;
+    }
+
+    .dialog-header h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+
+    .close-button {
+      margin-left: auto;
+    }
+
+    .dialog-content {
+      padding: 24px;
+    }
+
+    .form-card {
+      box-shadow: none;
+      border: 1px solid #e0e0e0;
+    }
+
+    .full-width {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 16px 24px;
+    }
+
+    .error {
+      border-color: #f44336 !important;
+    }
+
+    mat-spinner {
+      margin-right: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .dialog-container {
+        min-width: 300px;
+        max-width: 90vw;
+      }
+      
+      .dialog-content {
+        padding: 16px;
+      }
+      
+      .dialog-actions {
+        padding: 16px;
+      }
+    }
+  `]
+})
+export class OrganizationCreateDialogComponent {
+  // 服務注入
+  private organizationService = inject(OrganizationService);
+  private validationService = inject(ValidationService);
+  private notificationService = inject(NotificationService);
+  private authService = inject(AuthService);
+  private dialogRef = inject(MatDialogRef<OrganizationCreateDialogComponent>);
+
+  // 事件發射器
+  @Output() organizationCreated = new EventEmitter<OrganizationCreatedEvent>();
+
+  // 表單狀態
+  formState: OrganizationCreateFormState = {
+    isSubmitting: false,
+    isValid: false,
+    errors: {},
+    values: {
+      name: '',
+      login: '',
+      description: '',
+      privacy: 'private'
+    }
+  };
+
+  // 計算屬性
+  readonly isFormValid = computed(() => {
+    return this.formState.values.name.trim().length > 0 &&
+           this.formState.values.login.trim().length > 0 &&
+           !this.formState.errors.name &&
+           !this.formState.errors.login &&
+           !this.formState.errors.description;
+  });
+
+  constructor() {
+    // 初始化表單有效性
+    this.updateFormValidity();
+  }
+
+  /**
+   * 驗證單個字段
+   */
+  validateField(field: string): void {
+    switch (field) {
+      case 'name':
+        const nameResult = this.validationService.validateOrganizationName(this.formState.values.name);
+        this.formState.errors.name = nameResult.errors[0] || '';
+        break;
+      case 'login':
+        const loginResult = this.validationService.validateOrganizationLogin(this.formState.values.login);
+        this.formState.errors.login = loginResult.errors[0] || '';
+        break;
+      case 'description':
+        const descResult = this.validationService.validateOrganizationDescription(this.formState.values.description);
+        this.formState.errors.description = descResult.errors[0] || '';
+        break;
+    }
+    
+    this.updateFormValidity();
+  }
+
+  /**
+   * 更新表單有效性
+   */
+  private updateFormValidity(): void {
+    // 直接計算表單有效性，不依賴 computed signal
+    this.formState.isValid = this.formState.values.name.trim().length > 0 &&
+                            this.formState.values.login.trim().length > 0 &&
+                            !this.formState.errors.name &&
+                            !this.formState.errors.login &&
+                            !this.formState.errors.description;
+  }
+
+  /**
+   * 處理輸入變化
+   */
+  onInputChange(): void {
+    this.updateFormValidity();
+  }
+
+  /**
+   * 提交表單
+   */
+  async onSubmit(): Promise<void> {
+    if (!this.formState.isValid || this.formState.isSubmitting) {
+      return;
+    }
+
+    // 驗證所有字段
+    this.validateField('name');
+    this.validateField('login');
+    this.validateField('description');
+
+    if (!this.formState.isValid) {
+      this.notificationService.showValidationErrors([
+        this.formState.errors.name,
+        this.formState.errors.login,
+        this.formState.errors.description
+      ].filter(error => error) as string[]);
+      return;
+    }
+
+    this.formState.isSubmitting = true;
+
+    try {
+      const currentUser = this.authService.currentAccount();
+      if (!currentUser) {
+        throw new Error('用戶未登入');
+      }
+
+      const request: OrganizationCreateRequest = {
+        name: this.formState.values.name.trim(),
+        login: this.formState.values.login.trim(),
+        description: this.formState.values.description.trim(),
+        privacy: this.formState.values.privacy,
+        ownerId: currentUser.id
+      };
+
+      const organizationId = await this.organizationService.createOrganization(
+        request.name,
+        request.login,
+        request.ownerId,
+        request.description
+      );
+
+      // 發射成功事件
+      this.organizationCreated.emit({
+        organization: {
+          id: organizationId,
+          name: request.name,
+          login: request.login,
+          description: request.description,
+          privacy: request.privacy,
+          ownerId: request.ownerId,
+          createdAt: new Date()
+        },
+        success: true
+      });
+
+      this.notificationService.showOrganizationCreatedSuccess(request.name);
+      this.dialogRef.close({ success: true, organizationId });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      
+      this.organizationCreated.emit({
+        organization: {} as any,
+        success: false,
+        error: errorMessage
+      });
+
+      this.notificationService.showOrganizationCreatedError(errorMessage);
+    } finally {
+      this.formState.isSubmitting = false;
+    }
+  }
+
+  /**
+   * 取消操作
+   */
+  onCancel(): void {
+    this.dialogRef.close({ success: false });
   }
 }
 ```

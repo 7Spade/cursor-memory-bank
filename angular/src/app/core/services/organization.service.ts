@@ -16,7 +16,7 @@ import {
   getDoc,
   DocumentData
 } from '@angular/fire/firestore';
-import { Observable, map, switchMap, combineLatest, of } from 'rxjs';
+import { Observable, map, switchMap, combineLatest, of, catchError, throwError } from 'rxjs';
 import { 
   Organization, 
   OrganizationMember, 
@@ -79,10 +79,10 @@ export class OrganizationService {
       const profile: ProfileVO = {
         name: name,
         email: '', // 組織沒有電子郵件
-        avatar: undefined,
-        bio: description,
-        location: undefined,
-        website: undefined
+        avatar: 'https://firebasestorage.googleapis.com/v0/b/elite-chiller-455712-c4.firebasestorage.app/o/avatar.jpg?alt=media&token=e1474080-6528-4f01-a719-411ea3447060',
+        bio: description || '',
+        location: '',
+        website: ''
       };
 
       // 建立 PermissionVO
@@ -121,7 +121,7 @@ export class OrganizationService {
         permissions,
         settings,
         projectsOwned: [],
-        description,
+        description: description || '',
         ownerId,
         createdAt: new Date(),
         updatedAt: new Date()
@@ -137,14 +137,18 @@ export class OrganizationService {
     }
   }
 
-  getOrganization(orgId: string): Observable<Organization | undefined> {
+  getOrganization(orgId: string): Observable<Organization> {
     const orgDoc = doc(this.firestore, `accounts/${orgId}`);
     return docData(orgDoc, { idField: 'id' }).pipe(
       map(data => {
         if (data && (data as DocumentData)['type'] === 'organization') {
           return data as Organization;
         }
-        return undefined;
+        throw new Error(`組織不存在或類型不正確: ${orgId}`);
+      }),
+      catchError((error: any) => {
+        console.error('獲取組織失敗:', error);
+        return throwError(() => new Error('無法載入組織資訊，請稍後再試'));
       })
     );
   }
@@ -194,7 +198,7 @@ export class OrganizationService {
         userId,
         role,
         joinedAt: new Date(),
-        invitedBy
+        invitedBy: invitedBy || '系統自動添加'
       });
     } catch (error) {
       this._error.set(`添加組織成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);

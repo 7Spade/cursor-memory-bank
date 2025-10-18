@@ -277,15 +277,15 @@ export class OrganizationCreateDialogComponent {
     switch (field) {
       case 'name':
         const nameResult = this.validationService.validateOrganizationName(this.formState.values.name);
-        this.formState.errors.name = nameResult.errors[0] || undefined;
+        this.formState.errors.name = nameResult.errors[0] || '';
         break;
       case 'login':
         const loginResult = this.validationService.validateOrganizationLogin(this.formState.values.login);
-        this.formState.errors.login = loginResult.errors[0] || undefined;
+        this.formState.errors.login = loginResult.errors[0] || '';
         break;
       case 'description':
         const descResult = this.validationService.validateOrganizationDescription(this.formState.values.description);
-        this.formState.errors.description = descResult.errors[0] || undefined;
+        this.formState.errors.description = descResult.errors[0] || '';
         break;
     }
     

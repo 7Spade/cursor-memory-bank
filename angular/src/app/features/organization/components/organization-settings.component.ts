@@ -266,7 +266,7 @@ export class OrganizationSettingsComponent implements OnInit {
       const org = await this.orgService.getOrganization(this.orgId).toPromise();
       
       if (!org) {
-        this.error.set('組織不存在');
+        this.error.set('組織不存在或無法載入');
         return;
       }
 
