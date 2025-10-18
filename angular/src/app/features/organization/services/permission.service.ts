@@ -8,13 +8,13 @@ import {
 } from '../models/organization.model';
 
 /**
- * 權限計算服務
+ * 權限服務
  * 實作混合權限系統：結合遞迴計算和選擇性快取
  */
 @Injectable({
   providedIn: 'root'
 })
-export class PermissionCalculationService {
+export class PermissionService {
   private permissionCache = new Map<string, PermissionResult>();
   private cacheExpiry = new Map<string, number>();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5分鐘快取
@@ -52,7 +52,7 @@ export class PermissionCalculationService {
     }
     
     // 計算權限
-    const result = await this.calculatePermission(userId, resourceId, action);
+    const result = await this.calculateUserPermission(userId, resourceId, action);
     
     // 更新快取
     this.updateCache(cacheKey, result);
@@ -63,31 +63,31 @@ export class PermissionCalculationService {
   /**
    * 遞迴權限計算
    */
-  private async calculatePermission(
+  private async calculateUserPermission(
     userId: string, 
     resourceId: string, 
     action: string
   ): Promise<PermissionResult> {
     // 1. 檢查直接權限
-    const directPermission = await this.checkDirectPermission(userId, resourceId, action);
+    const directPermission = await this.checkUserDirectPermission(userId, resourceId, action);
     if (directPermission.granted) {
       return directPermission;
     }
     
     // 2. 檢查團隊繼承權限
-    const teamPermission = await this.checkTeamInheritedPermission(userId, resourceId, action);
+    const teamPermission = await this.checkUserTeamPermission(userId, resourceId, action);
     if (teamPermission.granted) {
       return teamPermission;
     }
     
     // 3. 檢查組織角色權限
-    const rolePermission = await this.checkOrganizationRolePermission(userId, resourceId, action);
+    const rolePermission = await this.checkUserRolePermission(userId, resourceId, action);
     if (rolePermission.granted) {
       return rolePermission;
     }
     
     // 4. 檢查安全管理器權限
-    const securityPermission = await this.checkSecurityManagerPermission(userId, resourceId, action);
+    const securityPermission = await this.checkUserSecurityPermission(userId, resourceId, action);
     
     return securityPermission;
   }
@@ -95,7 +95,7 @@ export class PermissionCalculationService {
   /**
    * 檢查直接權限
    */
-  private async checkDirectPermission(
+  private async checkUserDirectPermission(
     userId: string, 
     resourceId: string, 
     action: string
@@ -131,7 +131,7 @@ export class PermissionCalculationService {
   /**
    * 檢查團隊繼承權限
    */
-  private async checkTeamInheritedPermission(
+  private async checkUserTeamPermission(
     userId: string, 
     resourceId: string, 
     action: string
@@ -189,7 +189,7 @@ export class PermissionCalculationService {
   /**
    * 檢查組織角色權限
    */
-  private async checkOrganizationRolePermission(
+  private async checkUserRolePermission(
     userId: string, 
     resourceId: string, 
     action: string
@@ -227,7 +227,7 @@ export class PermissionCalculationService {
   /**
    * 檢查安全管理器權限
    */
-  private async checkSecurityManagerPermission(
+  private async checkUserSecurityPermission(
     userId: string, 
     resourceId: string, 
     action: string

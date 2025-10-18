@@ -17,13 +17,13 @@ import {
 } from '../models/organization.model';
 
 /**
- * GitHub 對齊的 API 服務
+ * 組織 API 服務
  * 實作對齊 GitHub REST API 模式的組織管理 API
  */
 @Injectable({
   providedIn: 'root'
 })
-export class GitHubAlignedApiService {
+export class OrganizationApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api';
 

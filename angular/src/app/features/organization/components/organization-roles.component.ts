@@ -13,7 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatBadgeModule } from '@angular/material/badge';
 
 import { OrganizationRole, Permission } from '../models/organization.model';
-import { PermissionCalculationService } from '../services/permission-calculation.service';
+import { PermissionService } from '../services/permission.service';
 
 /**
  * 組織角色系統組件
@@ -412,7 +412,7 @@ import { PermissionCalculationService } from '../services/permission-calculation
   `]
 })
 export class OrganizationRolesComponent implements OnInit {
-  private permissionService = inject(PermissionCalculationService);
+  private permissionService = inject(PermissionService);
   private dialog = inject(MatDialog);
   private snackBar = inject(MatSnackBar);
 

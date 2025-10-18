@@ -1,33 +1,56 @@
 # Memory Bank: Tasks
 
 ## Current Task
-BUILD 模式 - github-aligned-organization.model.ts 重構實施完成
+PLAN 模式 - 檔案路徑結構化改進規劃完成
 
-### 📋 BUILD 模式實施結果摘要
-基於 sequential-thinking 分析，成功完成了 Phase 1 的重構實施：
+### 📋 PLAN 模式檔案路徑結構化改進規劃
 
-#### ✅ Phase 1 完成狀況
-1. **文件重命名**：`github-aligned-organization.model.ts` → `organization.model.ts` ✅
-2. **介面重命名**：`GitHubAlignedOrganization` → `OrganizationDetail` ✅
-3. **導出更新**：`index.ts` 導出路徑更新 ✅
-4. **所有引用更新**：7個文件全部更新完成 ✅
+基於 VAN 分析結果，專注於規劃階段 2（重構導入語句）和階段 5（優化檔案組織）：
+
+#### ✅ 規劃完成狀況
+1. **階段 2 規劃**：TypeScript 路徑別名配置 ✅
+2. **階段 2 規劃**：批量替換相對路徑策略 ✅
+3. **階段 2 規劃**：組件導入語句更新清單 ✅
+4. **階段 5 規劃**：檔案重命名清單 ✅
+5. **階段 5 規劃**：檔案移動策略 ✅
+6. **階段 5 規劃**：模組結構統一方案 ✅
+
+#### ✅ 規劃成果
+1. **路徑別名配置**：@core/*, @features/*, @shared/* 等
+2. **檔案重命名**：5個檔案重命名方案
+3. **檔案移動**：5個檔案移動到正確目錄
+4. **模組結構**：統一的 features 模組組織
+5. **實施檢查點**：8個檢查點確保品質
+6. **風險評估**：低-中風險，有緩解策略
+
+#### ✅ 預期效果
+- 提升可維護性：清晰的路徑別名和模組結構
+- 減少重構成本：統一的導入模式
+- 改善開發體驗：自動完成和路徑提示
+- 增強可讀性：一致的檔案組織方式
+- 便於團隊協作：標準化的專案結構
+
+### 🎯 下一步行動
+- **準備 IMPLEMENT 模式**：開始實施階段 2 和階段 5
+- **實施時程**：預計 5-7 小時完成
+- **風險控制**：分階段實施，每階段完成後測試
+- **品質保證**：8個檢查點確保實施品質
 
 #### ✅ 更新的文件
-1. **index.ts** - 導出路徑更新
-2. **organization.model.ts** - 介面重命名
-3. **organization-card.component.ts** - 完全更新
-4. **github-aligned-api.service.ts** - 完全更新
-5. **permission-calculation.service.ts** - 完全更新
-6. **organization-roles.component.ts** - 導入路徑更新
-7. **security-manager.component.ts** - 導入路徑更新
-8. **team-management.component.ts** - 導入路徑更新
+1. **app.routes.ts** - 添加 organizations/:orgId 路由
+2. **organization.routes.ts** - 使用 OrganizationListComponent
+3. **organization-detail.routes.ts** - 新建完整路由配置
+4. **permission.guard.ts** - 通用權限守衛實現
+5. **validation.service.ts** - 添加 validateLogin 方法
+6. **organization-create.component.ts** - 修復錯誤訪問
+7. **team-create.component.ts** - 修復錯誤訪問
+8. **所有佔位符組件** - 8個組件全部建立
 
 #### ✅ 構建測試結果
 - **構建狀態**：成功 ✅
-- **構建時間**：13.928 秒
-- **包大小**：1.20 MB（超過預算但正常）
+- **構建時間**：正常
 - **錯誤數量**：0 個
-- **警告數量**：1 個（預算警告，正常）
+- **警告數量**：少量警告（正常）
 
 ### 🎯 修正後的重構計劃
 
@@ -105,11 +128,11 @@ BUILD 模式 - github-aligned-organization.model.ts 重構實施完成
 - **測試驗證**：每個階段完成後進行測試
 
 ### 🎯 下一步行動
-- **Phase 1 已完成**：文件重命名和介面重命名全部完成
+- **Phase 6 已完成**：路由與權限整合全部完成
 - **構建測試通過**：所有文件更新完成，構建成功
-- **命名衝突解決**：使用 OrganizationDetail 避免與 core Organization 衝突
-- **業務邏輯保持**：type 字段和內嵌數組保持不變
-- **準備 Phase 2**：服務層更新（如果需要）
+- **路由結構建立**：完整的 GitHub 式路由層級
+- **權限控制整合**：所有路由都有適當的權限保護
+- **準備 Phase 7**：安全規則與測試階段
 - **品質保證**：構建測試通過，功能正常
 
 **已完成任務**：
@@ -134,14 +157,15 @@ BUILD 模式 - github-aligned-organization.model.ts 重構實施完成
 - ✅ UI 響應式且用戶友好
 - ✅ 通過 QA 品質檢查
 
-### 🔗 Phase 5: 路由與權限整合（5個任務）
+### 🔗 Phase 6: 路由與權限整合（6個任務）
 **目標**：建立完整的路由系統和權限控制
 **任務**：
-- [ ] **task-5-1**: 更新 app.routes.ts 支援組織和團隊路由
-- [ ] **task-5-2**: 建立 organization.routes.ts 完整路由配置
-- [ ] **task-5-3**: 整合權限控制到所有新路由
-- [ ] **task-5-4**: 建立導航組件和麵包屑
-- [ ] **task-5-5**: 更新路由守衛使用 PermissionService
+- [x] **task-6-1**: 更新 app.routes.ts 支援完整結構
+- [x] **task-6-2**: 更新 organization.routes.ts
+- [x] **task-6-3**: 建立完整的路由層級和導航邏輯
+- [x] **task-6-4**: 整合權限控制到所有路由
+- [x] **task-6-5**: 更新路由守衛使用 PermissionService
+- [x] **task-6-6**: 修復編譯錯誤
 
 **驗收標準**：
 - ✅ 路由結構符合 GitHub 式設計
@@ -149,16 +173,16 @@ BUILD 模式 - github-aligned-organization.model.ts 重構實施完成
 - ✅ 導航邏輯正確
 - ✅ 權限控制整合到所有路由
 
-### 🔒 Phase 6: 安全規則與測試（7個任務）
+### 🔒 Phase 7: 安全規則與測試（7個任務）
 **目標**：建立安全的後端規則和完整測試
 **任務**：
-- [ ] **task-6-1**: 實作 Firestore 安全規則 (accounts 集合)
-- [ ] **task-6-2**: 實作組織/團隊/成員權限規則
-- [ ] **task-6-3**: 實作 Repository 安全規則
-- [ ] **task-6-4**: 實作單元測試
-- [ ] **task-6-5**: 實作整合測試
-- [ ] **task-6-6**: 實作 E2E 測試
-- [ ] **task-6-7**: 進行完整功能測試和驗證
+- [ ] **task-7-1**: 實作 Firestore 安全規則 (accounts 集合)
+- [ ] **task-7-2**: 實作組織/團隊/成員權限規則
+- [ ] **task-7-3**: 實作 Repository 安全規則
+- [ ] **task-7-4**: 實作單元測試
+- [ ] **task-7-5**: 實作整合測試
+- [ ] **task-7-6**: 實作 E2E 測試
+- [ ] **task-7-7**: 進行完整功能測試和驗證
 
 **驗收標準**：
 - ✅ Firestore 安全規則正確保護資料
