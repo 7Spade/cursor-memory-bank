@@ -23,6 +23,7 @@
 5. **IMPLEMENT** (⚒️) - 代碼實施：系統性地構建計劃的組件
 6. **REFLECT** (📝) - 審查：回顧並記錄經驗教訓
 7. **ARCHIVE** (📁) - 歸檔：建立全面的文件
+8. **REPO** (📚) - 倉庫分析：全面的倉庫分析和文檔生成
 
 ### 增強模式配置
 - **基礎配置**：使用本文件的核心模式定義
@@ -38,6 +39,7 @@
 - `creative-mode-detailed.mdc` - CREATIVE 模式詳細指令
 - `implement-mode-detailed.mdc` - IMPLEMENT 模式詳細指令
 - `reflect-archive-mode-detailed.mdc` - REFLECT+ARCHIVE 模式詳細指令
+- `repo-mode-detailed.mdc` - REPO 模式詳細指令
 
 ## 工作流程
 - **Level 1 任務**：INIT → VAN → IMPLEMENT → REFLECT

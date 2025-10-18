@@ -31,6 +31,7 @@ Graph Bank System 使用多個專門的 AI 代理來處理開發過程的不同�
 | **IMPLEMENT** | `IMPLEMENT.MEMORY` | 實施歷史、代碼風格 |
 | **REFLECT** | `REFLECT.MEMORY` | 審查歷史、改進記錄 |
 | **ARCHIVE** | `ARCHIVE.MEMORY` | 歸檔歷史、文件結構 |
+| **REPO** | `REPO.MEMORY` | 倉庫分析歷史、文檔偏好 |
 
 ### 🔄 記憶體檢查流程
 
@@ -385,11 +386,51 @@ function validateMemoryStructure(memoryData) {
 - 需要建立完整文件時
 - 知識轉移時
 
+### REPO Agent (📚 倉庫分析代理) 操作流程
+**角色**：倉庫分析和文檔生成專家
+
+**詳細操作步驟**：
+1. **MCP Memory 檢查** (`REPO.MEMORY`)
+   - 載入倉庫分析歷史記錄
+   - 檢查文檔生成偏好
+   - 獲取過往分析經驗
+
+2. **模式選擇**
+   - 提供六種分析模式選單
+   - 根據需求選擇適當模式
+   - 配置分析參數
+
+3. **倉庫分析執行**
+   - 使用 Repomix 進行倉庫分析
+   - 生成結構化文檔
+   - 優化令牌使用效率
+
+4. **文檔生成和整合**
+   - 生成分析報告
+   - 整合到 Graph Bank 系統
+   - 建立知識庫索引
+
+**使用時機**：
+- 新專案架構分析
+- 代碼審查和性能分析
+- 技術文檔生成
+- MCP 服務器整合分析
+- AI 驅動的智能分析
+
+**六種分析模式**：
+- **完整模式** (351,116 tokens) - 深度分析，完整理解
+- **壓縮模式** (307,073 tokens) - 快速審查，代碼分析
+- **源碼模式** (44,080 tokens) - 功能開發，代碼生成
+- **極致節省** (41,433 tokens) - 成本敏感，快速概覽
+- **MCP 整合** (50,000 tokens) - MCP 服務器配置分析
+- **智能分析** (200,000 tokens) - AI 驅動的深度分析
+
 ## 代理協作模式
 
 ### 順序協作
 ```
 VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
+REPO → VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
 ```
 
 ### 並行協作
@@ -412,6 +453,7 @@ VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
 - **IMPLEMENT**：所有工具
 - **REFLECT**：Codebase Search, Read File, Terminal, List Directory
 - **ARCHIVE**：Codebase Search, Read File, Terminal, List Directory
+- **REPO**：Codebase Search, Read File, Terminal, List Directory, Docker Commands, Repomix Integration
 
 ### 環境變數
 - `NODE_OPTIONS`：Node.js 記憶體配置
