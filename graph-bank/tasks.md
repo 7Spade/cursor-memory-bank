@@ -1,7 +1,16 @@
 # Memory Bank: Tasks
 
 ## Current Task
-INIT 模式完成 - 系統初始化成功，準備進入 VAN 模式
+BUILD 模式 - 修復 .cursorrules 和 AGENTS.md 中的矛盾、衝突和混淆問題
+
+## Status
+- [x] 修復圖標混淆：為 REFLECT 模式分配唯一圖標 (🔍 → 📝)
+- [x] 修復工作流程衝突：統一 Level 1 任務處理流程 (添加 REFLECT 階段)
+- [x] 補充 MCP Memory Server 指令：在 .cursorrules 中添加完整指令列表
+- [x] 修復文件路徑衝突：統一文件位置規範 (明確 graph-bank/ 目錄)
+- [x] 修復文件命名不一致：統一命名規範
+- [x] 補充 INIT Agent 檢查時機：在 .cursorrules 中定義
+- [x] BUILD 模式修復完成
 
 ## Status
 - [x] VAN Agent 初始化完成

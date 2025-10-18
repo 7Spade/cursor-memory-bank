@@ -21,7 +21,7 @@
 3. **PLAN** (📋) - 任務規劃：建立詳細的實施計劃
 4. **CREATIVE** (🎨) - 設計決策：探索複雜組件的設計選項
 5. **IMPLEMENT** (⚒️) - 代碼實施：系統性地構建計劃的組件
-6. **REFLECT** (🔍) - 審查：回顧並記錄經驗教訓
+6. **REFLECT** (📝) - 審查：回顧並記錄經驗教訓
 7. **ARCHIVE** (📁) - 歸檔：建立全面的文件
 
 ### 增強模式配置
@@ -40,16 +40,23 @@
 - `reflect-archive-mode-detailed.mdc` - REFLECT+ARCHIVE 模式詳細指令
 
 ## 工作流程
-- **Level 1 任務**：INIT → VAN → IMPLEMENT
+- **Level 1 任務**：INIT → VAN → IMPLEMENT → REFLECT
 - **Level 2 任務**：INIT → VAN → PLAN → IMPLEMENT → REFLECT
 - **Level 3-4 任務**：INIT → VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
 
 ## 核心文件
-- `tasks.md`：任務追蹤的中央真實來源
-- `activeContext.md`：維護當前開發階段的焦點
-- `progress.md`：追蹤實施狀態
-- `creative-*.md`：CREATIVE 模式期間生成的設計決策文件
-- `reflect-*.md`：REFLECT 模式期間創建的審查文件
+**📁 重要：所有核心 Graph Bank 文件必須位於 `graph-bank/` 目錄下**
+
+- `graph-bank/tasks.md`：任務追蹤的中央真實來源
+- `graph-bank/activeContext.md`：維護當前開發階段的焦點
+- `graph-bank/progress.md`：追蹤實施狀態
+- `graph-bank/projectbrief.md`：專案簡介和概述
+- `graph-bank/productContext.md`：產品上下文和需求
+- `graph-bank/systemPatterns.md`：系統模式和架構
+- `graph-bank/techContext.md`：技術上下文和決策
+- `graph-bank/creative/creative-[feature_name].md`：CREATIVE 模式期間生成的設計決策文件
+- `graph-bank/reflection/reflection-[task_id].md`：REFLECT 模式期間創建的審查文件
+- `graph-bank/archive/archive-[task_id].md`：任務歸檔文件
 
 ## 開發規範
 - 使用繁體中文進行交流
@@ -65,6 +72,18 @@
 2. **載入 MCP Memory 上下文**
 3. **建立對話基線**
 
+### MCP Memory Server 指令
+- **MEMORY.CHECK** - 檢查 MCP Memory Server 狀態和連接
+- **MEMORY.LOAD** - 載入 MCP Memory Server 上下文和歷史數據
+- **MEMORY.UPDATE** - 更新 MCP Memory Server 記憶內容
+- **MEMORY.SAVE** - 儲存新信息到 MCP Memory Server
+- **MEMORY.FIND** - 語義搜索記憶內容
+- **MEMORY.RECALL** - 基於時間範圍回憶記憶
+- **MEMORY.TAG** - 按標籤檢索記憶
+- **MEMORY.DELETE** - 刪除特定記憶
+- **MEMORY.HEALTH** - 檢查記憶系統健康狀態
+- **MEMORY.SUMMARY** - 生成記憶摘要
+
 > **詳細操作指南請參考 `AGENTS.md`**
 
 ## Graph Bank 文件管理協議
@@ -76,6 +95,7 @@
 > **詳細操作指南請參考 `AGENTS.md`**
 
 ## Agent 檢查時機
+- **INIT Agent**: 系統初始化前檢查 MCP Memory，初始化後更新 Graph Bank
 - **VAN Agent**: 專案分析前檢查 MCP Memory，分析後更新 Graph Bank
 - **PLAN Agent**: 任務規劃前檢查 MCP Memory，規劃後更新 Graph Bank
 - **CREATIVE Agent**: 設計決策前檢查 MCP Memory，決策後更新 Graph Bank
