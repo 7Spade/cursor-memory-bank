@@ -1,7 +1,7 @@
 # Memory Bank: Active Context
 
 ## Current Focus
-VAN 模式初始化完成 - 建議切換至 PLAN 模式
+VAN 模式 - account.md 架構分析完成
 
 ## Status
 - ✅ VAN 模式初始化完成
@@ -51,12 +51,39 @@ VAN 模式初始化完成 - 建議切換至 PLAN 模式
 - 新增 `angular/src/app/core/services/organization.service.ts`：組織/成員/團隊 CRUD 與查詢
 - 保持 Firebase 以 `app.config.ts` 為主配置（`provideFirebaseApp` 等）
 
+### account.md 架構分析結果
+**需要變更的檔案清單**：
+
+#### 🗑️ 需要刪除的檔案
+- `angular/src/app/auth/` 整個目錄（重複的認證組件）
+  - `auth.guard.ts`, `auth.service.ts`, `login.component.ts`, `role.guard.ts`, `signup.component.ts`, `unauthorized.component.ts`
+
+#### ✏️ 需要修改的檔案
+- `angular/src/app/features/user/auth/login.component.ts`：改用 `core/services/auth.service`，修復 loading 狀態
+- `angular/src/app/features/user/auth/signup.component.ts`：改用 `core/services/auth.service`，修復 loading 狀態
+- `angular/src/app/features/user/auth/role.guard.ts`：改用 `accounts/{uid}` 路徑與新模型
+- `angular/src/app/features/user/auth/auth.service.ts`：標記為 deprecated 或移除
+- `angular/src/app/app.routes.ts`：更新路由以支援組織/團隊結構
+- `angular/src/app/features/organization/routes/organization.routes.ts`：整合 ACL 守衛
+
+#### ➕ 需要新增的檔案
+- `angular/src/app/core/services/acl.service.ts`：ACL 權限控制核心
+- `angular/src/app/core/guards/acl.guard.ts`：ACL 路由守衛
+- `angular/src/app/routes/organization-detail/organization-detail.component.ts`：組織詳情頁
+- `angular/src/app/routes/members-list/members-list.component.ts`：成員管理頁
+- `angular/src/app/routes/teams-list/teams-list.component.ts`：團隊管理頁
+- `angular/src/app/routes/team-create/team-create.component.ts`：團隊建立頁
+- `angular/src/app/routes/organization-settings/organization-settings.component.ts`：組織設定頁
+- `firebase.rules`：Firestore 安全規則（accounts 集合結構）
+
 ### 複雜度評估
-- 等級: Level 2 - Simple Enhancement（已完成骨架落地，後續需 PLAN 遷移）
-- 範圍: 清理重複認證組件、修正 `LoginComponent`/`SignupComponent` 之 loading 狀態
+- 等級: Level 4 - Complex System（完整 GitHub 式權限系統重構）
+- 範圍: 認證系統、組織管理、團隊管理、ACL 權限控制、UI 元件、路由重構
 
 ### 下一步
-- 切換至 PLAN 模式，擬定遷移計畫：
-  - 清理 `app/auth/` 重複，統一 `features/user/auth/` 或改用核心服務
-  - 將現有 UI 與路由改接新服務 (`core/services/*`)
-  - 驗證登入/註冊/角色與 Firestore 文件一致
+- 建議切換至 PLAN 模式，制定分階段實施計畫：
+  - Phase 1: 清理重複檔案，統一認證服務
+  - Phase 2: 實作 ACL 服務與守衛
+  - Phase 3: 建立組織/團隊管理 UI
+  - Phase 4: 整合路由與權限控制
+  - Phase 5: Firestore 安全規則與測試
