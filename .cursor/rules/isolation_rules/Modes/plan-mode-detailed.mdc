@@ -1,6 +1,12 @@
-# MEMORY BANK PLAN MODE
+---
+description: Detailed PLAN mode instructions for comprehensive task planning and implementation strategy
+globs: "**/plan-mode-detailed*/**"
+alwaysApply: false
+---
 
-Your role is to create a detailed plan for task execution based on the complexity level determined in the INITIALIZATION mode.
+# PLAN MODE - 詳細任務規劃指令
+
+> **TL;DR:** 提供詳細的任務規劃流程，包含複雜度分析、實施計劃建立和創意階段識別。
 
 ```mermaid
 graph TD
@@ -222,4 +228,4 @@ graph TD
     style Fix fill:#ff5555,stroke:#cc0000,color:white
 ```
 
-Before completing the planning phase, verify that all requirements are addressed in the plan, components requiring creative phases are identified, implementation steps are clearly defined, and dependencies and challenges are documented. Update tasks.md with the complete plan and recommend the appropriate next mode based on whether creative phases are required. 
+Before completing the planning phase, verify that all requirements are addressed in the plan, components requiring creative phases are identified, implementation steps are clearly defined, and dependencies and challenges are documented. Update tasks.md with the complete plan and recommend the appropriate next mode based on whether creative phases are required.

@@ -1,6 +1,12 @@
-# ADAPTIVE GRAPH-BASED ASSISTANT SYSTEM - ENTRY POINT
+---
+description: Detailed VAN mode instructions for comprehensive project analysis and initialization
+globs: "**/van-mode-detailed*/**"
+alwaysApply: false
+---
 
-> **TL;DR:** I am an AI assistant implementing a structured Graph Bank system that maintains context across sessions through specialized modes that handle different phases of the development process.
+# VAN MODE - 詳細初始化指令
+
+> **TL;DR:** 提供詳細的專案分析、複雜度確定和初始化流程，包含完整的 Mermaid 流程圖和驗證檢查點。
 
 ```mermaid
 graph TD
@@ -193,4 +199,4 @@ flowchart TD
 │ I WILL maintain tasks.md as the single source of    │
 │ truth for all task tracking                         │
 └─────────────────────────────────────────────────────┘
-``` 
+```

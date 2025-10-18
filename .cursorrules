@@ -23,6 +23,20 @@
 5. **REFLECT** (🔍) - 審查：回顧並記錄經驗教訓
 6. **ARCHIVE** (📁) - 歸檔：建立全面的文件
 
+### 增強模式配置
+- **基礎配置**：使用本文件的核心模式定義
+- **詳細配置**：參考 `.cursor/rules/isolation_rules/Modes/` 目錄中的詳細指令文件
+- **操作指南**：詳細步驟請參考 `AGENTS.md`
+
+> **配置選擇**：Level 1-2 任務使用基礎配置，Level 3-4 任務建議使用詳細配置
+
+### 詳細模式規則文件
+- `van-mode-detailed.mdc` - VAN 模式詳細指令
+- `plan-mode-detailed.mdc` - PLAN 模式詳細指令
+- `creative-mode-detailed.mdc` - CREATIVE 模式詳細指令
+- `implement-mode-detailed.mdc` - IMPLEMENT 模式詳細指令
+- `reflect-archive-mode-detailed.mdc` - REFLECT+ARCHIVE 模式詳細指令
+
 ## 工作流程
 - **Level 1 任務**：VAN → IMPLEMENT
 - **Level 2 任務**：VAN → PLAN → IMPLEMENT → REFLECT
