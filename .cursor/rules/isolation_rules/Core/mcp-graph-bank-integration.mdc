@@ -1,0 +1,181 @@
+---
+description: Integration rules for MCP Memory Server and Graph Bank coordination
+globs: mcp-graph-bank-integration.mdc
+alwaysApply: false
+---
+
+# MCP MEMORY SERVER 與 GRAPH BANK 整合規則
+
+> **TL;DR:** 此文件定義 MCP Memory Server 和 Graph Bank 系統的協作機制，確保兩個系統無縫整合，避免混淆。
+
+## 🔄 系統整合概覽
+
+```mermaid
+graph TD
+    Agent["AI Agent 啟動"] --> MCPCheck["MCP Memory Server<br>檢查"]
+    MCPCheck --> MCPLoad["MCP Memory Server<br>載入上下文"]
+    MCPLoad --> GraphUpdate["Graph Bank<br>文件更新"]
+    GraphUpdate --> TaskStart["開始任務執行"]
+    
+    TaskStart --> TaskProgress["任務進行中"]
+    TaskProgress --> GraphRealTime["Graph Bank<br>實時更新"]
+    
+    TaskProgress --> TaskComplete["任務完成"]
+    TaskComplete --> MCPSave["MCP Memory Server<br>儲存經驗"]
+    TaskComplete --> GraphArchive["Graph Bank<br>歸檔文件"]
+    
+    style Agent fill:#4da6ff,stroke:#0066cc,color:white
+    style MCPCheck fill:#ffa64d,stroke:#cc7a30,color:white
+    style MCPLoad fill:#4dbb5f,stroke:#36873f,color:white
+    style GraphUpdate fill:#d94dbb,stroke:#a3378a,color:white
+    style TaskStart fill:#4dbbbb,stroke:#368787,color:white
+    style GraphRealTime fill:#d971ff,stroke:#a33bc2,color:white
+    style MCPSave fill:#ff71c2,stroke:#c23b8a,color:white
+    style GraphArchive fill:#71c2ff,stroke:#3b8ac2,color:white
+```
+
+## 📋 系統職責分工
+
+### MCP Memory Server 職責
+- **跨會話記憶**: 儲存 AI 模型的持久記憶
+- **語義搜索**: 提供記憶檢索和搜索功能
+- **經驗累積**: 記錄和學習過往的決策經驗
+- **上下文載入**: 為新會話提供歷史上下文
+
+### Graph Bank 職責
+- **專案文件管理**: 管理 tasks.md、activeContext.md 等文件
+- **任務追蹤**: 記錄當前任務的進度和狀態
+- **決策記錄**: 保存設計決策和實施細節
+- **知識歸檔**: 建立專案知識庫和文件
+
+## 🔄 協作流程
+
+### Phase 1: Agent 初始化
+```markdown
+1. MCP Memory Server 檢查
+   - 執行 MEMORY.CHECK 驗證記憶體狀態
+   - 檢查 memory.json 文件完整性
+   - 載入相關歷史記憶
+
+2. Graph Bank 文件同步
+   - 讀取 tasks.md 當前任務狀態
+   - 更新 activeContext.md 當前焦點
+   - 同步 progress.md 進度記錄
+```
+
+### Phase 2: 任務執行中
+```markdown
+1. Graph Bank 實時更新
+   - 任務進度更新到 tasks.md
+   - 當前焦點更新到 activeContext.md
+   - 重要決策記錄到相關文件
+
+2. MCP Memory Server 背景學習
+   - 持續學習任務執行模式
+   - 記錄決策和結果的關聯
+   - 更新語義記憶網絡
+```
+
+### Phase 3: 任務完成
+```markdown
+1. MCP Memory Server 經驗儲存
+   - 執行 MEMORY.UPDATE 儲存新經驗
+   - 更新決策模式記憶
+   - 強化成功路徑記憶
+
+2. Graph Bank 歸檔處理
+   - 創建任務歸檔文件
+   - 更新專案知識庫
+   - 清理臨時工作文件
+```
+
+## 📋 觸發指令映射
+
+### MCP Memory Server 指令
+```markdown
+- MEMORY.CHECK: 檢查 MCP Memory Server 狀態
+- MEMORY.LOAD: 載入 MCP Memory Server 上下文
+- MEMORY.UPDATE: 更新 MCP Memory Server 記憶
+```
+
+### Graph Bank 指令
+```markdown
+- GRAPH.UPDATE: 更新 Graph Bank 文件
+- GRAPH.SYNC: 同步 Graph Bank 狀態
+- GRAPH.ARCHIVE: 歸檔 Graph Bank 內容
+```
+
+## 🔍 整合檢查點
+
+### Agent 啟動檢查
+```markdown
+✓ AGENT INITIALIZATION CHECKLIST
+- MCP Memory Server 狀態正常? [YES/NO]
+- Graph Bank 文件可讀寫? [YES/NO]
+- 歷史記憶載入完成? [YES/NO]
+- 當前任務上下文同步? [YES/NO]
+
+→ 如果全部 YES: Agent 初始化完成
+→ 如果有 NO: 執行相應修復步驟
+```
+
+### 任務執行檢查
+```markdown
+✓ TASK EXECUTION CHECKLIST
+- Graph Bank 文件實時更新? [YES/NO]
+- MCP Memory Server 學習正常? [YES/NO]
+- 決策記錄完整? [YES/NO]
+- 進度追蹤準確? [YES/NO]
+
+→ 如果全部 YES: 任務執行正常
+→ 如果有 NO: 檢查整合機制
+```
+
+## 🚨 常見整合問題
+
+### 問題 1: 記憶體混淆
+**症狀**: Agent 無法區分 MCP Memory Server 和 Graph Bank
+**解決**: 明確使用不同的觸發指令和檢查流程
+
+### 問題 2: 文件同步延遲
+**症狀**: Graph Bank 文件更新與 MCP Memory Server 不同步
+**解決**: 實施強制同步檢查點
+
+### 問題 3: 上下文丟失
+**症狀**: 任務切換時上下文信息丟失
+**解決**: 確保 MCP Memory Server 和 Graph Bank 雙重備份
+
+## 📋 整合驗證流程
+
+```markdown
+## 整合驗證步驟
+
+1. 啟動 Agent 並執行初始化檢查
+2. 驗證 MCP Memory Server 和 Graph Bank 狀態
+3. 執行測試任務並監控整合狀況
+4. 檢查任務完成後的歸檔和儲存
+5. 驗證下次啟動時的上下文載入
+
+## 成功標準
+
+- MCP Memory Server 和 Graph Bank 無縫協作
+- 任務上下文完整保存和載入
+- 決策經驗正確累積和應用
+- 專案文件準確更新和歸檔
+```
+
+## 🔄 持續改進
+
+### 整合優化
+- 監控整合效率
+- 識別協作瓶頸
+- 優化同步機制
+- 改進錯誤處理
+
+### 學習改進
+- 分析整合模式
+- 優化協作流程
+- 增強錯誤恢復
+- 提升整合穩定性
+
+這個整合規則確保 MCP Memory Server 和 Graph Bank 系統能夠無縫協作，避免混淆，提供完整的記憶和文件管理解決方案。

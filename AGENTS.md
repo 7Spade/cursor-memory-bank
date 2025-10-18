@@ -5,27 +5,33 @@ Graph Bank System 使用多個專門的 AI 代理來處理開發過程的不同�
 
 ## Agent 記憶體檢查指令
 
-### 記憶體初始化指令
-每個 Agent 在開始工作前都必須執行記憶體檢查：
+### MCP Memory Server 初始化指令
+每個 Agent 在開始工作前都必須執行 MCP Memory Server 檢查：
 
-**通用指令：**
-- `MEMORY.CHECK` - 檢查 memory.json 狀態
-- `MEMORY.LOAD` - 載入記憶體上下文
-- `MEMORY.UPDATE` - 更新記憶體內容
+**MCP Memory Server 指令：**
+- `MEMORY.CHECK` - 檢查 MCP Memory Server 狀態
+- `MEMORY.LOAD` - 載入 MCP Memory Server 上下文
+- `MEMORY.UPDATE` - 更新 MCP Memory Server 記憶
+
+**Graph Bank 管理指令：**
+- `GRAPH.UPDATE` - 更新 Graph Bank 文件
+- `GRAPH.SYNC` - 同步 Graph Bank 狀態
+- `GRAPH.ARCHIVE` - 歸檔 Graph Bank 內容
 
 **Agent 特定指令：**
-- `VAN.MEMORY` - VAN Agent 記憶體檢查
-- `PLAN.MEMORY` - PLAN Agent 記憶體檢查
-- `CREATIVE.MEMORY` - CREATIVE Agent 記憶體檢查
-- `IMPLEMENT.MEMORY` - IMPLEMENT Agent 記憶體檢查
-- `REFLECT.MEMORY` - REFLECT Agent 記憶體檢查
-- `ARCHIVE.MEMORY` - ARCHIVE Agent 記憶體檢查
+- `VAN.MEMORY` - VAN Agent MCP Memory 檢查
+- `PLAN.MEMORY` - PLAN Agent MCP Memory 檢查
+- `CREATIVE.MEMORY` - CREATIVE Agent MCP Memory 檢查
+- `IMPLEMENT.MEMORY` - IMPLEMENT Agent MCP Memory 檢查
+- `REFLECT.MEMORY` - REFLECT Agent MCP Memory 檢查
+- `ARCHIVE.MEMORY` - ARCHIVE Agent MCP Memory 檢查
 
-### 記憶體檢查流程
-1. 執行 `MEMORY.CHECK` 驗證記憶體完整性
-2. 執行 `MEMORY.LOAD` 載入相關上下文
-3. 基於記憶體內容建立對話基線
-4. 開始 Agent 特定工作流程
+### Agent 記憶體檢查流程
+1. 執行 `MEMORY.CHECK` 驗證 MCP Memory Server 狀態
+2. 執行 `MEMORY.LOAD` 載入 MCP Memory Server 上下文
+3. 執行 `GRAPH.SYNC` 同步 Graph Bank 文件狀態
+4. 基於 MCP Memory 和 Graph Bank 內容建立對話基線
+5. 開始 Agent 特定工作流程
 
 ## 代理架構
 

@@ -42,35 +42,61 @@
 - 優化 token 使用效率
 - 確保模式間的無縫轉換
 
-## 記憶體初始化協議
+## MCP Memory Server 初始化協議
 **🚨 強制執行：在執行任何 AI agent 動作之前，必須：**
 
-1. **檢查 memory.json 狀態**
+1. **檢查 MCP Memory Server 狀態**
    - 使用 MCP memory server 讀取當前記憶體內容
-   - 驗證記憶體結構完整性
-   - 載入相關上下文
+   - 驗證 memory.json 文件完整性
+   - 載入相關歷史記憶
 
-2. **記憶體上下文載入**
+2. **MCP Memory 上下文載入**
    - 提取用戶偏好設定
    - 載入專案歷史記錄
    - 獲取相關決策記錄
 
-3. **基線建立**
-   - 基於記憶體內容建立對話基線
+3. **對話基線建立**
+   - 基於 MCP Memory 內容建立對話基線
    - 確保回應的一致性和連續性
 
-**觸發指令：**
-- 輸入 `MEMORY.CHECK` 強制執行記憶體檢查
-- 輸入 `MEMORY.LOAD` 載入記憶體上下文
-- 輸入 `MEMORY.UPDATE` 更新記憶體內容
+**MCP Memory Server 觸發指令：**
+- 輸入 `MEMORY.CHECK` 強制執行 MCP Memory 檢查
+- 輸入 `MEMORY.LOAD` 載入 MCP Memory 上下文
+- 輸入 `MEMORY.UPDATE` 更新 MCP Memory 內容
 
-## Agent 記憶體檢查時機
-- **VAN Agent**: 專案分析前檢查專案歷史、技術偏好
-- **PLAN Agent**: 任務規劃前檢查規劃歷史、資源配置
-- **CREATIVE Agent**: 設計決策前檢查設計歷史、創意偏好
-- **IMPLEMENT Agent**: 代碼實施前檢查實施歷史、代碼風格
-- **REFLECT Agent**: 審查開始前檢查審查歷史、改進記錄
-- **ARCHIVE Agent**: 歸檔開始前檢查歸檔歷史、文件結構
+## Graph Bank 文件管理協議
+**📁 專案文件管理：在任務進行過程中，必須：**
+
+1. **更新 Graph Bank 文件**
+   - 更新 tasks.md 任務狀態
+   - 維護 activeContext.md 當前焦點
+   - 記錄 progress.md 進度
+
+2. **Graph Bank 同步**
+   - 確保文件狀態一致性
+   - 維護專案上下文完整性
+   - 記錄重要決策和變更
+
+**Graph Bank 觸發指令：**
+- 輸入 `GRAPH.UPDATE` 更新 Graph Bank 文件
+- 輸入 `GRAPH.SYNC` 同步 Graph Bank 狀態
+- 輸入 `GRAPH.ARCHIVE` 歸檔 Graph Bank 內容
+
+## Agent MCP Memory 檢查時機
+- **VAN Agent**: 專案分析前檢查 MCP Memory 專案歷史、技術偏好
+- **PLAN Agent**: 任務規劃前檢查 MCP Memory 規劃歷史、資源配置
+- **CREATIVE Agent**: 設計決策前檢查 MCP Memory 設計歷史、創意偏好
+- **IMPLEMENT Agent**: 代碼實施前檢查 MCP Memory 實施歷史、代碼風格
+- **REFLECT Agent**: 審查開始前檢查 MCP Memory 審查歷史、改進記錄
+- **ARCHIVE Agent**: 歸檔開始前檢查 MCP Memory 歸檔歷史、文件結構
+
+## Agent Graph Bank 管理時機
+- **VAN Agent**: 專案分析後更新 Graph Bank 專案結構、技術棧
+- **PLAN Agent**: 任務規劃後更新 Graph Bank 任務清單、進度
+- **CREATIVE Agent**: 設計決策後更新 Graph Bank 設計文件、決策記錄
+- **IMPLEMENT Agent**: 代碼實施後更新 Graph Bank 實施進度、代碼變更
+- **REFLECT Agent**: 審查完成後更新 Graph Bank 審查結果、改進建議
+- **ARCHIVE Agent**: 歸檔完成後更新 Graph Bank 歸檔文件、知識庫
 
 ## 品質保證
 - 在任何模式下輸入 "QA" 可執行技術驗證
