@@ -1,87 +1,293 @@
 ---
-description: Zero-cognition IMPLEMENT mode for code implementation
+description: Detailed IMPLEMENT mode instructions for comprehensive code implementation and build processes
 globs: "**/implement-mode-detailed*/**"
 alwaysApply: false
 ---
 
-# IMPLEMENT MODE - 零認知代碼實施
+# IMPLEMENT MODE - 詳細代碼實施指令
 
-> **零認知原則**: 自動化代碼生成，智能實施流程，隱藏複雜實施邏輯
+> **TL;DR:** 提供詳細的代碼實施流程，包含分階段實施、命令執行和測試驗證的完整過程。
 
 ```mermaid
 graph TD
-    Start["⚒️ IMPLEMENT"] --> AutoImpl["⚡ 自動代碼實施"]
-    AutoImpl --> Level{"🧩 複雜度級別?"}
+    Start["🚀 START BUILD MODE"] --> ReadDocs["📚 Read Reference Documents<br>.cursor/rules/isolation_rules/Core/command-execution.mdc"]
     
-    Level -->|"Level 1"| L1["🔧 快速修復"]
-    Level -->|"Level 2"| L2["🔨 簡單增強"]
-    Level -->|"Level 3-4"| L34["🏗️ 複雜功能"]
+    %% Initialization
+    ReadDocs --> CheckLevel{"🧩 Determine<br>Complexity Level<br>from tasks.md"}
     
-    L1 --> L1Auto["📝 自動修復"]
-    L2 --> L2Auto["📝 自動增強"]
-    L34 --> L34Auto["📝 分階段實施"]
+    %% Level 1 Implementation
+    CheckLevel -->|"Level 1<br>Quick Bug Fix"| L1Process["🔧 LEVEL 1 PROCESS<br>.cursor/rules/isolation_rules/visual-maps/implement-mode-map.mdc"]
+    L1Process --> L1Review["🔍 Review Bug<br>Report"]
+    L1Review --> L1Examine["👁️ Examine<br>Relevant Code"]
+    L1Examine --> L1Fix["⚒️ Implement<br>Targeted Fix"]
+    L1Fix --> L1Test["✅ Test<br>Fix"]
+    L1Test --> L1Update["📝 Update<br>tasks.md"]
     
-    L1Auto --> Test["✅ 自動測試"]
-    L2Auto --> Test
-    L34Auto --> Test
+    %% Level 2 Implementation
+    CheckLevel -->|"Level 2<br>Simple Enhancement"| L2Process["🔨 LEVEL 2 PROCESS<br>.cursor/rules/isolation_rules/visual-maps/implement-mode-map.mdc"]
+    L2Process --> L2Review["🔍 Review Build<br>Plan"]
+    L2Review --> L2Examine["👁️ Examine Relevant<br>Code Areas"]
+    L2Examine --> L2Implement["⚒️ Implement Changes<br>Sequentially"]
+    L2Implement --> L2Test["✅ Test<br>Changes"]
+    L2Test --> L2Update["📝 Update<br>tasks.md"]
     
-    Test --> Verify["🔍 自動驗證"]
-    Verify --> Next["⏭️ → REFLECT"]
+    %% Level 3-4 Implementation
+    CheckLevel -->|"Level 3-4<br>Feature/System"| L34Process["🏗️ LEVEL 3-4 PROCESS<br>.cursor/rules/isolation_rules/visual-maps/implement-mode-map.mdc"]
+    L34Process --> L34Review["🔍 Review Plan &<br>Creative Decisions"]
+    L34Review --> L34Phase{"📋 Select<br>Build<br>Phase"}
     
+    %% Implementation Phases
+    L34Phase --> L34Phase1["⚒️ Phase 1<br>Build"]
+    L34Phase1 --> L34Test1["✅ Test<br>Phase 1"]
+    L34Test1 --> L34Document1["📝 Document<br>Phase 1"]
+    L34Document1 --> L34Next1{"📋 Next<br>Phase?"}
+    L34Next1 -->|"Yes"| L34Phase
+    
+    L34Next1 -->|"No"| L34Integration["🔄 Integration<br>Testing"]
+    L34Integration --> L34Document["📝 Document<br>Integration Points"]
+    L34Document --> L34Update["📝 Update<br>tasks.md"]
+    
+    %% Command Execution
+    L1Fix & L2Implement & L34Phase1 --> CommandExec["⚙️ COMMAND EXECUTION<br>.cursor/rules/isolation_rules/Core/command-execution.mdc"]
+    CommandExec --> DocCommands["📝 Document Commands<br>& Results"]
+    
+    %% Implementation Documentation
+    DocCommands -.-> DocTemplate["📋 BUILD DOC:<br>- Code Changes<br>- Commands Executed<br>- Results/Observations<br>- Status"]
+    
+    %% Verification & Completion
+    L1Update & L2Update & L34Update --> VerifyImpl["✅ Verify Implementation<br>Completeness"]
+    VerifyImpl --> UpdateProgress["📈 Update progress.md<br>with Implementation Status"]
+    UpdateProgress --> Transition["⏭️ NEXT MODE:<br>REFLECT MODE"]
+    
+    %% Error Handling
+    Error["⚠️ ERROR<br>DETECTION"] -->|"Build Error"| DebugBuild["🔍 Debug Build<br>Issues"]
+    Error -->|"Test Failure"| DebugTest["🔍 Debug Test<br>Failures"]
+    Error -->|"Integration Issue"| DebugIntegration["🔍 Debug Integration<br>Problems"]
+    
+    DebugBuild --> RetryBuild["🔄 Retry Build<br>Process"]
+    DebugTest --> RetryTest["🔄 Retry Test<br>Process"]
+    DebugIntegration --> RetryIntegration["🔄 Retry Integration<br>Process"]
+    
+    RetryBuild & RetryTest & RetryIntegration --> CommandExec
+    
+    %% Styling
     style Start fill:#4da6ff,stroke:#0066cc,color:white
-    style AutoImpl fill:#ffa64d,stroke:#cc7a30,color:white
-    style Test fill:#4dbb5f,stroke:#36873f,color:white
+    style ReadDocs fill:#80bfff,stroke:#4da6ff,color:black
+    style CheckLevel fill:#d94dbb,stroke:#a3378a,color:white
+    style L1Process fill:#4dbb5f,stroke:#36873f,color:white
+    style L2Process fill:#ffa64d,stroke:#cc7a30,color:white
+    style L34Process fill:#ff5555,stroke:#cc0000,color:white
+    style CommandExec fill:#4dbbbb,stroke:#368787,color:white
+    style VerifyImpl fill:#d971ff,stroke:#a33bc2,color:white
+    style Transition fill:#5fd94d,stroke:#3da336,color:white
+    style Error fill:#ff5555,stroke:#cc0000,color:white
 ```
-## ⚡ 自動化實施流程
 
-### 🧩 複雜度確定
-- **Level 1**: 快速修復 → 自動化修復流程
-- **Level 2**: 簡單增強 → 自動化增強流程
-- **Level 3-4**: 複雜功能 → 分階段自動化實施
+## IMPLEMENTATION STEPS
 
-### 📝 智能代碼生成
-- **自動代碼分析**: 基於計劃和創意決策自動分析代碼需求
-- **代碼生成**: 智能生成符合設計的代碼
-- **代碼優化**: 自動優化代碼性能和可讀性
-- **錯誤處理**: 自動處理常見的實施錯誤
+### Step 1: READ REFERENCE DOCUMENTS
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Core/command-execution.mdc",
+  should_read_entire_file: true
+})
 
-### 🎯 零認知操作
-- **實施模板自動選擇**: 根據複雜度自動選擇實施模板
-- **測試自動執行**: 自動執行相關測試
-- **驗證自動進行**: 自動驗證實施結果
-- **Graph Bank 自動更新**: 實施結果自動同步到 Graph Bank
+read_file({
+  target_file: "tasks.md",
+  should_read_entire_file: true
+})
+```
 
-## 📊 智能實施報告
+### Step 2: LOAD IMPLEMENT MODE MAP
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/visual-maps/implement-mode-map.mdc",
+  should_read_entire_file: true
+})
+```
 
-### 🔧 Level 1 快速修復
-- **問題分析**: 自動分析問題根因
-- **修復實施**: 自動生成修復代碼
-- **測試驗證**: 自動執行修復測試
-- **結果確認**: 自動確認修復效果
+### Step 3: LOAD COMPLEXITY-SPECIFIC IMPLEMENTATION REFERENCES
+Based on complexity level determined from tasks.md, load one of:
 
-### 🔨 Level 2 簡單增強
-- **需求分析**: 自動分析增強需求
-- **代碼實施**: 自動生成增強代碼
-- **功能測試**: 自動執行功能測試
-- **整合驗證**: 自動驗證整合效果
+#### For Level 1:
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Level1/workflow-level1.mdc",
+  should_read_entire_file: true
+})
+```
 
-### 🏗️ Level 3-4 複雜功能
-- **分階段實施**: 自動分解為多個實施階段
-- **階段性測試**: 每個階段自動測試
-- **整合測試**: 自動執行整合測試
-- **系統驗證**: 自動驗證系統功能
+#### For Level 2:
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Level2/workflow-level2.mdc",
+  should_read_entire_file: true
+})
+```
 
-## ✅ 自動驗證
+#### For Level 3:
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Level3/workflow-level3.mdc",
+  should_read_entire_file: true
+})
+```
 
-### 驗證檢查點
-- **代碼品質**: 代碼是否符合品質標準
-- **功能完整性**: 所有功能是否正確實施
-- **測試覆蓋**: 測試是否覆蓋所有功能
-- **整合穩定性**: 系統整合是否穩定
+#### For Level 4:
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Level4/workflow-level4.mdc",
+  should_read_entire_file: true
+})
+```
 
-### 成功標準
-- **實施完整性**: 所有計劃功能都已實施
-- **代碼品質**: 代碼符合最佳實踐
-- **測試通過**: 所有測試都通過
-- **文檔完整**: 實施文檔完整
+## IMPLEMENTATION APPROACH
 
+Your task is to build the planned changes following the implementation plan and creative phase decisions. Focus on systematic implementation, proper testing, and comprehensive documentation.
+
+### Level 1: Quick Bug Fix Implementation
+
+For Level 1 tasks, focus on targeted fixes with minimal impact. Review the bug report, examine relevant code, implement the fix, and test thoroughly.
+
+```mermaid
+graph TD
+    L1["🔧 LEVEL 1 IMPLEMENTATION"] --> Review["Review bug report"]
+    Review --> Examine["Examine relevant code"]
+    Examine --> Fix["Implement targeted fix"]
+    Fix --> Test["Test fix thoroughly"]
+    Test --> Update["Update tasks.md"]
+    
+    style L1 fill:#4dbb5f,stroke:#36873f,color:white
+    style Review fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Examine fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Fix fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Test fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Update fill:#d6f5dd,stroke:#a3e0ae,color:black
+```
+
+### Level 2: Simple Enhancement Implementation
+
+For Level 2 tasks, implement changes sequentially following the build plan. Review the plan, examine relevant code areas, implement changes, and test thoroughly.
+
+```mermaid
+graph TD
+    L2["🔨 LEVEL 2 IMPLEMENTATION"] --> Review["Review build plan"]
+    Review --> Examine["Examine relevant code areas"]
+    Examine --> Implement["Implement changes sequentially"]
+    Implement --> Test["Test changes"]
+    Test --> Update["Update tasks.md"]
+    
+    style L2 fill:#ffa64d,stroke:#cc7a30,color:white
+    style Review fill:#ffe6cc,stroke:#ffa64d,color:black
+    style Examine fill:#ffe6cc,stroke:#ffa64d,color:black
+    style Implement fill:#ffe6cc,stroke:#ffa64d,color:black
+    style Test fill:#ffe6cc,stroke:#ffa64d,color:black
+    style Update fill:#ffe6cc,stroke:#ffa64d,color:black
+```
+
+### Level 3-4: Feature/System Implementation
+
+For Level 3-4 tasks, implement in phases following the comprehensive plan and creative decisions. Review the plan and creative decisions, select build phases, implement each phase, test, and document.
+
+```mermaid
+graph TD
+    L34["🏗️ LEVEL 3-4 IMPLEMENTATION"] --> Review["Review plan & creative decisions"]
+    Review --> Select["Select build phase"]
+    Select --> Implement["Implement phase"]
+    Implement --> Test["Test phase"]
+    Test --> Document["Document phase"]
+    Document --> Next{"Next phase?"}
+    Next -->|"Yes"| Select
+    Next -->|"No"| Integration["Integration testing"]
+    Integration --> Final["Update tasks.md"]
+    
+    style L34 fill:#ff5555,stroke:#cc0000,color:white
+    style Review fill:#ffcccc,stroke:#ffaaaa,color:black
+    style Select fill:#ffcccc,stroke:#ffaaaa,color:black
+    style Implement fill:#ffcccc,stroke:#ffaaaa,color:black
+    style Test fill:#ffcccc,stroke:#ffaaaa,color:black
+    style Document fill:#ffcccc,stroke:#ffaaaa,color:black
+    style Next fill:#ffcccc,stroke:#ffaaaa,color:black
+    style Integration fill:#ffcccc,stroke:#ffaaaa,color:black
+    style Final fill:#ffcccc,stroke:#ffaaaa,color:black
+```
+
+## COMMAND EXECUTION GUIDELINES
+
+Follow the command execution guidelines from the Core rules:
+
+### Command Documentation Template
+```
+## Command Execution: [Purpose]
+
+### Command
+```
+[actual command or chain]
+```
+
+### Result
+```
+[command output]
+```
+
+### Effect
+[Brief description of what changed in the system]
+
+### Next Steps
+[What needs to be done next]
+```
+
+### Platform-Specific Considerations
+- **Windows**: Use PowerShell commands and path separators
+- **Unix/Linux/Mac**: Use bash commands and forward slashes
+- **Cross-platform**: Use appropriate command chaining
+
+## IMPLEMENTATION DOCUMENTATION
+
+Document each implementation phase with:
+
+### Build Documentation Template
+```
+# BUILD DOCUMENTATION: [Phase Name]
+
+## Code Changes
+- [List of files modified]
+- [Summary of changes made]
+- [Key implementation details]
+
+## Commands Executed
+- [List of commands run]
+- [Command results and outputs]
+- [Any errors encountered]
+
+## Results/Observations
+- [What worked well]
+- [Issues encountered]
+- [Performance observations]
+
+## Status
+- [Current implementation status]
+- [Next steps required]
+- [Dependencies for next phase]
+```
+
+## VERIFICATION
+
+```mermaid
+graph TD
+    V["✅ VERIFICATION CHECKLIST"] --> C["All planned changes implemented?"]
+    V --> T["All tests passing?"]
+    V --> D["Implementation documented?"]
+    V --> S["Status updated in tasks.md?"]
+    
+    C & T & D & S --> Decision{"All Verified?"}
+    Decision -->|"Yes"| Complete["Ready for REFLECT mode"]
+    Decision -->|"No"| Fix["Complete missing items"]
+    
+    style V fill:#4dbbbb,stroke:#368787,color:white
+    style Decision fill:#ffa64d,stroke:#cc7a30,color:white
+    style Complete fill:#5fd94d,stroke:#3da336,color:white
+    style Fix fill:#ff5555,stroke:#cc0000,color:white
+```
+
+Before completing the implementation phase, verify that all planned changes have been implemented, tests are passing, implementation is documented, and status is updated in tasks.md. Prepare for the reflection phase.

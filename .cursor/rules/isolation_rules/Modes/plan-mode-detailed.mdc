@@ -1,98 +1,231 @@
 ---
-description: Zero-cognition PLAN mode for task planning
+description: Detailed PLAN mode instructions for comprehensive task planning and implementation strategy
 globs: "**/plan-mode-detailed*/**"
 alwaysApply: false
 ---
 
-# PLAN MODE - 零認知任務規劃
+# PLAN MODE - 詳細任務規劃指令
 
-> **零認知原則**: 自動化任務分解，智能計劃生成，隱藏複雜規劃邏輯
+> **TL;DR:** 提供詳細的任務規劃流程，包含複雜度分析、實施計劃建立和創意階段識別。
 
 ```mermaid
 graph TD
-    Start["📋 PLAN"] --> AutoPlan["⚡ 自動任務規劃"]
-    AutoPlan --> Level{"🧩 複雜度級別?"}
+    Start["🚀 START PLANNING"] --> ReadTasks["📚 Read tasks.md<br>.cursor/rules/isolation_rules/main.mdc"]
     
-    Level -->|"Level 2"| L2["🔨 簡單增強規劃"]
-    Level -->|"Level 3"| L3["🏗️ 中級功能規劃"]
-    Level -->|"Level 4"| L4["🚀 複雜系統規劃"]
+    %% Complexity Level Determination
+    ReadTasks --> CheckLevel{"🧩 Determine<br>Complexity Level"}
+    CheckLevel -->|"Level 2"| Level2["📝 LEVEL 2 PLANNING<br>.cursor/rules/isolation_rules/visual-maps/plan-mode-map.mdc"]
+    CheckLevel -->|"Level 3"| Level3["📋 LEVEL 3 PLANNING<br>.cursor/rules/isolation_rules/visual-maps/plan-mode-map.mdc"]
+    CheckLevel -->|"Level 4"| Level4["📊 LEVEL 4 PLANNING<br>.cursor/rules/isolation_rules/visual-maps/plan-mode-map.mdc"]
     
-    L2 --> L2Plan["📝 生成實施計劃"]
-    L3 --> L3Plan["📋 生成詳細計劃"]
-    L4 --> L4Plan["📊 生成分階段計劃"]
+    %% Level 2 Planning
+    Level2 --> L2Review["🔍 Review Code<br>Structure"]
+    L2Review --> L2Document["📄 Document<br>Planned Changes"]
+    L2Document --> L2Challenges["⚠️ Identify<br>Challenges"]
+    L2Challenges --> L2Checklist["✅ Create Task<br>Checklist"]
+    L2Checklist --> L2Update["📝 Update tasks.md<br>with Plan"]
+    L2Update --> L2Verify["✓ Verify Plan<br>Completeness"]
     
-    L2Plan --> Creative{"🎨 需要創意階段?"}
-    L3Plan --> Creative
-    L4Plan --> Creative
+    %% Level 3 Planning
+    Level3 --> L3Review["🔍 Review Codebase<br>Structure"]
+    L3Review --> L3Requirements["📋 Document Detailed<br>Requirements"]
+    L3Requirements --> L3Components["🧩 Identify Affected<br>Components"]
+    L3Components --> L3Plan["📝 Create Comprehensive<br>Implementation Plan"]
+    L3Plan --> L3Challenges["⚠️ Document Challenges<br>& Solutions"]
+    L3Challenges --> L3Update["📝 Update tasks.md<br>with Plan"]
+    L3Update --> L3Flag["🎨 Flag Components<br>Requiring Creative"]
+    L3Flag --> L3Verify["✓ Verify Plan<br>Completeness"]
     
-    Creative -->|"是"| NextCreative["⏭️ → CREATIVE"]
-    Creative -->|"否"| NextImplement["⏭️ → IMPLEMENT"]
+    %% Level 4 Planning
+    Level4 --> L4Analysis["🔍 Codebase Structure<br>Analysis"]
+    L4Analysis --> L4Requirements["📋 Document Comprehensive<br>Requirements"]
+    L4Requirements --> L4Diagrams["📊 Create Architectural<br>Diagrams"]
+    L4Diagrams --> L4Subsystems["🧩 Identify Affected<br>Subsystems"]
+    L4Subsystems --> L4Dependencies["🔄 Document Dependencies<br>& Integration Points"]
+    L4Dependencies --> L4Plan["📝 Create Phased<br>Implementation Plan"]
+    L4Plan --> L4Update["📝 Update tasks.md<br>with Plan"]
+    L4Update --> L4Flag["🎨 Flag Components<br>Requiring Creative"]
+    L4Flag --> L4Verify["✓ Verify Plan<br>Completeness"]
     
+    %% Verification & Completion
+    L2Verify & L3Verify & L4Verify --> CheckCreative{"🎨 Creative<br>Phases<br>Required?"}
+    
+    %% Mode Transition
+    CheckCreative -->|"Yes"| RecCreative["⏭️ NEXT MODE:<br>CREATIVE MODE"]
+    CheckCreative -->|"No"| RecImplement["⏭️ NEXT MODE:<br>IMPLEMENT MODE"]
+    
+    %% Template Selection
+    L2Update -.- Template2["TEMPLATE L2:<br>- Overview<br>- Files to Modify<br>- Implementation Steps<br>- Potential Challenges"]
+    L3Update & L4Update -.- TemplateAdv["TEMPLATE L3-4:<br>- Requirements Analysis<br>- Components Affected<br>- Architecture Considerations<br>- Implementation Strategy<br>- Detailed Steps<br>- Dependencies<br>- Challenges & Mitigations<br>- Creative Phase Components"]
+    
+    %% Validation Options
+    Start -.-> Validation["🔍 VALIDATION OPTIONS:<br>- Review complexity level<br>- Create planning templates<br>- Identify creative needs<br>- Generate plan documents<br>- Show mode transition"]
+
+    %% Styling
     style Start fill:#4da6ff,stroke:#0066cc,color:white
-    style AutoPlan fill:#ffa64d,stroke:#cc7a30,color:white
-    style Creative fill:#d971ff,stroke:#a33bc2,color:white
+    style ReadTasks fill:#80bfff,stroke:#4da6ff,color:black
+    style CheckLevel fill:#d94dbb,stroke:#a3378a,color:white
+    style Level2 fill:#4dbb5f,stroke:#36873f,color:white
+    style Level3 fill:#ffa64d,stroke:#cc7a30,color:white
+    style Level4 fill:#ff5555,stroke:#cc0000,color:white
+    style CheckCreative fill:#d971ff,stroke:#a33bc2,color:white
+    style RecCreative fill:#ffa64d,stroke:#cc7a30,color:black
+    style RecImplement fill:#4dbb5f,stroke:#36873f,color:black
 ```
 
-## ⚡ 自動化規劃流程
+## IMPLEMENTATION STEPS
 
-### 🧩 複雜度確定
-- **Level 2**: 簡單增強 → 快速計劃生成
-- **Level 3**: 中級功能 → 詳細計劃 + 創意標記
-- **Level 4**: 複雜系統 → 分階段計劃 + 架構考慮
+### Step 1: READ MAIN RULE & TASKS
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/main.mdc",
+  should_read_entire_file: true
+})
 
-### 📋 智能計劃生成
-- **自動需求分析**: 基於任務描述自動提取需求
-- **組件影響評估**: 智能識別受影響的組件
-- **依賴關係映射**: 自動建立依賴關係圖
-- **風險識別**: 自動標記潛在挑戰
+read_file({
+  target_file: "tasks.md",
+  should_read_entire_file: true
+})
+```
 
-### 🎯 零認知操作
-- **計劃模板自動選擇**: 根據複雜度自動選擇模板
-- **創意階段自動標記**: 智能識別需要設計決策的組件
-- **模式轉換自動判斷**: 基於創意需求自動決定下一模式
-- **Graph Bank 自動更新**: 計劃結果自動同步到 Graph Bank
+### Step 2: LOAD PLAN MODE MAP
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/visual-maps/plan-mode-map.mdc",
+  should_read_entire_file: true
+})
+```
 
-## 📊 智能評估報告
+### Step 3: LOAD COMPLEXITY-SPECIFIC PLANNING REFERENCES
+Based on complexity level determined from tasks.md, load one of:
 
-### Level 2 快速計劃
-- **概述**: 簡潔的變更描述
-- **文件清單**: 需要修改的文件
-- **實施步驟**: 清晰的執行順序
-- **潛在挑戰**: 識別的風險點
-- **測試策略**: 驗證方法
+#### For Level 2:
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Level2/task-tracking-basic.mdc",
+  should_read_entire_file: true
+})
+```
 
-### Level 3-4 詳細計劃
-- **需求分析**: 全面的需求理解
-- **組件影響**: 受影響的系統組件
-- **架構考慮**: 架構層面的影響
-- **實施策略**: 高層次的實施方法
-- **詳細步驟**: 具體的執行計劃
-- **依賴關係**: 依賴和整合點
-- **挑戰與緩解**: 風險和解決方案
-- **創意組件**: 需要設計決策的組件
+#### For Level 3:
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Level3/task-tracking-intermediate.mdc",
+  should_read_entire_file: true
+})
 
-## 🎨 創意階段識別
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Level3/planning-comprehensive.mdc",
+  should_read_entire_file: true
+})
+```
 
-### 自動標記規則
-- **架構設計**: 需要架構決策的組件
-- **算法設計**: 需要算法優化的組件
-- **UI/UX 設計**: 需要用戶體驗設計的組件
+#### For Level 4:
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Level4/task-tracking-advanced.mdc",
+  should_read_entire_file: true
+})
 
-### 零認知轉換
-- **自動判斷**: 基於組件複雜度自動判斷是否需要創意階段
-- **智能路由**: 自動決定下一模式（CREATIVE 或 IMPLEMENT）
-- **上下文傳遞**: 自動傳遞規劃上下文到下一模式
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Level4/architectural-planning.mdc",
+  should_read_entire_file: true
+})
+```
 
-## ✅ 自動驗證
+## PLANNING APPROACH
 
-### 驗證檢查點
-- **需求覆蓋**: 所有需求是否已包含在計劃中
-- **創意標記**: 需要創意階段的組件是否已識別
-- **步驟清晰**: 實施步驟是否明確定義
-- **依賴文檔**: 依賴關係和挑戰是否已記錄
+Create a detailed implementation plan based on the complexity level determined during initialization. Your approach should provide clear guidance while remaining adaptable to project requirements and technology constraints.
 
-### 成功標準
-- **計劃完整性**: 所有必要元素都已包含
-- **創意識別**: 需要設計決策的組件已標記
-- **實施可行性**: 計劃在技術上可行
-- **模式準備**: 下一模式已準備就緒
+### Level 2: Simple Enhancement Planning
+
+For Level 2 tasks, focus on creating a streamlined plan that identifies the specific changes needed and any potential challenges. Review the codebase structure to understand the areas affected by the enhancement and document a straightforward implementation approach.
+
+```mermaid
+graph TD
+    L2["📝 LEVEL 2 PLANNING"] --> Doc["Document plan with these components:"]
+    Doc --> OV["📋 Overview of changes"]
+    Doc --> FM["📁 Files to modify"]
+    Doc --> IS["🔄 Implementation steps"]
+    Doc --> PC["⚠️ Potential challenges"]
+    Doc --> TS["✅ Testing strategy"]
+    
+    style L2 fill:#4dbb5f,stroke:#36873f,color:white
+    style Doc fill:#80bfff,stroke:#4da6ff,color:black
+    style OV fill:#cce6ff,stroke:#80bfff,color:black
+    style FM fill:#cce6ff,stroke:#80bfff,color:black
+    style IS fill:#cce6ff,stroke:#80bfff,color:black
+    style PC fill:#cce6ff,stroke:#80bfff,color:black
+    style TS fill:#cce6ff,stroke:#80bfff,color:black
+```
+
+### Level 3-4: Comprehensive Planning
+
+For Level 3-4 tasks, develop a comprehensive plan that addresses architecture, dependencies, and integration points. Identify components requiring creative phases and document detailed requirements. For Level 4 tasks, include architectural diagrams and propose a phased implementation approach.
+
+```mermaid
+graph TD
+    L34["📊 LEVEL 3-4 PLANNING"] --> Doc["Document plan with these components:"]
+    Doc --> RA["📋 Requirements analysis"]
+    Doc --> CA["🧩 Components affected"]
+    Doc --> AC["🏗️ Architecture considerations"]
+    Doc --> IS["📝 Implementation strategy"]
+    Doc --> DS["🔢 Detailed steps"]
+    Doc --> DP["🔄 Dependencies"]
+    Doc --> CM["⚠️ Challenges & mitigations"]
+    Doc --> CP["🎨 Creative phase components"]
+    
+    style L34 fill:#ffa64d,stroke:#cc7a30,color:white
+    style Doc fill:#80bfff,stroke:#4da6ff,color:black
+    style RA fill:#ffe6cc,stroke:#ffa64d,color:black
+    style CA fill:#ffe6cc,stroke:#ffa64d,color:black
+    style AC fill:#ffe6cc,stroke:#ffa64d,color:black
+    style IS fill:#ffe6cc,stroke:#ffa64d,color:black
+    style DS fill:#ffe6cc,stroke:#ffa64d,color:black
+    style DP fill:#ffe6cc,stroke:#ffa64d,color:black
+    style CM fill:#ffe6cc,stroke:#ffa64d,color:black
+    style CP fill:#ffe6cc,stroke:#ffa64d,color:black
+```
+
+## CREATIVE PHASE IDENTIFICATION
+
+```mermaid
+graph TD
+    CPI["🎨 CREATIVE PHASE IDENTIFICATION"] --> Question{"Does the component require<br>design decisions?"}
+    Question -->|"Yes"| Identify["Flag for Creative Phase"]
+    Question -->|"No"| Skip["Proceed to Implementation"]
+    
+    Identify --> Types["Identify Creative Phase Type:"]
+    Types --> A["🏗️ Architecture Design"]
+    Types --> B["⚙️ Algorithm Design"]
+    Types --> C["🎨 UI/UX Design"]
+    
+    style CPI fill:#d971ff,stroke:#a33bc2,color:white
+    style Question fill:#80bfff,stroke:#4da6ff,color:black
+    style Identify fill:#ffa64d,stroke:#cc7a30,color:black
+    style Skip fill:#4dbb5f,stroke:#36873f,color:black
+    style Types fill:#ffe6cc,stroke:#ffa64d,color:black
+```
+
+Identify components that require creative problem-solving or significant design decisions. For these components, flag them for the CREATIVE mode. Focus on architectural considerations, algorithm design needs, or UI/UX requirements that would benefit from structured design exploration.
+
+## VERIFICATION
+
+```mermaid
+graph TD
+    V["✅ VERIFICATION CHECKLIST"] --> P["Plan addresses all requirements?"]
+    V --> C["Components requiring creative phases identified?"]
+    V --> S["Implementation steps clearly defined?"]
+    V --> D["Dependencies and challenges documented?"]
+    
+    P & C & S & D --> Decision{"All Verified?"}
+    Decision -->|"Yes"| Complete["Ready for next mode"]
+    Decision -->|"No"| Fix["Complete missing items"]
+    
+    style V fill:#4dbbbb,stroke:#368787,color:white
+    style Decision fill:#ffa64d,stroke:#cc7a30,color:white
+    style Complete fill:#5fd94d,stroke:#3da336,color:white
+    style Fix fill:#ff5555,stroke:#cc0000,color:white
+```
+
+Before completing the planning phase, verify that all requirements are addressed in the plan, components requiring creative phases are identified, implementation steps are clearly defined, and dependencies and challenges are documented. Update tasks.md with the complete plan and recommend the appropriate next mode based on whether creative phases are required.
