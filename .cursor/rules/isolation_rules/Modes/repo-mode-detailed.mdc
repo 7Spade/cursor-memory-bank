@@ -8,7 +8,45 @@ alwaysApply: false
 
 > **TL;DR:** 此文件提供詳細的 REPO 模式指令，用於全面的倉庫分析和文檔生成，包含六種不同的輸出模式以滿足各種分析需求。
 
+## 🔧 REPO MODE 技術架構
+
+### MCP 工具整合
+REPO 模式使用 **repomix-docker** MCP 工具，該工具已預配置在 `.cursor/mcp.json` 中：
+
+```json
+"repomix-docker": {
+  "command": "docker",
+  "args": [
+    "run",
+    "-i",
+    "--rm",
+    "ghcr.io/yamadashy/repomix",
+    "--mcp"
+  ],
+  "disabled": false,
+  "autoApprove": [],
+  "retry": {
+    "enabled": true,
+    "maxAttempts": 3,
+    "delay": 2000,
+    "backoffMultiplier": 1.5,
+    "maxDelay": 10000
+  }
+}
+```
+
+### 工具功能
+- **pack_codebase**: 打包本地代碼目錄進行 AI 分析
+- **pack_remote_repository**: 獲取並打包遠程 GitHub 倉庫
+- **attach_packed_output**: 附加現有的 Repomix 輸出文件
+- **read_repomix_output**: 讀取 Repomix 生成的輸出文件內容
+- **grep_repomix_output**: 在 Repomix 輸出中搜索模式
+- **file_system_read_file**: 讀取本地文件系統文件
+- **file_system_read_directory**: 列出目錄內容
+
 ## 🚀 REPO MODE 啟動
+
+**重要：** REPO 模式使用 **repomix-docker** MCP 工具進行倉庫分析，該工具已配置在 `.cursor/mcp.json` 中。
 
 當您輸入 `repo` 時，系統會自動顯示模式選擇選單：
 
@@ -30,14 +68,26 @@ alwaysApply: false
 
 ## 📊 六種模式綜合對比
 
-| 模式 | Token | 文件數 | 適用場景 | 命令 |
-|------|-------|--------|----------|------|
-| **完整模式** | 351,116 | 147 | 新專案架構分析、完整代碼審查 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --style markdown --top-files-len 20 --output complete-analysis.md` |
-| **壓縮模式** | 307,073 | 147 | 快速代碼審查、性能瓶頸分析 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --style markdown --top-files-len 10 --output compressed-analysis.md` |
-| **源碼模式** | 44,080 | 5 | 新功能開發、代碼生成和補全 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "src/**/*.ts,src/**/*.html,src/**/*.scss,*.md,*.json" --style markdown --top-files-len 5 --output source-code.md` |
-| **極致節省** | 41,433 | 4 | 成本敏感分析、快速專案概覽 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --remove-comments --remove-empty-lines --no-file-summary --no-directory-structure --include "src/**/*.ts,src/**/*.html,*.md" --style markdown --output minimal-analysis.md` |
-| **MCP 整合** | 50,000 | 8 | MCP 服務器配置分析、協議兼容性檢查 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "**/*.mcp.*,**/*mcp*,**/*.json,**/*.yaml,**/*.yml" --style markdown --top-files-len 8 --output mcp-integration-analysis.md` |
-| **智能分析** | 200,000 | 50 | AI 代碼分析、智能重構建議 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --include "src/**/*,*.md,*.json,*.yaml,*.yml" --style markdown --top-files-len 15 --output ai-analysis.md` |
+> **注意：** 以下命令為 Docker 直接使用方式，實際 REPO 模式會通過 **repomix-docker** MCP 工具執行，提供更好的整合體驗。
+
+| 模式 | Token | 文件數 | 適用場景 | MCP 工具使用 |
+|------|-------|--------|----------|-------------|
+| **完整模式** | 351,116 | 147 | 新專案架構分析、完整代碼審查 | `pack_codebase` (style: markdown, topFilesLength: 20) |
+| **壓縮模式** | 307,073 | 147 | 快速代碼審查、性能瓶頸分析 | `pack_codebase` (compress: true, topFilesLength: 10) |
+| **源碼模式** | 44,080 | 5 | 新功能開發、代碼生成和補全 | `pack_codebase` (includePatterns: "src/**/*.ts,src/**/*.html,src/**/*.scss,*.md,*.json") |
+| **極致節省** | 41,433 | 4 | 成本敏感分析、快速專案概覽 | `pack_codebase` (compress: true, minimal output) |
+| **MCP 整合** | 50,000 | 8 | MCP 服務器配置分析、協議兼容性檢查 | `pack_codebase` (includePatterns: "**/*.mcp.*,**/*mcp*,**/*.json,**/*.yaml,**/*.yml") |
+| **智能分析** | 200,000 | 50 | AI 代碼分析、智能重構建議 | `pack_codebase` (compress: true, AI-optimized settings) |
+
+### Docker 命令對照（參考用）
+| 模式 | Docker 命令 |
+|------|-------------|
+| **完整模式** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --style markdown --top-files-len 20 --output complete-analysis.md` |
+| **壓縮模式** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --style markdown --top-files-len 10 --output compressed-analysis.md` |
+| **源碼模式** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "src/**/*.ts,src/**/*.html,src/**/*.scss,*.md,*.json" --style markdown --top-files-len 5 --output source-code.md` |
+| **極致節省** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --remove-comments --remove-empty-lines --no-file-summary --no-directory-structure --include "src/**/*.ts,src/**/*.html,*.md" --style markdown --output minimal-analysis.md` |
+| **MCP 整合** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "**/*.mcp.*,**/*mcp*,**/*.json,**/*.yaml,**/*.yml" --style markdown --top-files-len 8 --output mcp-integration-analysis.md` |
+| **智能分析** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --include "src/**/*,*.md,*.json,*.yaml,*.yml" --style markdown --top-files-len 15 --output ai-analysis.md` |
 
 ## 📋 模式選擇決策樹
 
