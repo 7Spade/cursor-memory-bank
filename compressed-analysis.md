@@ -626,476 +626,6 @@ export class PermissionService {
 }
 ```
 
-## File: angular/src/app/core/services/repository.service.ts
-```typescript
-// src/app/core/services/repository.service.ts
-
-import { Injectable, inject, signal, computed } from '@angular/core';
-import {
-  Firestore,
-  doc,
-  docData,
-  collection,
-  collectionData,
-  query,
-  where,
-  addDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  getDoc,
-  DocumentData
-} from '@angular/fire/firestore';
-import { Observable, map, switchMap, combineLatest, of } from 'rxjs';
-import { 
-  Repository, 
-  RepositoryCollaborator, 
-  RepositoryTeamAccess,
-  Account
-} from '../models/auth.model';
-import { AuthService } from './auth.service';
-import { PermissionService } from './permission.service';
-import { ValidationUtils } from '../utils/validation.utils';
-
-@Injectable({ providedIn: 'root' })
-export class RepositoryService {
-  private firestore = inject(Firestore);
-  private authService = inject(AuthService);
-  private permissionService = inject(PermissionService);
-
-  // Signals for state management
-  private _currentRepository = signal<Repository | null>(null);
-  private _isLoading = signal(false);
-  private _error = signal<string | null>(null);
-
-  // Readonly signals
-  readonly currentRepository = this._currentRepository.asReadonly();
-  readonly isLoading = this._isLoading.asReadonly();
-  readonly error = this._error.asReadonly();
-
-  // Computed signals
-  readonly isRepositoryLoaded = computed(() => this._currentRepository() !== null);
-  readonly canManageRepository = computed(() => {
-    const repo = this._currentRepository();
-    if (!repo) return false;
-    
-    const currentAccount = this.authService.currentAccount();
-    if (!currentAccount) return false;
-    
-    return repo.ownerId === currentAccount.id;
-  });
-
-  async createRepository(
-    name: string,
-    description?: string,
-    isPrivate: boolean = true,
-    ownerId?: string
-  ): Promise<string> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 驗證 Repository 名稱
-      const nameValidation = ValidationUtils.validateRepositoryName(name);
-      if (!nameValidation.isValid) {
-        throw new Error(`Repository 名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
-      }
-
-      const currentAccount = this.authService.currentAccount();
-      if (!currentAccount) {
-        throw new Error('用戶未登入');
-      }
-
-      const actualOwnerId = ownerId || currentAccount.id;
-      const repoId = doc(collection(this.firestore, 'repositories')).id;
-      const fullName = `${currentAccount.login}/${name}`;
-
-      await setDoc(doc(this.firestore, `repositories/${repoId}`), {
-        id: repoId,
-        name,
-        fullName,
-        description,
-        private: isPrivate,
-        ownerId: actualOwnerId,
-        ownerType: currentAccount.type,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        defaultBranch: 'main',
-        topics: []
-      });
-
-      // 如果擁有者不是當前用戶，添加協作者
-      if (actualOwnerId !== currentAccount.id) {
-        await this.addCollaborator(repoId, currentAccount.id, 'admin');
-      }
-
-      return repoId;
-    } catch (error) {
-      this._error.set(`創建 Repository 失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  getRepository(repoId: string): Observable<Repository | undefined> {
-    const repoDoc = doc(this.firestore, `repositories/${repoId}`);
-    return docData(repoDoc, { idField: 'id' }).pipe(
-      map(data => {
-        if (data) {
-          return data as Repository;
-        }
-        return undefined;
-      })
-    );
-  }
-
-  async loadRepository(repoId: string): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const repoDoc = doc(this.firestore, `repositories/${repoId}`);
-      const repoData = await docData(repoDoc, { idField: 'id' }).pipe(
-        map(data => data as Repository | null)
-      ).toPromise();
-
-      this._currentRepository.set(repoData || null);
-    } catch (error) {
-      this._error.set(`載入 Repository 失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  getUserRepositories(userId: string): Observable<Repository[]> {
-    const reposQuery = query(
-      collection(this.firestore, 'repositories'),
-      where('ownerId', '==', userId)
-    );
-    return collectionData(reposQuery, { idField: 'id' }) as Observable<Repository[]>;
-  }
-
-  getOrganizationRepositories(orgId: string): Observable<Repository[]> {
-    const reposQuery = query(
-      collection(this.firestore, 'repositories'),
-      where('ownerId', '==', orgId),
-      where('ownerType', '==', 'organization')
-    );
-    return collectionData(reposQuery, { idField: 'id' }) as Observable<Repository[]>;
-  }
-
-  async updateRepository(
-    repoId: string,
-    updates: Partial<Repository>
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 檢查權限
-      const canManage = await this.permissionService.canManageRepository(repoId);
-      if (!canManage) {
-        throw new Error('沒有權限修改此 Repository');
-      }
-
-      const repoRef = doc(this.firestore, `repositories/${repoId}`);
-      await updateDoc(repoRef, {
-        ...updates,
-        updatedAt: new Date()
-      });
-
-      // 更新本地狀態
-      const currentRepo = this._currentRepository();
-      if (currentRepo && currentRepo.id === repoId) {
-        this._currentRepository.set({ ...currentRepo, ...updates, updatedAt: new Date() });
-      }
-    } catch (error) {
-      this._error.set(`更新 Repository 失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async deleteRepository(repoId: string): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 檢查權限
-      const canManage = await this.permissionService.canManageRepository(repoId);
-      if (!canManage) {
-        throw new Error('沒有權限刪除此 Repository');
-      }
-
-      const repoRef = doc(this.firestore, `repositories/${repoId}`);
-      await deleteDoc(repoRef);
-
-      // 清除本地狀態
-      const currentRepo = this._currentRepository();
-      if (currentRepo && currentRepo.id === repoId) {
-        this._currentRepository.set(null);
-      }
-    } catch (error) {
-      this._error.set(`刪除 Repository 失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  getRepositoryCollaborators(repoId: string): Observable<RepositoryCollaborator[]> {
-    const collaboratorsCol = collection(this.firestore, `repositories/${repoId}/collaborators`);
-    return collectionData(collaboratorsCol, { idField: 'id' }) as Observable<RepositoryCollaborator[]>;
-  }
-
-  async addCollaborator(
-    repoId: string,
-    userId: string,
-    permission: 'read' | 'triage' | 'write' | 'maintain' | 'admin',
-    invitedBy?: string
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 檢查權限
-      const canManage = await this.permissionService.canManageRepository(repoId);
-      if (!canManage) {
-        throw new Error('沒有權限添加協作者');
-      }
-
-      const collaboratorRef = doc(this.firestore, `repositories/${repoId}/collaborators/${userId}`);
-      await setDoc(collaboratorRef, {
-        id: userId,
-        repositoryId: repoId,
-        userId,
-        permission,
-        roleName: this.getRoleName(permission),
-        invitedBy: invitedBy || this.authService.currentAccount()?.id,
-        invitedAt: new Date()
-      });
-    } catch (error) {
-      this._error.set(`添加協作者失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async updateCollaboratorPermission(
-    repoId: string,
-    userId: string,
-    newPermission: 'read' | 'triage' | 'write' | 'maintain' | 'admin'
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 檢查權限
-      const canManage = await this.permissionService.canManageRepository(repoId);
-      if (!canManage) {
-        throw new Error('沒有權限修改協作者權限');
-      }
-
-      const collaboratorRef = doc(this.firestore, `repositories/${repoId}/collaborators/${userId}`);
-      await updateDoc(collaboratorRef, {
-        permission: newPermission,
-        roleName: this.getRoleName(newPermission)
-      });
-    } catch (error) {
-      this._error.set(`更新協作者權限失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async removeCollaborator(repoId: string, userId: string): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 檢查權限
-      const canManage = await this.permissionService.canManageRepository(repoId);
-      if (!canManage) {
-        throw new Error('沒有權限移除協作者');
-      }
-
-      const collaboratorRef = doc(this.firestore, `repositories/${repoId}/collaborators/${userId}`);
-      await deleteDoc(collaboratorRef);
-    } catch (error) {
-      this._error.set(`移除協作者失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  getRepositoryTeamAccess(repoId: string): Observable<RepositoryTeamAccess[]> {
-    const teamAccessCol = collection(this.firestore, `repositories/${repoId}/teamAccess`);
-    return collectionData(teamAccessCol, { idField: 'id' }) as Observable<RepositoryTeamAccess[]>;
-  }
-
-  async addTeamAccess(
-    repoId: string,
-    teamId: string,
-    permission: 'read' | 'triage' | 'write' | 'maintain' | 'admin',
-    grantedBy?: string
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 檢查權限
-      const canManage = await this.permissionService.canManageRepository(repoId);
-      if (!canManage) {
-        throw new Error('沒有權限添加團隊訪問權限');
-      }
-
-      const teamAccessRef = doc(this.firestore, `repositories/${repoId}/teamAccess/${teamId}`);
-      await setDoc(teamAccessRef, {
-        id: teamId,
-        repositoryId: repoId,
-        teamId,
-        permission,
-        roleName: this.getRoleName(permission),
-        grantedBy: grantedBy || this.authService.currentAccount()?.id,
-        grantedAt: new Date()
-      });
-    } catch (error) {
-      this._error.set(`添加團隊訪問權限失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async updateTeamAccessPermission(
-    repoId: string,
-    teamId: string,
-    newPermission: 'read' | 'triage' | 'write' | 'maintain' | 'admin'
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 檢查權限
-      const canManage = await this.permissionService.canManageRepository(repoId);
-      if (!canManage) {
-        throw new Error('沒有權限修改團隊訪問權限');
-      }
-
-      const teamAccessRef = doc(this.firestore, `repositories/${repoId}/teamAccess/${teamId}`);
-      await updateDoc(teamAccessRef, {
-        permission: newPermission,
-        roleName: this.getRoleName(newPermission)
-      });
-    } catch (error) {
-      this._error.set(`更新團隊訪問權限失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async removeTeamAccess(repoId: string, teamId: string): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 檢查權限
-      const canManage = await this.permissionService.canManageRepository(repoId);
-      if (!canManage) {
-        throw new Error('沒有權限移除團隊訪問權限');
-      }
-
-      const teamAccessRef = doc(this.firestore, `repositories/${repoId}/teamAccess/${teamId}`);
-      await deleteDoc(teamAccessRef);
-    } catch (error) {
-      this._error.set(`移除團隊訪問權限失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  private getRoleName(permission: string): string {
-    const roleMap: { [key: string]: string } = {
-      'read': '讀取',
-      'triage': '分類',
-      'write': '寫入',
-      'maintain': '維護',
-      'admin': '管理員'
-    };
-    return roleMap[permission] || permission;
-  }
-
-  // 清除錯誤
-  clearError() {
-    this._error.set(null);
-  }
-
-  // 清除 Repository 上下文
-  clearRepositoryContext() {
-    this._currentRepository.set(null);
-    this._error.set(null);
-  }
-}
-```
-
-## File: angular/src/app/core/utils/avatar.utils.ts
-```typescript
-/**
- * 頭像 URL 處理工具
- * 統一處理預設頭像和用戶自定義頭像的 URL 生成
- */
-
-export class AvatarUtils {
-  private static readonly DEFAULT_AVATAR = 'avatar.jpg';
-  private static readonly STORAGE_BASE_URL = 'https://firebasestorage.googleapis.com/v0/b/elite-chiller-455712-c4.firebasestorage.app/o';
-
-  /**
-   * 獲取頭像 URL
-   * @param avatar 頭像路徑或 URL
-   * @returns 完整的頭像 URL
-   */
-  static getAvatarUrl(avatar: string | undefined | null): string {
-    if (!avatar) {
-      // 使用預設頭像
-      return `${this.STORAGE_BASE_URL}/${this.DEFAULT_AVATAR}?alt=media`;
-    }
-    
-    if (avatar.startsWith('http')) {
-      // 完整的 URL，直接返回
-      return avatar;
-    } else {
-      // 相對路徑，從 Storage 獲取
-      return `${this.STORAGE_BASE_URL}/${avatar}?alt=media`;
-    }
-  }
-
-  /**
-   * 檢查是否為預設頭像
-   * @param avatar 頭像路徑或 URL
-   * @returns 是否為預設頭像
-   */
-  static isDefaultAvatar(avatar: string | undefined | null): boolean {
-    if (!avatar) return true;
-    return avatar === this.DEFAULT_AVATAR || avatar.includes(this.DEFAULT_AVATAR);
-  }
-
-  /**
-   * 獲取預設頭像 URL
-   * @returns 預設頭像的完整 URL
-   */
-  static getDefaultAvatarUrl(): string {
-    return `${this.STORAGE_BASE_URL}/${this.DEFAULT_AVATAR}?alt=media`;
-  }
-}
-```
-
 ## File: angular/src/app/core/utils/validation.utils.spec.ts
 ```typescript
 import { ValidationUtils } from './validation.utils';
@@ -2667,1055 +2197,6 @@ export class MembersListComponent implements OnInit {
 }
 ```
 
-## File: angular/src/app/features/organization/components/organization-create.component.ts
-```typescript
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
-import { OrganizationService } from '../../../core/services/organization.service';
-import { PermissionService } from '../../../core/services/permission.service';
-import { NotificationService } from '../../../core/services/notification.service';
-import { ValidationService } from '../../../core/services/validation.service';
-
-/**
- * 組織建立組件
- * 允許用戶建立新的組織
- */
-@Component({
-  selector: 'app-organization-create',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatProgressSpinnerModule
-  ],
-  template: `
-    <div class="organization-create-container">
-      <mat-card class="create-card">
-        <mat-card-header>
-          <mat-card-title>建立新組織</mat-card-title>
-          <mat-card-subtitle>建立一個新的組織來管理您的專案和團隊</mat-card-subtitle>
-        </mat-card-header>
-
-        <mat-card-content>
-          <form class="create-form" (ngSubmit)="onSubmit()">
-            <!-- 組織名稱 -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>組織名稱</mat-label>
-              <input 
-                matInput 
-                [(ngModel)]="formData.name" 
-                name="name"
-                required
-                [disabled]="isSubmitting()"
-                (blur)="validateField('name')">
-              <mat-icon matSuffix>business</mat-icon>
-              @if (errors['name']) {
-                <mat-error>{{ errors['name'] }}</mat-error>
-              }
-            </mat-form-field>
-
-            <!-- 組織 Slug -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>組織 Slug</mat-label>
-              <input 
-                matInput 
-                [(ngModel)]="formData.slug" 
-                name="slug"
-                required
-                [disabled]="isSubmitting()"
-                (blur)="validateField('slug')">
-              <mat-icon matSuffix>link</mat-icon>
-              <mat-hint>用於 URL 的唯一識別碼</mat-hint>
-              @if (errors['slug']) {
-                <mat-error>{{ errors['slug'] }}</mat-error>
-              }
-            </mat-form-field>
-
-            <!-- 組織描述 -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>組織描述</mat-label>
-              <textarea 
-                matInput 
-                [(ngModel)]="formData.description" 
-                name="description"
-                rows="3"
-                [disabled]="isSubmitting()"
-                (blur)="validateField('description')">
-              </textarea>
-              <mat-icon matSuffix>description</mat-icon>
-              <mat-hint>簡短描述組織的用途和目標</mat-hint>
-              @if (errors['description']) {
-                <mat-error>{{ errors['description'] }}</mat-error>
-              }
-            </mat-form-field>
-
-            <!-- 組織隱私設定 -->
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>組織隱私</mat-label>
-              <mat-select 
-                [(ngModel)]="formData.privacy" 
-                name="privacy"
-                [disabled]="isSubmitting()">
-                <mat-option value="public">公開</mat-option>
-                <mat-option value="private">私有</mat-option>
-              </mat-select>
-              <mat-icon matSuffix>visibility</mat-icon>
-              <mat-hint>控制組織的公開可見性</mat-hint>
-            </mat-form-field>
-          </form>
-        </mat-card-content>
-
-        <mat-card-actions>
-          <button 
-            mat-button 
-            (click)="goBack()"
-            [disabled]="isSubmitting()">
-            <mat-icon>arrow_back</mat-icon>
-            取消
-          </button>
-          
-          <div class="spacer"></div>
-          
-          <button 
-            mat-raised-button 
-            color="primary"
-            (click)="onSubmit()"
-            [disabled]="isSubmitting() || !isFormValid()">
-            @if (isSubmitting()) {
-              <mat-spinner diameter="20"></mat-spinner>
-            } @else {
-              <mat-icon>add</mat-icon>
-            }
-            建立組織
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .organization-create-container {
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .create-card {
-      .create-form {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .full-width {
-        width: 100%;
-      }
-
-      .spacer {
-        flex: 1;
-      }
-
-      mat-card-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .organization-create-container {
-        padding: 16px;
-      }
-    }
-  `]
-})
-export class OrganizationCreateComponent implements OnInit {
-  private router = inject(Router);
-  private orgService = inject(OrganizationService);
-  private permissionService = inject(PermissionService);
-  private notificationService = inject(NotificationService);
-  private validationService = inject(ValidationService);
-
-  // Signals
-  isSubmitting = signal(false);
-  errors: { [key: string]: string | undefined } = {};
-
-  // Form data
-  formData = {
-    name: '',
-    slug: '',
-    description: '',
-    privacy: 'private' as 'public' | 'private'
-  };
-
-  ngOnInit() {
-    // 檢查用戶是否已登入
-    if (!this.permissionService.hasRole('user')) {
-      this.notificationService.showError('請先登入以建立組織');
-      this.router.navigate(['/login']);
-      return;
-    }
-  }
-
-  isFormValid(): boolean {
-    return this.formData.name.trim().length > 0 && 
-           this.formData.slug.trim().length > 0 &&
-           !this.errors['name'] &&
-           !this.errors['slug'] &&
-           !this.errors['description'];
-  }
-
-  validateField(field: string): void {
-    switch (field) {
-      case 'name':
-        const nameResult = this.validationService.validateOrganizationName(this.formData.name);
-        this.errors['name'] = nameResult.errors[0] || undefined;
-        break;
-      case 'slug':
-        const slugResult = this.validationService.validateLogin(this.formData.slug);
-        this.errors['slug'] = slugResult.errors[0] || undefined;
-        break;
-      case 'description':
-        const descResult = this.validationService.validateOrganizationDescription(this.formData.description);
-        this.errors['description'] = descResult.errors[0] || undefined;
-        break;
-    }
-  }
-
-  async onSubmit() {
-    if (!this.isFormValid() || this.isSubmitting()) {
-      return;
-    }
-
-    // 驗證所有字段
-    this.validateField('name');
-    this.validateField('slug');
-    this.validateField('description');
-
-    if (!this.isFormValid()) {
-      this.notificationService.showValidationErrors([
-        this.errors['name'],
-        this.errors['slug'],
-        this.errors['description']
-      ].filter(error => error) as string[]);
-      return;
-    }
-
-    try {
-      this.isSubmitting.set(true);
-      
-      // TODO: 實作建立組織的邏輯
-      // const orgId = await this.orgService.createOrganization(
-      //   this.formData.name.trim(),
-      //   this.formData.slug.trim(),
-      //   'current-user-id', // 需要從 AuthService 獲取
-      //   undefined, // email
-      //   this.formData.description.trim()
-      // );
-      
-      this.notificationService.showSuccess('組織已成功建立');
-      this.router.navigate(['/organizations']);
-      
-    } catch (error) {
-      this.notificationService.showError(`建立組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-    } finally {
-      this.isSubmitting.set(false);
-    }
-  }
-
-  goBack() {
-    this.router.navigate(['/organizations']);
-  }
-}
-```
-
-## File: angular/src/app/features/organization/components/organization-detail.component.ts
-```typescript
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatGridListModule } from '@angular/material/grid-list';
-import { MatDividerModule } from '@angular/material/divider';
-
-import { OrganizationService } from '../../../core/services/organization.service';
-import { PermissionService } from '../../../core/services/permission.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { Organization, Team, OrganizationMember } from '../../../core/models/auth.model';
-
-/**
- * 組織詳情組件
- * 顯示組織的基本信息和統計數據
- */
-@Component({
-  selector: 'app-organization-detail',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatGridListModule,
-    MatDividerModule
-  ],
-  template: `
-    <div class="organization-detail-container">
-      @if (isLoading()) {
-        <div class="loading-container">
-          <mat-spinner></mat-spinner>
-          <p>載入組織詳情中...</p>
-        </div>
-      } @else if (error()) {
-        <div class="error-container">
-          <mat-icon>error</mat-icon>
-          <p>{{ error() }}</p>
-          <button mat-button (click)="loadOrganization()">重試</button>
-        </div>
-      } @else if (organization()) {
-        <!-- 組織資訊卡片 -->
-        <mat-card class="organization-info-card">
-          <mat-card-header>
-            <div mat-card-avatar class="organization-avatar">
-              @if (organization()?.profile?.avatar) {
-                <img [src]="organization()?.profile?.avatar" [alt]="organization()?.login">
-              } @else {
-                <mat-icon>business</mat-icon>
-              }
-            </div>
-            <mat-card-title>{{ organization()?.login }}</mat-card-title>
-            <mat-card-subtitle>{{ organization()?.login }}</mat-card-subtitle>
-            
-            <div class="card-actions">
-              @if (permissionService.canManageOrganization()) {
-                <button mat-icon-button (click)="editOrganization()">
-                  <mat-icon>edit</mat-icon>
-                </button>
-              }
-              @if (permissionService.isOrganizationOwner()) {
-                <button mat-icon-button (click)="deleteOrganization()" class="delete-button">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              }
-            </div>
-          </mat-card-header>
-
-          <mat-card-content>
-            @if (organization()?.description) {
-              <p class="organization-description">{{ organization()?.description }}</p>
-            }
-            
-            <div class="organization-stats">
-              <div class="stat-item">
-                <mat-icon>people</mat-icon>
-                <span>{{ memberCount() }} 成員</span>
-              </div>
-              <div class="stat-item">
-                <mat-icon>groups</mat-icon>
-                <span>{{ teamCount() }} 團隊</span>
-              </div>
-              <div class="stat-item">
-                <mat-icon>security</mat-icon>
-                <span>{{ securityManagerCount() }} 安全管理器</span>
-              </div>
-            </div>
-          </mat-card-content>
-
-          <mat-card-actions>
-            @if (permissionService.canManageMembers()) {
-              <button mat-button (click)="goToMembers()" color="primary">
-                <mat-icon>people</mat-icon>
-                管理成員
-              </button>
-            }
-            @if (permissionService.canManageTeams()) {
-              <button mat-button (click)="goToTeams()">
-                <mat-icon>groups</mat-icon>
-                管理團隊
-              </button>
-            }
-            @if (permissionService.canManageOrganization()) {
-              <button mat-button (click)="goToSettings()">
-                <mat-icon>settings</mat-icon>
-                組織設定
-              </button>
-            }
-          </mat-card-actions>
-        </mat-card>
-
-        <!-- 統計資訊網格 -->
-        <div class="stats-grid">
-          <mat-card class="stat-card">
-            <mat-card-content>
-              <div class="stat-content">
-                <mat-icon class="stat-icon">people</mat-icon>
-                <div class="stat-info">
-                  <h3>{{ memberCount() }}</h3>
-                  <p>成員</p>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <mat-card class="stat-card">
-            <mat-card-content>
-              <div class="stat-content">
-                <mat-icon class="stat-icon">groups</mat-icon>
-                <div class="stat-info">
-                  <h3>{{ teamCount() }}</h3>
-                  <p>團隊</p>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <mat-card class="stat-card">
-            <mat-card-content>
-              <div class="stat-content">
-                <mat-icon class="stat-icon">security</mat-icon>
-                <div class="stat-info">
-                  <h3>{{ securityManagerCount() }}</h3>
-                  <p>安全管理器</p>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-
-        <!-- 最近團隊 -->
-        @if (teams().length > 0) {
-          <mat-card class="recent-teams-card">
-            <mat-card-header>
-              <mat-card-title>最近團隊</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="team-list">
-                @for (team of teams(); track team.id) {
-                  <div class="team-item">
-                    <div class="team-info">
-                      <h4>{{ team.name }}</h4>
-                      <p>{{ team.description || '暫無描述' }}</p>
-                    </div>
-                    <button mat-button (click)="viewTeam(team.id)">
-                      查看
-                    </button>
-                  </div>
-                }
-              </div>
-            </mat-card-content>
-          </mat-card>
-        }
-      }
-    </div>
-  `,
-  styles: [`
-    .organization-detail-container {
-      padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-    }
-
-    .error-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-      color: var(--mdc-theme-error);
-    }
-
-    .organization-info-card {
-      margin-bottom: 24px;
-    }
-
-    .organization-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background-color: var(--mdc-theme-primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      
-      img {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-    }
-
-    .card-actions {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-    }
-
-    .delete-button {
-      color: var(--mdc-theme-error);
-    }
-
-    .organization-description {
-      margin: 16px 0;
-      color: var(--mdc-theme-on-surface-variant);
-      line-height: 1.5;
-    }
-
-    .organization-stats {
-      display: flex;
-      gap: 16px;
-      margin: 16px 0;
-      
-      .stat-item {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        color: var(--mdc-theme-on-surface-variant);
-        font-size: 14px;
-        
-        mat-icon {
-          font-size: 18px;
-          width: 18px;
-          height: 18px;
-        }
-      }
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .stat-card {
-      .stat-content {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        
-        .stat-icon {
-          font-size: 32px;
-          width: 32px;
-          height: 32px;
-          color: var(--mdc-theme-primary);
-        }
-        
-        .stat-info {
-          h3 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 500;
-          }
-          
-          p {
-            margin: 0;
-            color: var(--mdc-theme-on-surface-variant);
-            font-size: 14px;
-          }
-        }
-      }
-    }
-
-    .recent-teams-card {
-      .team-list {
-        display: grid;
-        gap: 16px;
-      }
-      
-      .team-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        
-        .team-info {
-          h4 {
-            margin: 0 0 4px 0;
-            font-size: 16px;
-            font-weight: 500;
-          }
-          
-          p {
-            margin: 0;
-            color: var(--mdc-theme-on-surface-variant);
-            font-size: 14px;
-          }
-        }
-      }
-    }
-
-    @media (max-width: 600px) {
-      .organization-detail-container {
-        padding: 16px;
-      }
-      
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-      
-      .team-item {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-      }
-    }
-  `]
-})
-export class OrganizationDetailComponent implements OnInit {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private orgService = inject(OrganizationService);
-  readonly permissionService = inject(PermissionService);
-  private authService = inject(AuthService);
-
-  // Signals
-  organization = signal<Organization | null>(null);
-  teams = signal<Team[]>([]);
-  members = signal<OrganizationMember[]>([]);
-  isLoading = signal(false);
-  error = signal<string | null>(null);
-
-  // Computed signals
-  readonly memberCount = computed(() => this.members().length);
-  readonly teamCount = computed(() => this.teams().length);
-  readonly securityManagerCount = computed(() => 
-    this.members().filter(m => m.role === 'admin' || m.role === 'owner').length
-  );
-
-  orgId!: string;
-
-  async ngOnInit() {
-    this.orgId = this.route.snapshot.paramMap.get('orgId')!;
-    
-    if (!this.orgId) {
-      this.error.set('無效的組織 ID');
-      return;
-    }
-
-    // 設置當前組織到權限服務
-    await this.permissionService.setCurrentOrganization(this.orgId);
-    
-    // 載入組織詳情
-    await this.loadOrganization();
-  }
-
-  async loadOrganization() {
-    try {
-      this.isLoading.set(true);
-      this.error.set(null);
-      
-      // 載入組織資訊
-      const org = await this.orgService.getOrganization(this.orgId).toPromise();
-      this.organization.set(org || null);
-      
-      if (!org) {
-        this.error.set('組織不存在');
-        return;
-      }
-
-      // 載入團隊列表 - 暫時設為空數組，因為 getOrganizationTeams 方法不存在
-      this.teams.set([]);
-
-      // 載入成員列表
-      const members = await this.orgService.getOrganizationMembers(this.orgId).toPromise();
-      this.members.set(members || []);
-
-    } catch (error) {
-      this.error.set(`載入組織詳情失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-    } finally {
-      this.isLoading.set(false);
-    }
-  }
-
-  editOrganization() {
-    this.router.navigate(['settings'], { relativeTo: this.route });
-  }
-
-  deleteOrganization() {
-    // TODO: 實作刪除組織邏輯
-    console.log('刪除組織:', this.orgId);
-  }
-
-  goToMembers() {
-    this.router.navigate(['members'], { relativeTo: this.route });
-  }
-
-  goToTeams() {
-    this.router.navigate(['teams'], { relativeTo: this.route });
-  }
-
-  goToSettings() {
-    this.router.navigate(['settings'], { relativeTo: this.route });
-  }
-
-  viewTeam(teamId: string) {
-    this.router.navigate(['teams', teamId], { relativeTo: this.route });
-  }
-}
-```
-
-## File: angular/src/app/features/organization/components/organization-settings.component.ts
-```typescript
-import { Component, inject, signal, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
-import { OrganizationService } from '../../../core/services/organization.service';
-import { PermissionService } from '../../../core/services/permission.service';
-import { NotificationService } from '../../../core/services/notification.service';
-import { Organization } from '../../../core/models/auth.model';
-
-/**
- * 組織設定組件
- * 允許組織管理員編輯組織的基本資訊
- */
-@Component({
-  selector: 'app-organization-settings',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatProgressSpinnerModule
-  ],
-  template: `
-    <div class="organization-settings-container">
-      @if (isLoading()) {
-        <div class="loading-container">
-          <mat-spinner></mat-spinner>
-          <p>載入組織設定中...</p>
-        </div>
-      } @else if (error()) {
-        <div class="error-container">
-          <mat-icon>error</mat-icon>
-          <p>{{ error() }}</p>
-          <button mat-button (click)="loadOrganization()">重試</button>
-        </div>
-      } @else if (organization()) {
-        <mat-card class="settings-card">
-          <mat-card-header>
-            <mat-card-title>組織設定</mat-card-title>
-            <mat-card-subtitle>管理組織的基本資訊和設定</mat-card-subtitle>
-          </mat-card-header>
-
-          <mat-card-content>
-            <form class="settings-form" (ngSubmit)="onSubmit()">
-              <!-- 組織名稱 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織名稱</mat-label>
-                <input 
-                  matInput 
-                  [(ngModel)]="formData.name" 
-                  name="name"
-                  required
-                  [disabled]="isSubmitting()">
-                <mat-icon matSuffix>business</mat-icon>
-              </mat-form-field>
-
-              <!-- 組織 Slug -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織 Slug</mat-label>
-                <input 
-                  matInput 
-                  [(ngModel)]="formData.slug" 
-                  name="slug"
-                  required
-                  [disabled]="isSubmitting()">
-                <mat-icon matSuffix>link</mat-icon>
-                <mat-hint>用於 URL 的唯一識別碼</mat-hint>
-              </mat-form-field>
-
-              <!-- 組織描述 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織描述</mat-label>
-                <textarea 
-                  matInput 
-                  [(ngModel)]="formData.description" 
-                  name="description"
-                  rows="4"
-                  [disabled]="isSubmitting()">
-                </textarea>
-                <mat-icon matSuffix>description</mat-icon>
-                <mat-hint>簡短描述組織的用途和目標</mat-hint>
-              </mat-form-field>
-
-              <!-- 組織可見性 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織可見性</mat-label>
-                <mat-select 
-                  [(ngModel)]="formData.visibility" 
-                  name="visibility"
-                  [disabled]="isSubmitting()">
-                  <mat-option value="public">公開</mat-option>
-                  <mat-option value="private">私有</mat-option>
-                </mat-select>
-                <mat-icon matSuffix>visibility</mat-icon>
-                <mat-hint>控制組織的公開可見性</mat-hint>
-              </mat-form-field>
-
-              <!-- 預設成員角色 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>預設成員角色</mat-label>
-                <mat-select 
-                  [(ngModel)]="formData.defaultMemberRole" 
-                  name="defaultMemberRole"
-                  [disabled]="isSubmitting()">
-                  <mat-option value="member">成員</mat-option>
-                  <mat-option value="admin">管理員</mat-option>
-                </mat-select>
-                <mat-icon matSuffix>person_add</mat-icon>
-                <mat-hint>新成員的預設角色</mat-hint>
-              </mat-form-field>
-            </form>
-          </mat-card-content>
-
-          <mat-card-actions>
-            <button 
-              mat-button 
-              (click)="goBack()"
-              [disabled]="isSubmitting()">
-              <mat-icon>arrow_back</mat-icon>
-              返回
-            </button>
-            
-            <div class="spacer"></div>
-            
-            <button 
-              mat-button 
-              (click)="resetForm()"
-              [disabled]="isSubmitting()">
-              <mat-icon>refresh</mat-icon>
-              重置
-            </button>
-            
-            <button 
-              mat-raised-button 
-              color="primary"
-              (click)="onSubmit()"
-              [disabled]="isSubmitting() || !isFormValid()">
-              @if (isSubmitting()) {
-                <mat-spinner diameter="20"></mat-spinner>
-              } @else {
-                <mat-icon>save</mat-icon>
-              }
-              儲存設定
-            </button>
-          </mat-card-actions>
-        </mat-card>
-      }
-    </div>
-  `,
-  styles: [`
-    .organization-settings-container {
-      padding: 24px;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-    }
-
-    .error-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-      color: var(--mdc-theme-error);
-    }
-
-    .settings-card {
-      .settings-form {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .full-width {
-        width: 100%;
-      }
-
-      .spacer {
-        flex: 1;
-      }
-
-      mat-card-actions {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .organization-settings-container {
-        padding: 16px;
-      }
-    }
-  `]
-})
-export class OrganizationSettingsComponent implements OnInit {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private orgService = inject(OrganizationService);
-  private permissionService = inject(PermissionService);
-  private notificationService = inject(NotificationService);
-
-  // Signals
-  organization = signal<Organization | null>(null);
-  isLoading = signal(false);
-  isSubmitting = signal(false);
-  error = signal<string | null>(null);
-
-  // Form data
-  formData = {
-    name: '',
-    slug: '',
-    description: '',
-    visibility: 'private' as 'public' | 'private',
-    defaultMemberRole: 'member' as 'member' | 'admin'
-  };
-
-  private originalFormData = { ...this.formData };
-
-  orgId!: string;
-
-  async ngOnInit() {
-    this.orgId = this.route.snapshot.paramMap.get('orgId')!;
-    
-    if (!this.orgId) {
-      this.error.set('無效的組織 ID');
-      return;
-    }
-
-    // 檢查權限
-    if (!this.permissionService.canManageOrganization()) {
-      this.error.set('您沒有權限編輯組織設定');
-      return;
-    }
-
-    await this.loadOrganization();
-  }
-
-  async loadOrganization() {
-    try {
-      this.isLoading.set(true);
-      this.error.set(null);
-      
-      const org = await this.orgService.getOrganization(this.orgId).toPromise();
-      
-      if (!org) {
-        this.error.set('組織不存在');
-        return;
-      }
-
-      this.organization.set(org);
-      
-      // 填充表單數據
-      this.formData = {
-        name: org.profile.name,
-        slug: org.login,
-        description: org.description || '',
-        visibility: org.settings?.organization?.visibility || 'private',
-        defaultMemberRole: (org.settings?.organization?.defaultMemberRole as 'admin' | 'member') || 'member'
-      };
-
-      this.originalFormData = { ...this.formData };
-
-    } catch (error) {
-      this.error.set(`載入組織設定失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-    } finally {
-      this.isLoading.set(false);
-    }
-  }
-
-  isFormValid(): boolean {
-    return this.formData.name.trim().length > 0 && 
-           this.formData.slug.trim().length > 0;
-  }
-
-  async onSubmit() {
-    if (!this.isFormValid() || this.isSubmitting()) {
-      return;
-    }
-
-    try {
-      this.isSubmitting.set(true);
-      
-      // TODO: 實作更新組織設定的邏輯
-      // await this.orgService.updateOrganization(this.orgId, this.formData);
-      
-      this.notificationService.showSuccess('組織設定已更新');
-      this.originalFormData = { ...this.formData };
-      
-    } catch (error) {
-      this.notificationService.showError(`更新失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-    } finally {
-      this.isSubmitting.set(false);
-    }
-  }
-
-  resetForm() {
-    this.formData = { ...this.originalFormData };
-  }
-
-  goBack() {
-    this.router.navigate(['..'], { relativeTo: this.route });
-  }
-}
-```
-
 ## File: angular/src/app/features/organization/components/team-create.component.ts
 ```typescript
 import { Component, inject, signal, OnInit } from '@angular/core';
@@ -4117,7 +2598,10 @@ export class TeamCreateComponent implements OnInit {
       const teamId = await this.orgService.createTeam(
         this.orgId,
         this.formData.name.trim(),
-        this.formData.slug.trim()
+        this.formData.slug.trim(),
+        this.formData.description.trim(),
+        this.formData.privacy,
+        this.formData.permissions
       );
       
       this.notificationService.showSuccess('團隊已成功建立');
@@ -4611,6 +3095,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
 
 import { OrganizationService } from '../../../core/services/organization.service';
 import { PermissionService } from '../../../core/services/permission.service';
@@ -4906,8 +3391,12 @@ export class TeamsListComponent implements OnInit {
       this.isLoading.set(true);
       this.error.set(null);
       
-      // 暫時設為空數組，因為 getOrganizationTeams 方法不存在
-      this.teams.set([]);
+      // 使用 getOrganizationTeams 方法載入團隊列表
+      const teams = await firstValueFrom(
+        this.orgService.getOrganizationTeams(this.orgId)
+      );
+      
+      this.teams.set(teams);
       
     } catch (error) {
       this.error.set(`載入團隊列表失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
@@ -4929,8 +3418,23 @@ export class TeamsListComponent implements OnInit {
   }
 
   async deleteTeam(team: Team) {
-    // TODO: 實作刪除團隊對話框
-    this.notificationService.showInfo('刪除團隊功能即將推出');
+    // 確認對話框
+    const confirmed = confirm(`確定要刪除團隊 "${team.name}" 嗎？此操作無法復原。`);
+    
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await this.orgService.deleteTeam(this.orgId, team.id);
+      this.notificationService.showSuccess(`團隊 "${team.name}" 已成功刪除`);
+      
+      // 重新載入團隊列表
+      await this.loadTeams();
+      
+    } catch (error) {
+      this.notificationService.showError(`刪除團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    }
   }
 }
 ```
@@ -9348,9 +7852,9 @@ bootstrapApplication(App, appConfig)
 export * from './auth.model';
 ```
 
-## File: angular/src/app/core/services/organization.service.ts
+## File: angular/src/app/core/services/repository.service.ts
 ```typescript
-// src/app/core/services/organization.service.ts
+// src/app/core/services/repository.service.ts
 
 import { Injectable, inject, signal, computed } from '@angular/core';
 import {
@@ -9368,428 +7872,394 @@ import {
   getDoc,
   DocumentData
 } from '@angular/fire/firestore';
-import { Observable, map, switchMap, combineLatest, of } from 'rxjs';
+import { Observable, map, switchMap, combineLatest, of, catchError, throwError } from 'rxjs';
 import { 
-  Organization, 
-  OrganizationMember, 
-  Team,
-  TeamMember,
-  OrgRole,
-  TeamRole,
-  ProfileVO,
-  PermissionVO,
-  SettingsVO
+  Repository, 
+  RepositoryCollaborator, 
+  RepositoryTeamAccess,
+  Account
 } from '../models/auth.model';
+import { AuthService } from './auth.service';
+import { PermissionService } from './permission.service';
 import { ValidationUtils } from '../utils/validation.utils';
 
 @Injectable({ providedIn: 'root' })
-export class OrganizationService {
+export class RepositoryService {
   private firestore = inject(Firestore);
+  private authService = inject(AuthService);
+  private permissionService = inject(PermissionService);
 
   // Signals for state management
-  private _currentOrganization = signal<Organization | null>(null);
+  private _currentRepository = signal<Repository | null>(null);
   private _isLoading = signal(false);
   private _error = signal<string | null>(null);
 
   // Readonly signals
-  readonly currentOrganization = this._currentOrganization.asReadonly();
+  readonly currentRepository = this._currentRepository.asReadonly();
   readonly isLoading = this._isLoading.asReadonly();
   readonly error = this._error.asReadonly();
 
   // Computed signals
-  readonly isOrganizationLoaded = computed(() => this._currentOrganization() !== null);
-  readonly organizationMembers = computed(() => {
-    const org = this._currentOrganization();
-    return org ? [] : []; // 這裡應該實現成員查詢
+  readonly isRepositoryLoaded = computed(() => this._currentRepository() !== null);
+  readonly canManageRepository = computed(() => {
+    const repo = this._currentRepository();
+    if (!repo) return false;
+    
+    const currentAccount = this.authService.currentAccount();
+    if (!currentAccount) return false;
+    
+    return repo.ownerId === currentAccount.id;
   });
 
-  async createOrganization(
+  async createRepository(
     name: string,
-    login: string,
-    ownerId: string,
-    description?: string
+    description?: string,
+    isPrivate: boolean = true,
+    ownerId?: string
   ): Promise<string> {
     try {
       this._isLoading.set(true);
       this._error.set(null);
 
-      // 驗證組織名稱
-      const nameValidation = ValidationUtils.validateOrganizationName(name);
+      // 驗證 Repository 名稱
+      const nameValidation = ValidationUtils.validateRepositoryName(name);
       if (!nameValidation.isValid) {
-        throw new Error(`組織名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
+        throw new Error(`Repository 名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
       }
 
-      // 驗證登入名稱
-      const loginValidation = ValidationUtils.validateLogin(login);
-      if (!loginValidation.isValid) {
-        throw new Error(`登入名稱驗證失敗: ${loginValidation.errors.join(', ')}`);
+      const currentAccount = this.authService.currentAccount();
+      if (!currentAccount) {
+        throw new Error('用戶未登入');
       }
 
-      const orgId = doc(collection(this.firestore, 'accounts')).id;
+      const actualOwnerId = ownerId || currentAccount.id;
+      const repoId = doc(collection(this.firestore, 'repositories')).id;
+      const fullName = `${currentAccount.login}/${name}`;
 
-      // 建立 ProfileVO
-      const profile: ProfileVO = {
-        name: name,
-        email: '', // 組織沒有電子郵件
-        avatar: undefined,
-        bio: description,
-        location: undefined,
-        website: undefined
-      };
-
-      // 建立 PermissionVO
-      const permissions: PermissionVO = {
-        roles: ['organization'],
-        abilities: [
-          { action: 'read', resource: 'organization' },
-          { action: 'write', resource: 'organization' },
-          { action: 'admin', resource: 'organization' },
-          { action: 'read', resource: 'team' },
-          { action: 'write', resource: 'team' },
-          { action: 'admin', resource: 'team' },
-          { action: 'read', resource: 'member' },
-          { action: 'write', resource: 'member' },
-          { action: 'admin', resource: 'member' }
-        ]
-      };
-
-      // 建立 SettingsVO
-      const settings: SettingsVO = {
-        language: 'zh-TW',
-        theme: 'light',
-        notifications: { email: true, push: true, sms: false },
-        privacy: { profilePublic: true, showEmail: false },
-        organization: {
-          defaultMemberRole: OrgRole.MEMBER,
-          visibility: 'private'
-        }
-      };
-
-      await setDoc(doc(this.firestore, `accounts/${orgId}`), {
-        id: orgId,
-        type: 'organization',
-        login,
-        profile,
-        permissions,
-        settings,
-        projectsOwned: [],
+      await setDoc(doc(this.firestore, `repositories/${repoId}`), {
+        id: repoId,
+        name,
+        fullName,
         description,
-        ownerId,
+        private: isPrivate,
+        ownerId: actualOwnerId,
+        ownerType: currentAccount.type,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        defaultBranch: 'main',
+        topics: []
       });
 
-      await this.addOrganizationMember(orgId, ownerId, OrgRole.OWNER);
-      return orgId;
+      // 如果擁有者不是當前用戶，添加協作者
+      if (actualOwnerId !== currentAccount.id) {
+        await this.addCollaborator(repoId, currentAccount.id, 'admin');
+      }
+
+      return repoId;
     } catch (error) {
-      this._error.set(`創建組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      this._error.set(`創建 Repository 失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
       throw error;
     } finally {
       this._isLoading.set(false);
     }
   }
 
-  getOrganization(orgId: string): Observable<Organization | undefined> {
-    const orgDoc = doc(this.firestore, `accounts/${orgId}`);
-    return docData(orgDoc, { idField: 'id' }).pipe(
+  getRepository(repoId: string): Observable<Repository> {
+    const repoDoc = doc(this.firestore, `repositories/${repoId}`);
+    return docData(repoDoc, { idField: 'id' }).pipe(
       map(data => {
-        if (data && (data as DocumentData)['type'] === 'organization') {
-          return data as Organization;
+        if (data) {
+          return data as Repository;
         }
-        return undefined;
+        throw new Error(`倉庫不存在: ${repoId}`);
+      }),
+      catchError((error: any) => {
+        console.error('獲取倉庫失敗:', error);
+        return throwError(() => new Error('無法載入倉庫資訊，請稍後再試'));
       })
     );
   }
 
-  async loadOrganization(orgId: string): Promise<void> {
+  async loadRepository(repoId: string): Promise<void> {
     try {
       this._isLoading.set(true);
       this._error.set(null);
 
-      const orgDoc = doc(this.firestore, `accounts/${orgId}`);
-      const orgData = await docData(orgDoc, { idField: 'id' }).pipe(
-        map(data => {
-          if (data && (data as DocumentData)['type'] === 'organization') {
-            return data as Organization;
-          }
-          return null;
-        })
+      const repoDoc = doc(this.firestore, `repositories/${repoId}`);
+      const repoData = await docData(repoDoc, { idField: 'id' }).pipe(
+        map(data => data as Repository | null)
       ).toPromise();
 
-      this._currentOrganization.set(orgData || null);
+      this._currentRepository.set(repoData || null);
     } catch (error) {
-      this._error.set(`載入組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      this._error.set(`載入 Repository 失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
     } finally {
       this._isLoading.set(false);
     }
   }
 
-  getOrganizationMembers(orgId: string): Observable<OrganizationMember[]> {
-    const membersCol = collection(this.firestore, `accounts/${orgId}/members`);
-    return collectionData(membersCol, { idField: 'id' }) as Observable<OrganizationMember[]>;
+  getUserRepositories(userId: string): Observable<Repository[]> {
+    const reposQuery = query(
+      collection(this.firestore, 'repositories'),
+      where('ownerId', '==', userId)
+    );
+    return collectionData(reposQuery, { idField: 'id' }) as Observable<Repository[]>;
   }
 
-  async addOrganizationMember(
-    orgId: string,
+  getOrganizationRepositories(orgId: string): Observable<Repository[]> {
+    const reposQuery = query(
+      collection(this.firestore, 'repositories'),
+      where('ownerId', '==', orgId),
+      where('ownerType', '==', 'organization')
+    );
+    return collectionData(reposQuery, { idField: 'id' }) as Observable<Repository[]>;
+  }
+
+  async updateRepository(
+    repoId: string,
+    updates: Partial<Repository>
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 檢查權限
+      const canManage = await this.permissionService.canManageRepository(repoId);
+      if (!canManage) {
+        throw new Error('沒有權限修改此 Repository');
+      }
+
+      const repoRef = doc(this.firestore, `repositories/${repoId}`);
+      await updateDoc(repoRef, {
+        ...updates,
+        updatedAt: new Date()
+      });
+
+      // 更新本地狀態
+      const currentRepo = this._currentRepository();
+      if (currentRepo && currentRepo.id === repoId) {
+        this._currentRepository.set({ ...currentRepo, ...updates, updatedAt: new Date() });
+      }
+    } catch (error) {
+      this._error.set(`更新 Repository 失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async deleteRepository(repoId: string): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 檢查權限
+      const canManage = await this.permissionService.canManageRepository(repoId);
+      if (!canManage) {
+        throw new Error('沒有權限刪除此 Repository');
+      }
+
+      const repoRef = doc(this.firestore, `repositories/${repoId}`);
+      await deleteDoc(repoRef);
+
+      // 清除本地狀態
+      const currentRepo = this._currentRepository();
+      if (currentRepo && currentRepo.id === repoId) {
+        this._currentRepository.set(null);
+      }
+    } catch (error) {
+      this._error.set(`刪除 Repository 失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  getRepositoryCollaborators(repoId: string): Observable<RepositoryCollaborator[]> {
+    const collaboratorsCol = collection(this.firestore, `repositories/${repoId}/collaborators`);
+    return collectionData(collaboratorsCol, { idField: 'id' }) as Observable<RepositoryCollaborator[]>;
+  }
+
+  async addCollaborator(
+    repoId: string,
     userId: string,
-    role: OrgRole,
+    permission: 'read' | 'triage' | 'write' | 'maintain' | 'admin',
     invitedBy?: string
   ): Promise<void> {
     try {
       this._isLoading.set(true);
       this._error.set(null);
 
-      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
-      await setDoc(memberRef, {
+      // 檢查權限
+      const canManage = await this.permissionService.canManageRepository(repoId);
+      if (!canManage) {
+        throw new Error('沒有權限添加協作者');
+      }
+
+      const collaboratorRef = doc(this.firestore, `repositories/${repoId}/collaborators/${userId}`);
+      await setDoc(collaboratorRef, {
         id: userId,
-        organizationId: orgId,
+        repositoryId: repoId,
         userId,
-        role,
-        joinedAt: new Date(),
-        invitedBy
+        permission,
+        roleName: this.getRoleName(permission),
+        invitedBy: invitedBy || this.authService.currentAccount()?.id,
+        invitedAt: new Date()
       });
     } catch (error) {
-      this._error.set(`添加組織成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      this._error.set(`添加協作者失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
       throw error;
     } finally {
       this._isLoading.set(false);
     }
   }
 
-  async updateMemberRole(
-    orgId: string,
+  async updateCollaboratorPermission(
+    repoId: string,
     userId: string,
-    newRole: OrgRole
+    newPermission: 'read' | 'triage' | 'write' | 'maintain' | 'admin'
   ): Promise<void> {
     try {
       this._isLoading.set(true);
       this._error.set(null);
 
-      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
-      await updateDoc(memberRef, { role: newRole });
-    } catch (error) {
-      this._error.set(`更新成員角色失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async removeOrganizationMember(orgId: string, userId: string): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
-      await deleteDoc(memberRef);
-    } catch (error) {
-      this._error.set(`移除組織成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  getTeams(orgId: string): Observable<Team[]> {
-    const teamsCol = collection(this.firestore, `accounts/${orgId}/teams`);
-    return collectionData(teamsCol, { idField: 'id' }) as Observable<Team[]>;
-  }
-
-  async createTeam(
-    orgId: string,
-    name: string,
-    description?: string
-  ): Promise<string> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 驗證團隊名稱
-      const nameValidation = ValidationUtils.validateTeamName(name);
-      if (!nameValidation.isValid) {
-        throw new Error(`團隊名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
+      // 檢查權限
+      const canManage = await this.permissionService.canManageRepository(repoId);
+      if (!canManage) {
+        throw new Error('沒有權限修改協作者權限');
       }
 
-      const teamId = doc(collection(this.firestore, `accounts/${orgId}/teams`)).id;
-      const slug = name.toLowerCase().replace(/\s+/g, '-');
+      const collaboratorRef = doc(this.firestore, `repositories/${repoId}/collaborators/${userId}`);
+      await updateDoc(collaboratorRef, {
+        permission: newPermission,
+        roleName: this.getRoleName(newPermission)
+      });
+    } catch (error) {
+      this._error.set(`更新協作者權限失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
 
-      await setDoc(doc(this.firestore, `accounts/${orgId}/teams/${teamId}`), {
+  async removeCollaborator(repoId: string, userId: string): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 檢查權限
+      const canManage = await this.permissionService.canManageRepository(repoId);
+      if (!canManage) {
+        throw new Error('沒有權限移除協作者');
+      }
+
+      const collaboratorRef = doc(this.firestore, `repositories/${repoId}/collaborators/${userId}`);
+      await deleteDoc(collaboratorRef);
+    } catch (error) {
+      this._error.set(`移除協作者失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  getRepositoryTeamAccess(repoId: string): Observable<RepositoryTeamAccess[]> {
+    const teamAccessCol = collection(this.firestore, `repositories/${repoId}/teamAccess`);
+    return collectionData(teamAccessCol, { idField: 'id' }) as Observable<RepositoryTeamAccess[]>;
+  }
+
+  async addTeamAccess(
+    repoId: string,
+    teamId: string,
+    permission: 'read' | 'triage' | 'write' | 'maintain' | 'admin',
+    grantedBy?: string
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 檢查權限
+      const canManage = await this.permissionService.canManageRepository(repoId);
+      if (!canManage) {
+        throw new Error('沒有權限添加團隊訪問權限');
+      }
+
+      const teamAccessRef = doc(this.firestore, `repositories/${repoId}/teamAccess/${teamId}`);
+      await setDoc(teamAccessRef, {
         id: teamId,
-        organizationId: orgId,
-        name,
-        slug,
-        description,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        permissions: {
-          repository: { read: true, write: true, admin: false },
-          issues: { read: true, write: true, delete: false },
-          pullRequests: { read: true, write: true, merge: false }
-        }
-      });
-
-      return teamId;
-    } catch (error) {
-      this._error.set(`創建團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async updateTeam(
-    orgId: string,
-    teamId: string,
-    updates: Partial<Team>
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const teamRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}`);
-      await updateDoc(teamRef, {
-        ...updates,
-        updatedAt: new Date()
-      });
-    } catch (error) {
-      this._error.set(`更新團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async deleteTeam(orgId: string, teamId: string): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const teamRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}`);
-      await deleteDoc(teamRef);
-    } catch (error) {
-      this._error.set(`刪除團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  getTeamMembers(orgId: string, teamId: string): Observable<TeamMember[]> {
-    const membersCol = collection(this.firestore, `accounts/${orgId}/teams/${teamId}/members`);
-    return collectionData(membersCol, { idField: 'id' }) as Observable<TeamMember[]>;
-  }
-
-  async addTeamMember(
-    orgId: string,
-    teamId: string,
-    userId: string,
-    role: TeamRole,
-    addedBy?: string
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const memberRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}/members/${userId}`);
-      await setDoc(memberRef, {
-        id: userId,
+        repositoryId: repoId,
         teamId,
-        userId,
-        role,
-        joinedAt: new Date(),
-        addedBy
+        permission,
+        roleName: this.getRoleName(permission),
+        grantedBy: grantedBy || this.authService.currentAccount()?.id,
+        grantedAt: new Date()
       });
     } catch (error) {
-      this._error.set(`添加團隊成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      this._error.set(`添加團隊訪問權限失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
       throw error;
     } finally {
       this._isLoading.set(false);
     }
   }
 
-  async removeTeamMember(
-    orgId: string,
+  async updateTeamAccessPermission(
+    repoId: string,
     teamId: string,
-    userId: string
+    newPermission: 'read' | 'triage' | 'write' | 'maintain' | 'admin'
   ): Promise<void> {
     try {
       this._isLoading.set(true);
       this._error.set(null);
 
-      const memberRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}/members/${userId}`);
-      await deleteDoc(memberRef);
+      // 檢查權限
+      const canManage = await this.permissionService.canManageRepository(repoId);
+      if (!canManage) {
+        throw new Error('沒有權限修改團隊訪問權限');
+      }
+
+      const teamAccessRef = doc(this.firestore, `repositories/${repoId}/teamAccess/${teamId}`);
+      await updateDoc(teamAccessRef, {
+        permission: newPermission,
+        roleName: this.getRoleName(newPermission)
+      });
     } catch (error) {
-      this._error.set(`移除團隊成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      this._error.set(`更新團隊訪問權限失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
       throw error;
     } finally {
       this._isLoading.set(false);
     }
   }
 
-  async updateOrganizationProfile(
-    orgId: string,
-    profile: ProfileVO
-  ): Promise<void> {
+  async removeTeamAccess(repoId: string, teamId: string): Promise<void> {
     try {
       this._isLoading.set(true);
       this._error.set(null);
 
-      // 驗證 Profile
-      const profileErrors = ValidationUtils.validateProfile(profile);
-      if (profileErrors.length > 0) {
-        throw new Error(`Profile validation failed: ${profileErrors.join(', ')}`);
+      // 檢查權限
+      const canManage = await this.permissionService.canManageRepository(repoId);
+      if (!canManage) {
+        throw new Error('沒有權限移除團隊訪問權限');
       }
 
-      const orgRef = doc(this.firestore, `accounts/${orgId}`);
-      await updateDoc(orgRef, {
-        profile,
-        updatedAt: new Date()
-      });
-
-      // 更新本地狀態
-      const currentOrg = this._currentOrganization();
-      if (currentOrg) {
-        this._currentOrganization.set({ ...currentOrg, profile, updatedAt: new Date() });
-      }
+      const teamAccessRef = doc(this.firestore, `repositories/${repoId}/teamAccess/${teamId}`);
+      await deleteDoc(teamAccessRef);
     } catch (error) {
-      this._error.set(`更新組織檔案失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      this._error.set(`移除團隊訪問權限失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
       throw error;
     } finally {
       this._isLoading.set(false);
     }
   }
 
-  async updateOrganizationSettings(
-    orgId: string,
-    settings: SettingsVO
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 驗證 Settings
-      const settingsErrors = ValidationUtils.validateSettings(settings);
-      if (settingsErrors.length > 0) {
-        throw new Error(`Settings validation failed: ${settingsErrors.join(', ')}`);
-      }
-
-      const orgRef = doc(this.firestore, `accounts/${orgId}`);
-      await updateDoc(orgRef, {
-        settings,
-        updatedAt: new Date()
-      });
-
-      // 更新本地狀態
-      const currentOrg = this._currentOrganization();
-      if (currentOrg) {
-        this._currentOrganization.set({ ...currentOrg, settings, updatedAt: new Date() });
-      }
-    } catch (error) {
-      this._error.set(`更新組織設定失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
+  private getRoleName(permission: string): string {
+    const roleMap: { [key: string]: string } = {
+      'read': '讀取',
+      'triage': '分類',
+      'write': '寫入',
+      'maintain': '維護',
+      'admin': '管理員'
+    };
+    return roleMap[permission] || permission;
   }
 
   // 清除錯誤
@@ -9797,10 +8267,61 @@ export class OrganizationService {
     this._error.set(null);
   }
 
-  // 清除組織上下文
-  clearOrganizationContext() {
-    this._currentOrganization.set(null);
+  // 清除 Repository 上下文
+  clearRepositoryContext() {
+    this._currentRepository.set(null);
     this._error.set(null);
+  }
+}
+```
+
+## File: angular/src/app/core/utils/avatar.utils.ts
+```typescript
+/**
+ * 頭像 URL 處理工具
+ * 統一處理預設頭像和用戶自定義頭像的 URL 生成
+ */
+
+export class AvatarUtils {
+  private static readonly DEFAULT_AVATAR = 'avatar.jpg';
+  private static readonly STORAGE_BASE_URL = 'https://firebasestorage.googleapis.com/v0/b/elite-chiller-455712-c4.firebasestorage.app/o';
+
+  /**
+   * 獲取頭像 URL
+   * @param avatar 頭像路徑或 URL
+   * @returns 完整的頭像 URL
+   */
+  static getAvatarUrl(avatar: string | undefined | null): string {
+    if (!avatar || avatar.trim() === '') {
+      // 使用預設頭像
+      return `${this.STORAGE_BASE_URL}/${this.DEFAULT_AVATAR}?alt=media`;
+    }
+    
+    if (avatar.startsWith('http')) {
+      // 完整的 URL，直接返回
+      return avatar;
+    } else {
+      // 相對路徑，從 Storage 獲取
+      return `${this.STORAGE_BASE_URL}/${avatar}?alt=media`;
+    }
+  }
+
+  /**
+   * 檢查是否為預設頭像
+   * @param avatar 頭像路徑或 URL
+   * @returns 是否為預設頭像
+   */
+  static isDefaultAvatar(avatar: string | undefined | null): boolean {
+    if (!avatar) return true;
+    return avatar === this.DEFAULT_AVATAR || avatar.includes(this.DEFAULT_AVATAR);
+  }
+
+  /**
+   * 獲取預設頭像 URL
+   * @returns 預設頭像的完整 URL
+   */
+  static getDefaultAvatarUrl(): string {
+    return `${this.STORAGE_BASE_URL}/${this.DEFAULT_AVATAR}?alt=media`;
   }
 }
 ```
@@ -10163,102 +8684,530 @@ export class OrganizationCardComponent {
 }
 ```
 
-## File: angular/src/app/features/organization/components/organization-create-dialog.component.ts
+## File: angular/src/app/features/organization/components/organization-detail.component.ts
 ```typescript
-import { Component, inject, signal, computed, Output, EventEmitter } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatDividerModule } from '@angular/material/divider';
+
+import { OrganizationService } from '../../../core/services/organization.service';
+import { PermissionService } from '../../../core/services/permission.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { Organization, Team, OrganizationMember } from '../../../core/models/auth.model';
+
+/**
+ * 組織詳情組件
+ * 顯示組織的基本信息和統計數據
+ */
+@Component({
+  selector: 'app-organization-detail',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatGridListModule,
+    MatDividerModule
+  ],
+  template: `
+    <div class="organization-detail-container">
+      @if (isLoading()) {
+        <div class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>載入組織詳情中...</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-container">
+          <mat-icon>error</mat-icon>
+          <p>{{ error() }}</p>
+          <button mat-button (click)="loadOrganization()">重試</button>
+        </div>
+      } @else if (organization()) {
+        <!-- 組織資訊卡片 -->
+        <mat-card class="organization-info-card">
+          <mat-card-header>
+            <div mat-card-avatar class="organization-avatar">
+              @if (organization()?.profile?.avatar) {
+                <img [src]="organization()?.profile?.avatar" [alt]="organization()?.login">
+              } @else {
+                <mat-icon>business</mat-icon>
+              }
+            </div>
+            <mat-card-title>{{ organization()?.login }}</mat-card-title>
+            <mat-card-subtitle>{{ organization()?.login }}</mat-card-subtitle>
+            
+            <div class="card-actions">
+              @if (permissionService.canManageOrganization()) {
+                <button mat-icon-button (click)="editOrganization()">
+                  <mat-icon>edit</mat-icon>
+                </button>
+              }
+              @if (permissionService.isOrganizationOwner()) {
+                <button mat-icon-button (click)="deleteOrganization()" class="delete-button">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              }
+            </div>
+          </mat-card-header>
+
+          <mat-card-content>
+            @if (organization()?.description) {
+              <p class="organization-description">{{ organization()?.description }}</p>
+            }
+            
+            <div class="organization-stats">
+              <div class="stat-item">
+                <mat-icon>people</mat-icon>
+                <span>{{ memberCount() }} 成員</span>
+              </div>
+              <div class="stat-item">
+                <mat-icon>groups</mat-icon>
+                <span>{{ teamCount() }} 團隊</span>
+              </div>
+              <div class="stat-item">
+                <mat-icon>security</mat-icon>
+                <span>{{ securityManagerCount() }} 安全管理器</span>
+              </div>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions>
+            @if (permissionService.canManageMembers()) {
+              <button mat-button (click)="goToMembers()" color="primary">
+                <mat-icon>people</mat-icon>
+                管理成員
+              </button>
+            }
+            @if (permissionService.canManageTeams()) {
+              <button mat-button (click)="goToTeams()">
+                <mat-icon>groups</mat-icon>
+                管理團隊
+              </button>
+            }
+            @if (permissionService.canManageOrganization()) {
+              <button mat-button (click)="goToSettings()">
+                <mat-icon>settings</mat-icon>
+                組織設定
+              </button>
+            }
+          </mat-card-actions>
+        </mat-card>
+
+        <!-- 統計資訊網格 -->
+        <div class="stats-grid">
+          <mat-card class="stat-card">
+            <mat-card-content>
+              <div class="stat-content">
+                <mat-icon class="stat-icon">people</mat-icon>
+                <div class="stat-info">
+                  <h3>{{ memberCount() }}</h3>
+                  <p>成員</p>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stat-card">
+            <mat-card-content>
+              <div class="stat-content">
+                <mat-icon class="stat-icon">groups</mat-icon>
+                <div class="stat-info">
+                  <h3>{{ teamCount() }}</h3>
+                  <p>團隊</p>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <mat-card class="stat-card">
+            <mat-card-content>
+              <div class="stat-content">
+                <mat-icon class="stat-icon">security</mat-icon>
+                <div class="stat-info">
+                  <h3>{{ securityManagerCount() }}</h3>
+                  <p>安全管理器</p>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <!-- 最近團隊 -->
+        @if (teams().length > 0) {
+          <mat-card class="recent-teams-card">
+            <mat-card-header>
+              <mat-card-title>最近團隊</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="team-list">
+                @for (team of teams(); track team.id) {
+                  <div class="team-item">
+                    <div class="team-info">
+                      <h4>{{ team.name }}</h4>
+                      <p>{{ team.description || '暫無描述' }}</p>
+                    </div>
+                    <button mat-button (click)="viewTeam(team.id)">
+                      查看
+                    </button>
+                  </div>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        }
+      }
+    </div>
+  `,
+  styles: [`
+    .organization-detail-container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+    }
+
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+      color: var(--mdc-theme-error);
+    }
+
+    .organization-info-card {
+      margin-bottom: 24px;
+    }
+
+    .organization-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: var(--mdc-theme-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      
+      img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+    }
+
+    .card-actions {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+    }
+
+    .delete-button {
+      color: var(--mdc-theme-error);
+    }
+
+    .organization-description {
+      margin: 16px 0;
+      color: var(--mdc-theme-on-surface-variant);
+      line-height: 1.5;
+    }
+
+    .organization-stats {
+      display: flex;
+      gap: 16px;
+      margin: 16px 0;
+      
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--mdc-theme-on-surface-variant);
+        font-size: 14px;
+        
+        mat-icon {
+          font-size: 18px;
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      .stat-content {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        
+        .stat-icon {
+          font-size: 32px;
+          width: 32px;
+          height: 32px;
+          color: var(--mdc-theme-primary);
+        }
+        
+        .stat-info {
+          h3 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 500;
+          }
+          
+          p {
+            margin: 0;
+            color: var(--mdc-theme-on-surface-variant);
+            font-size: 14px;
+          }
+        }
+      }
+    }
+
+    .recent-teams-card {
+      .team-list {
+        display: grid;
+        gap: 16px;
+      }
+      
+      .team-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        
+        .team-info {
+          h4 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+            font-weight: 500;
+          }
+          
+          p {
+            margin: 0;
+            color: var(--mdc-theme-on-surface-variant);
+            font-size: 14px;
+          }
+        }
+      }
+    }
+
+    @media (max-width: 600px) {
+      .organization-detail-container {
+        padding: 16px;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .team-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+    }
+  `]
+})
+export class OrganizationDetailComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private orgService = inject(OrganizationService);
+  readonly permissionService = inject(PermissionService);
+  private authService = inject(AuthService);
+
+  // Signals
+  organization = signal<Organization | null>(null);
+  teams = signal<Team[]>([]);
+  members = signal<OrganizationMember[]>([]);
+  isLoading = signal(false);
+  error = signal<string | null>(null);
+
+  // Computed signals
+  readonly memberCount = computed(() => this.members().length);
+  readonly teamCount = computed(() => this.teams().length);
+  readonly securityManagerCount = computed(() => 
+    this.members().filter(m => m.role === 'admin' || m.role === 'owner').length
+  );
+
+  orgId!: string;
+
+  async ngOnInit() {
+    this.orgId = this.route.snapshot.paramMap.get('orgId')!;
+    
+    if (!this.orgId) {
+      this.error.set('無效的組織 ID');
+      return;
+    }
+
+    // 設置當前組織到權限服務
+    await this.permissionService.setCurrentOrganization(this.orgId);
+    
+    // 載入組織詳情
+    await this.loadOrganization();
+  }
+
+  async loadOrganization() {
+    try {
+      this.isLoading.set(true);
+      this.error.set(null);
+      
+      // 載入組織資訊
+      const org = await this.orgService.getOrganization(this.orgId).toPromise();
+      this.organization.set(org || null);
+      
+      if (!org) {
+        this.error.set('組織不存在或無法載入');
+        return;
+      }
+
+      // 載入團隊列表 - 暫時設為空數組，因為 getOrganizationTeams 方法不存在
+      this.teams.set([]);
+
+      // 載入成員列表
+      const members = await this.orgService.getOrganizationMembers(this.orgId).toPromise();
+      this.members.set(members || []);
+
+    } catch (error) {
+      this.error.set(`載入組織詳情失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  editOrganization() {
+    this.router.navigate(['settings'], { relativeTo: this.route });
+  }
+
+  deleteOrganization() {
+    // TODO: 實作刪除組織邏輯
+    console.log('刪除組織:', this.orgId);
+  }
+
+  goToMembers() {
+    this.router.navigate(['members'], { relativeTo: this.route });
+  }
+
+  goToTeams() {
+    this.router.navigate(['teams'], { relativeTo: this.route });
+  }
+
+  goToSettings() {
+    this.router.navigate(['settings'], { relativeTo: this.route });
+  }
+
+  viewTeam(teamId: string) {
+    this.router.navigate(['teams', teamId], { relativeTo: this.route });
+  }
+}
+```
+
+## File: angular/src/app/features/organization/components/organization-settings.component.ts
+```typescript
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
 
 import { OrganizationService } from '../../../core/services/organization.service';
-import { ValidationService } from '../../../core/services/validation.service';
+import { PermissionService } from '../../../core/services/permission.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { 
-  OrganizationCreateRequest, 
-  OrganizationCreateFormState,
-  OrganizationCreatedEvent 
-} from '../models/organization-create.model';
+import { Organization } from '../../../core/models/auth.model';
 
 /**
- * 組織建立對話框組件
- * 單一職責：處理組織建立的用戶界面和表單提交
- * 遵循單一職責原則：只負責組織建立的 UI 和用戶交互
+ * 組織設定組件
+ * 允許組織管理員編輯組織的基本資訊
  */
 @Component({
-  selector: 'app-organization-create-dialog',
+  selector: 'app-organization-settings',
   standalone: true,
   imports: [
     CommonModule,
     FormsModule,
-    MatDialogModule,
+    MatCardModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
     MatSelectModule,
-    MatProgressSpinnerModule,
-    MatCardModule,
-    MatDividerModule
+    MatProgressSpinnerModule
   ],
   template: `
-    <div class="dialog-container">
-      <div class="dialog-header">
-        <h2 mat-dialog-title>
-          <mat-icon>business</mat-icon>
-          建立新組織
-        </h2>
-        <button mat-icon-button (click)="onCancel()" class="close-button">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
+    <div class="organization-settings-container">
+      @if (isLoading()) {
+        <div class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>載入組織設定中...</p>
+        </div>
+      } @else if (error()) {
+        <div class="error-container">
+          <mat-icon>error</mat-icon>
+          <p>{{ error() }}</p>
+          <button mat-button (click)="loadOrganization()">重試</button>
+        </div>
+      } @else if (organization()) {
+        <mat-card class="settings-card">
+          <mat-card-header>
+            <mat-card-title>組織設定</mat-card-title>
+            <mat-card-subtitle>管理組織的基本資訊和設定</mat-card-subtitle>
+          </mat-card-header>
 
-      <mat-divider></mat-divider>
-
-      <div class="dialog-content">
-        <form (ngSubmit)="onSubmit()" #organizationForm="ngForm">
-          <mat-card class="form-card">
-            <mat-card-content>
+          <mat-card-content>
+            <form class="settings-form" (ngSubmit)="onSubmit()">
               <!-- 組織名稱 -->
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織名稱 *</mat-label>
+                <mat-label>組織名稱</mat-label>
                 <input 
                   matInput 
-                  [(ngModel)]="formState.values.name"
+                  [(ngModel)]="formData.name" 
                   name="name"
-                  placeholder="輸入組織名稱"
                   required
-                  (blur)="validateField('name')"
-                  [class.error]="formState.errors.name">
-                <mat-hint>組織的顯示名稱</mat-hint>
-                @if (formState.errors.name) {
-                  <mat-error>{{ formState.errors.name }}</mat-error>
-                }
+                  [disabled]="isSubmitting()">
+                <mat-icon matSuffix>business</mat-icon>
               </mat-form-field>
 
-              <!-- 組織登入名稱 -->
+              <!-- 組織 Slug -->
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織標識符 *</mat-label>
+                <mat-label>組織 Slug</mat-label>
                 <input 
                   matInput 
-                  [(ngModel)]="formState.values.login"
-                  name="login"
-                  placeholder="輸入組織標識符"
+                  [(ngModel)]="formData.slug" 
+                  name="slug"
                   required
-                  (blur)="validateField('login')"
-                  [class.error]="formState.errors.login">
-                <mat-hint>用於 URL 的唯一標識符</mat-hint>
-                @if (formState.errors.login) {
-                  <mat-error>{{ formState.errors.login }}</mat-error>
-                }
+                  [disabled]="isSubmitting()">
+                <mat-icon matSuffix>link</mat-icon>
+                <mat-hint>用於 URL 的唯一識別碼</mat-hint>
               </mat-form-field>
 
               <!-- 組織描述 -->
@@ -10266,271 +9215,243 @@ import {
                 <mat-label>組織描述</mat-label>
                 <textarea 
                   matInput 
-                  [(ngModel)]="formState.values.description"
+                  [(ngModel)]="formData.description" 
                   name="description"
-                  placeholder="描述組織的用途和目標"
-                  rows="3"
-                  (blur)="validateField('description')"
-                  [class.error]="formState.errors.description">
+                  rows="4"
+                  [disabled]="isSubmitting()">
                 </textarea>
-                <mat-hint>可選的描述信息</mat-hint>
-                @if (formState.errors.description) {
-                  <mat-error>{{ formState.errors.description }}</mat-error>
-                }
+                <mat-icon matSuffix>description</mat-icon>
+                <mat-hint>簡短描述組織的用途和目標</mat-hint>
               </mat-form-field>
 
-              <!-- 隱私設定 -->
+              <!-- 組織可見性 -->
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>隱私設定 *</mat-label>
+                <mat-label>組織可見性</mat-label>
                 <mat-select 
-                  [(ngModel)]="formState.values.privacy"
-                  name="privacy"
-                  required>
+                  [(ngModel)]="formData.visibility" 
+                  name="visibility"
+                  [disabled]="isSubmitting()">
                   <mat-option value="public">公開</mat-option>
                   <mat-option value="private">私有</mat-option>
                 </mat-select>
-                <mat-hint>選擇組織的可見性</mat-hint>
+                <mat-icon matSuffix>visibility</mat-icon>
+                <mat-hint>控制組織的公開可見性</mat-hint>
               </mat-form-field>
-            </mat-card-content>
-          </mat-card>
-        </form>
-      </div>
 
-      <mat-divider></mat-divider>
+              <!-- 預設成員角色 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>預設成員角色</mat-label>
+                <mat-select 
+                  [(ngModel)]="formData.defaultMemberRole" 
+                  name="defaultMemberRole"
+                  [disabled]="isSubmitting()">
+                  <mat-option value="member">成員</mat-option>
+                  <mat-option value="admin">管理員</mat-option>
+                </mat-select>
+                <mat-icon matSuffix>person_add</mat-icon>
+                <mat-hint>新成員的預設角色</mat-hint>
+              </mat-form-field>
+            </form>
+          </mat-card-content>
 
-      <div class="dialog-actions">
-        <button 
-          mat-button 
-          type="button" 
-          (click)="onCancel()"
-          [disabled]="formState.isSubmitting">
-          取消
-        </button>
-        <button 
-          mat-raised-button 
-          color="primary" 
-          type="button"
-          (click)="onSubmit()"
-          [disabled]="!isFormValid() || formState.isSubmitting">
-          @if (formState.isSubmitting) {
-            <mat-spinner diameter="20"></mat-spinner>
-            建立中...
-          } @else {
-            <ng-container>
-              <mat-icon>add</mat-icon>
-              建立組織
-            </ng-container>
-          }
-        </button>
-      </div>
+          <mat-card-actions>
+            <button 
+              mat-button 
+              (click)="goBack()"
+              [disabled]="isSubmitting()">
+              <mat-icon>arrow_back</mat-icon>
+              返回
+            </button>
+            
+            <div class="spacer"></div>
+            
+            <button 
+              mat-button 
+              (click)="resetForm()"
+              [disabled]="isSubmitting()">
+              <mat-icon>refresh</mat-icon>
+              重置
+            </button>
+            
+            <button 
+              mat-raised-button 
+              color="primary"
+              (click)="onSubmit()"
+              [disabled]="isSubmitting() || !isFormValid()">
+              @if (isSubmitting()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                <mat-icon>save</mat-icon>
+              }
+              儲存設定
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      }
     </div>
   `,
   styles: [`
-    .dialog-container {
-      min-width: 500px;
-      max-width: 600px;
-    }
-
-    .dialog-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px 0 24px;
-    }
-
-    .dialog-header h2 {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 500;
-    }
-
-    .close-button {
-      margin-left: auto;
-    }
-
-    .dialog-content {
+    .organization-settings-container {
       padding: 24px;
+      max-width: 800px;
+      margin: 0 auto;
     }
 
-    .form-card {
-      box-shadow: none;
-      border: 1px solid #e0e0e0;
-    }
-
-    .full-width {
-      width: 100%;
-      margin-bottom: 16px;
-    }
-
-    .dialog-actions {
+    .loading-container {
       display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding: 16px 24px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
     }
 
-    .error {
-      border-color: #f44336 !important;
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+      color: var(--mdc-theme-error);
     }
 
-    mat-spinner {
-      margin-right: 8px;
+    .settings-card {
+      .settings-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .full-width {
+        width: 100%;
+      }
+
+      .spacer {
+        flex: 1;
+      }
+
+      mat-card-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
     }
 
     @media (max-width: 600px) {
-      .dialog-container {
-        min-width: 300px;
-        max-width: 90vw;
-      }
-      
-      .dialog-content {
-        padding: 16px;
-      }
-      
-      .dialog-actions {
+      .organization-settings-container {
         padding: 16px;
       }
     }
   `]
 })
-export class OrganizationCreateDialogComponent {
-  // 服務注入
-  private organizationService = inject(OrganizationService);
-  private validationService = inject(ValidationService);
+export class OrganizationSettingsComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private orgService = inject(OrganizationService);
+  private permissionService = inject(PermissionService);
   private notificationService = inject(NotificationService);
-  private authService = inject(AuthService);
-  private dialogRef = inject(MatDialogRef<OrganizationCreateDialogComponent>);
 
-  // 事件發射器
-  @Output() organizationCreated = new EventEmitter<OrganizationCreatedEvent>();
+  // Signals
+  organization = signal<Organization | null>(null);
+  isLoading = signal(false);
+  isSubmitting = signal(false);
+  error = signal<string | null>(null);
 
-  // 表單狀態
-  formState: OrganizationCreateFormState = {
-    isSubmitting: false,
-    isValid: false,
-    errors: {},
-    values: {
-      name: '',
-      login: '',
-      description: '',
-      privacy: 'private'
-    }
+  // Form data
+  formData = {
+    name: '',
+    slug: '',
+    description: '',
+    visibility: 'private' as 'public' | 'private',
+    defaultMemberRole: 'member' as 'member' | 'admin'
   };
 
-  // 計算屬性 - 使用 computed signal 自動響應表單變化
-  readonly isFormValid = computed(() => {
-    return this.formState.values.name.trim().length > 0 &&
-           this.formState.values.login.trim().length > 0 &&
-           !this.formState.errors.name &&
-           !this.formState.errors.login &&
-           !this.formState.errors.description;
-  });
+  private originalFormData = { ...this.formData };
 
-  /**
-   * 驗證單個字段
-   */
-  validateField(field: string): void {
-    switch (field) {
-      case 'name':
-        const nameResult = this.validationService.validateOrganizationName(this.formState.values.name);
-        this.formState.errors.name = nameResult.errors[0] || undefined;
-        break;
-      case 'login':
-        const loginResult = this.validationService.validateOrganizationLogin(this.formState.values.login);
-        this.formState.errors.login = loginResult.errors[0] || undefined;
-        break;
-      case 'description':
-        const descResult = this.validationService.validateOrganizationDescription(this.formState.values.description);
-        this.formState.errors.description = descResult.errors[0] || undefined;
-        break;
+  orgId!: string;
+
+  async ngOnInit() {
+    this.orgId = this.route.snapshot.paramMap.get('orgId')!;
+    
+    if (!this.orgId) {
+      this.error.set('無效的組織 ID');
+      return;
     }
+
+    // 檢查權限
+    if (!this.permissionService.canManageOrganization()) {
+      this.error.set('您沒有權限編輯組織設定');
+      return;
+    }
+
+    await this.loadOrganization();
   }
 
-  /**
-   * 提交表單
-   */
-  async onSubmit(): Promise<void> {
-    if (!this.isFormValid() || this.formState.isSubmitting) {
-      return;
-    }
-
-    // 驗證所有字段
-    this.validateField('name');
-    this.validateField('login');
-    this.validateField('description');
-
-    if (!this.isFormValid()) {
-      this.notificationService.showValidationErrors([
-        this.formState.errors.name,
-        this.formState.errors.login,
-        this.formState.errors.description
-      ].filter(error => error) as string[]);
-      return;
-    }
-
-    this.formState.isSubmitting = true;
-
+  async loadOrganization() {
     try {
-      const currentUser = this.authService.currentAccount();
-      if (!currentUser) {
-        throw new Error('用戶未登入');
+      this.isLoading.set(true);
+      this.error.set(null);
+      
+      const org = await this.orgService.getOrganization(this.orgId).toPromise();
+      
+      if (!org) {
+        this.error.set('組織不存在或無法載入');
+        return;
       }
 
-      const request: OrganizationCreateRequest = {
-        name: this.formState.values.name.trim(),
-        login: this.formState.values.login.trim(),
-        description: this.formState.values.description.trim(),
-        privacy: this.formState.values.privacy,
-        ownerId: currentUser.id
+      this.organization.set(org);
+      
+      // 填充表單數據
+      this.formData = {
+        name: org.profile.name,
+        slug: org.login,
+        description: org.description || '',
+        visibility: org.settings?.organization?.visibility || 'private',
+        defaultMemberRole: (org.settings?.organization?.defaultMemberRole as 'admin' | 'member') || 'member'
       };
 
-      const organizationId = await this.organizationService.createOrganization(
-        request.name,
-        request.login,
-        request.ownerId,
-        request.description
-      );
-
-      // 發射成功事件
-      this.organizationCreated.emit({
-        organization: {
-          id: organizationId,
-          name: request.name,
-          login: request.login,
-          description: request.description,
-          privacy: request.privacy,
-          ownerId: request.ownerId,
-          createdAt: new Date()
-        },
-        success: true
-      });
-
-      this.notificationService.showOrganizationCreatedSuccess(request.name);
-      this.dialogRef.close({ success: true, organizationId });
+      this.originalFormData = { ...this.formData };
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-      
-      this.organizationCreated.emit({
-        organization: {} as any,
-        success: false,
-        error: errorMessage
-      });
-
-      this.notificationService.showOrganizationCreatedError(errorMessage);
+      this.error.set(`載入組織設定失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
     } finally {
-      this.formState.isSubmitting = false;
+      this.isLoading.set(false);
     }
   }
 
-  /**
-   * 取消操作
-   */
-  onCancel(): void {
-    this.dialogRef.close({ success: false });
+  isFormValid(): boolean {
+    return this.formData.name.trim().length > 0 && 
+           this.formData.slug.trim().length > 0;
+  }
+
+  async onSubmit() {
+    if (!this.isFormValid() || this.isSubmitting()) {
+      return;
+    }
+
+    try {
+      this.isSubmitting.set(true);
+      
+      // TODO: 實作更新組織設定的邏輯
+      // await this.orgService.updateOrganization(this.orgId, this.formData);
+      
+      this.notificationService.showSuccess('組織設定已更新');
+      this.originalFormData = { ...this.formData };
+      
+    } catch (error) {
+      this.notificationService.showError(`更新失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    } finally {
+      this.isSubmitting.set(false);
+    }
+  }
+
+  resetForm() {
+    this.formData = { ...this.originalFormData };
+  }
+
+  goBack() {
+    this.router.navigate(['..'], { relativeTo: this.route });
   }
 }
 ```
@@ -12414,359 +11335,282 @@ export class ValidationUtils {
 }
 ```
 
-## File: angular/src/app/features/organization/components/organization-list.component.ts
+## File: angular/src/app/features/organization/components/organization-create.component.ts
 ```typescript
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatGridListModule } from '@angular/material/grid-list';
 
 import { OrganizationService } from '../../../core/services/organization.service';
-import { AuthService } from '../../../core/services/auth.service';
+import { PermissionService } from '../../../core/services/permission.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { OrganizationCardComponent } from '../components/organization-card.component';
-import { OrganizationCreateDialogComponent } from '../components/organization-create-dialog.component';
-import { OrganizationDetail } from '../models/organization.model';
-import { OrganizationCreatedEvent } from '../models/organization-create.model';
+import { ValidationService } from '../../../core/services/validation.service';
 
 /**
- * 組織列表組件
- * 單一職責：顯示組織列表和提供建立組織的功能
- * 遵循單一職責原則：只負責組織列表的顯示和建立組織的入口
+ * 組織建立組件
+ * 允許用戶建立新的組織
  */
 @Component({
-  selector: 'app-organization-list',
+  selector: 'app-organization-create',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatCardModule,
-    MatDialogModule,
-    MatProgressSpinnerModule,
-    MatGridListModule,
-    OrganizationCardComponent
+    MatSelectModule,
+    MatProgressSpinnerModule
   ],
   template: `
-    <div class="organization-list-container">
-      <!-- 頁面標題和操作按鈕 -->
-      <div class="page-header">
-        <div class="header-content">
-          <h1>組織管理</h1>
-          <p>管理您的組織和團隊</p>
-        </div>
-        <div class="header-actions">
+    <div class="organization-create-container">
+      <mat-card class="create-card">
+        <mat-card-header>
+          <mat-card-title>建立新組織</mat-card-title>
+          <mat-card-subtitle>建立一個新的組織來管理您的專案和團隊</mat-card-subtitle>
+        </mat-card-header>
+
+        <mat-card-content>
+          <form class="create-form" (ngSubmit)="onSubmit()">
+            <!-- 組織名稱 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>組織名稱</mat-label>
+              <input 
+                matInput 
+                [(ngModel)]="formData.name" 
+                name="name"
+                required
+                [disabled]="isSubmitting()"
+                (input)="validateField('name')"
+                (blur)="validateField('name')">
+              <mat-icon matSuffix>business</mat-icon>
+              @if (errors['name']) {
+                <mat-error>{{ errors['name'] }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- 組織 Slug -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>組織 Slug</mat-label>
+              <input 
+                matInput 
+                [(ngModel)]="formData.slug" 
+                name="slug"
+                required
+                [disabled]="isSubmitting()"
+                (input)="validateField('slug')"
+                (blur)="validateField('slug')">
+              <mat-icon matSuffix>link</mat-icon>
+              <mat-hint>用於 URL 的唯一識別碼</mat-hint>
+              @if (errors['slug']) {
+                <mat-error>{{ errors['slug'] }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- 組織描述 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>組織描述</mat-label>
+              <textarea 
+                matInput 
+                [(ngModel)]="formData.description" 
+                name="description"
+                rows="3"
+                [disabled]="isSubmitting()"
+                (input)="validateField('description')"
+                (blur)="validateField('description')">
+              </textarea>
+              <mat-icon matSuffix>description</mat-icon>
+              <mat-hint>簡短描述組織的用途和目標</mat-hint>
+              @if (errors['description']) {
+                <mat-error>{{ errors['description'] }}</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- 組織隱私設定 -->
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>組織隱私</mat-label>
+              <mat-select 
+                [(ngModel)]="formData.privacy" 
+                name="privacy"
+                [disabled]="isSubmitting()">
+                <mat-option value="public">公開</mat-option>
+                <mat-option value="private">私有</mat-option>
+              </mat-select>
+              <mat-icon matSuffix>visibility</mat-icon>
+              <mat-hint>控制組織的公開可見性</mat-hint>
+            </mat-form-field>
+          </form>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button 
+            mat-button 
+            (click)="goBack()"
+            [disabled]="isSubmitting()">
+            <mat-icon>arrow_back</mat-icon>
+            取消
+          </button>
+          
+          <div class="spacer"></div>
+          
           <button 
             mat-raised-button 
             color="primary"
-            (click)="openCreateOrganizationDialog()"
-            [disabled]="isLoading()">
-            <mat-icon>add</mat-icon>
+            (click)="onSubmit()"
+            [disabled]="isSubmitting() || !isFormValid()">
+            @if (isSubmitting()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              <mat-icon>add</mat-icon>
+            }
             建立組織
           </button>
-        </div>
-      </div>
-
-      <!-- 載入狀態 -->
-      @if (isLoading()) {
-        <div class="loading-container">
-          <mat-spinner></mat-spinner>
-          <p>載入組織列表中...</p>
-        </div>
-      }
-
-      <!-- 錯誤狀態 -->
-      @if (error()) {
-        <div class="error-container">
-          <mat-icon>error</mat-icon>
-          <p>{{ error() }}</p>
-          <button mat-button (click)="loadOrganizations()">重試</button>
-        </div>
-      }
-
-      <!-- 組織列表 -->
-      @if (!isLoading() && !error()) {
-        @if (organizations().length === 0) {
-          <!-- 空狀態 -->
-          <div class="empty-state">
-            <mat-icon>business</mat-icon>
-            <h2>尚未建立任何組織</h2>
-            <p>建立您的第一個組織來開始管理團隊和專案</p>
-            <button 
-              mat-raised-button 
-              color="primary"
-              (click)="openCreateOrganizationDialog()">
-              <mat-icon>add</mat-icon>
-              建立第一個組織
-            </button>
-          </div>
-        } @else {
-          <!-- 組織網格 -->
-          <mat-grid-list 
-            cols="1" 
-            rowHeight="400px" 
-            gutterSize="16px"
-            class="organization-grid">
-            @for (organization of organizations(); track organization.id) {
-              <mat-grid-tile>
-                <app-organization-card
-                  [organization]="createOrganizationSignal(organization)"
-                  [isSelected]="createIsSelectedSignal(false)"
-                  (view)="onViewOrganization($event)"
-                  (edit)="onEditOrganization($event)"
-                  (settings)="onOrganizationSettings($event)"
-                  (members)="onOrganizationMembers($event)"
-                  (teams)="onOrganizationTeams($event)"
-                  (delete)="onDeleteOrganization($event)">
-                </app-organization-card>
-              </mat-grid-tile>
-            }
-          </mat-grid-list>
-        }
-      }
+        </mat-card-actions>
+      </mat-card>
     </div>
   `,
   styles: [`
-    .organization-list-container {
+    .organization-create-container {
       padding: 24px;
-      max-width: 1200px;
+      max-width: 800px;
       margin: 0 auto;
     }
 
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 32px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .header-content h1 {
-      margin: 0 0 8px 0;
-      font-size: 2rem;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    .header-content p {
-      margin: 0;
-      color: var(--mdc-theme-on-surface-variant);
-      font-size: 1rem;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-    }
-
-    .error-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-      color: var(--mdc-theme-error);
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-      text-align: center;
-    }
-
-    .empty-state mat-icon {
-      font-size: 64px;
-      width: 64px;
-      height: 64px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .empty-state h2 {
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    .empty-state p {
-      margin: 0;
-      color: var(--mdc-theme-on-surface-variant);
-      max-width: 400px;
-    }
-
-    .organization-grid {
-      margin-top: 16px;
-    }
-
-    @media (min-width: 768px) {
-      .organization-grid {
-        cols: 2;
+    .create-card {
+      .create-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
       }
-    }
 
-    @media (min-width: 1024px) {
-      .organization-grid {
-        cols: 3;
+      .full-width {
+        width: 100%;
+      }
+
+      .spacer {
+        flex: 1;
+      }
+
+      mat-card-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
     }
 
     @media (max-width: 600px) {
-      .organization-list-container {
+      .organization-create-container {
         padding: 16px;
-      }
-
-      .page-header {
-        flex-direction: column;
-        gap: 16px;
-        align-items: stretch;
-      }
-
-      .header-actions {
-        justify-content: center;
       }
     }
   `]
 })
-export class OrganizationListComponent implements OnInit {
-  // 服務注入
-  private organizationService = inject(OrganizationService);
-  private authService = inject(AuthService);
+export class OrganizationCreateComponent implements OnInit {
+  private router = inject(Router);
+  private orgService = inject(OrganizationService);
+  private permissionService = inject(PermissionService);
   private notificationService = inject(NotificationService);
-  private dialog = inject(MatDialog);
+  private validationService = inject(ValidationService);
 
-  // 狀態管理
-  private _organizations = signal<OrganizationDetail[]>([]);
-  private _isLoading = signal(false);
-  private _error = signal<string | null>(null);
+  // Signals
+  isSubmitting = signal(false);
+  errors: { [key: string]: string } = {};
 
-  // 只讀信號
-  readonly organizations = this._organizations.asReadonly();
-  readonly isLoading = this._isLoading.asReadonly();
-  readonly error = this._error.asReadonly();
+  // Form data
+  formData = {
+    name: '',
+    slug: '',
+    description: '',
+    privacy: 'private' as 'public' | 'private'
+  };
 
-  ngOnInit(): void {
-    this.loadOrganizations();
-  }
-
-  /**
-   * 載入組織列表
-   */
-  async loadOrganizations(): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 這裡應該調用實際的服務方法來獲取組織列表
-      // 由於現有的 OrganizationService 沒有 getOrganizations 方法，
-      // 我們暫時使用空數組
-      const organizations: OrganizationDetail[] = [];
-      this._organizations.set(organizations);
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '載入組織列表失敗';
-      this._error.set(errorMessage);
-      this.notificationService.showError(errorMessage);
-    } finally {
-      this._isLoading.set(false);
+  ngOnInit() {
+    // 檢查用戶是否已登入
+    if (!this.permissionService.hasRole('user')) {
+      this.notificationService.showError('請先登入以建立組織');
+      this.router.navigate(['/login']);
+      return;
     }
   }
 
-  /**
-   * 建立組織信號
-   */
-  createOrganizationSignal(organization: OrganizationDetail) {
-    return signal(organization);
+  isFormValid(): boolean {
+    return this.formData.name.trim().length > 0 && 
+           this.formData.slug.trim().length > 0 &&
+           !this.errors['name'] &&
+           !this.errors['slug'] &&
+           !this.errors['description'];
   }
 
-  /**
-   * 建立選中狀態信號
-   */
-  createIsSelectedSignal(isSelected: boolean) {
-    return signal(isSelected);
+  validateField(field: string): void {
+    switch (field) {
+      case 'name':
+        const nameResult = this.validationService.validateOrganizationName(this.formData.name);
+        this.errors['name'] = nameResult.errors[0] || '';
+        break;
+      case 'slug':
+        const slugResult = this.validationService.validateLogin(this.formData.slug);
+        this.errors['slug'] = slugResult.errors[0] || '';
+        break;
+      case 'description':
+        const descResult = this.validationService.validateOrganizationDescription(this.formData.description);
+        this.errors['description'] = descResult.errors[0] || '';
+        break;
+    }
   }
 
-  /**
-   * 打開建立組織對話框
-   */
-  openCreateOrganizationDialog(): void {
-    const dialogRef = this.dialog.open(OrganizationCreateDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-      disableClose: false
-    });
+  async onSubmit() {
+    if (!this.isFormValid() || this.isSubmitting()) {
+      return;
+    }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result?.success) {
-        this.loadOrganizations(); // 重新載入組織列表
-      }
-    });
+    // 驗證所有字段
+    this.validateField('name');
+    this.validateField('slug');
+    this.validateField('description');
+
+    if (!this.isFormValid()) {
+      this.notificationService.showValidationErrors([
+        this.errors['name'],
+        this.errors['slug'],
+        this.errors['description']
+      ].filter(error => error) as string[]);
+      return;
+    }
+
+    try {
+      this.isSubmitting.set(true);
+      
+      // TODO: 實作建立組織的邏輯
+      // const orgId = await this.orgService.createOrganization(
+      //   this.formData.name.trim(),
+      //   this.formData.slug.trim(),
+      //   'current-user-id', // 需要從 AuthService 獲取
+      //   undefined, // email
+      //   this.formData.description.trim()
+      // );
+      
+      this.notificationService.showSuccess('組織已成功建立');
+      this.router.navigate(['/organizations']);
+      
+    } catch (error) {
+      this.notificationService.showError(`建立組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    } finally {
+      this.isSubmitting.set(false);
+    }
   }
 
-  /**
-   * 檢視組織
-   */
-  onViewOrganization(organization: OrganizationDetail): void {
-    console.log('檢視組織:', organization);
-    // TODO: 導航到組織詳情頁面
-  }
-
-  /**
-   * 編輯組織
-   */
-  onEditOrganization(organization: OrganizationDetail): void {
-    console.log('編輯組織:', organization);
-    // TODO: 打開編輯組織對話框
-  }
-
-  /**
-   * 組織設定
-   */
-  onOrganizationSettings(organization: OrganizationDetail): void {
-    console.log('組織設定:', organization);
-    // TODO: 導航到組織設定頁面
-  }
-
-  /**
-   * 組織成員
-   */
-  onOrganizationMembers(organization: OrganizationDetail): void {
-    console.log('組織成員:', organization);
-    // TODO: 導航到組織成員頁面
-  }
-
-  /**
-   * 組織團隊
-   */
-  onOrganizationTeams(organization: OrganizationDetail): void {
-    console.log('組織團隊:', organization);
-    // TODO: 導航到組織團隊頁面
-  }
-
-  /**
-   * 刪除組織
-   */
-  onDeleteOrganization(organization: OrganizationDetail): void {
-    console.log('刪除組織:', organization);
-    // TODO: 顯示刪除確認對話框
+  goBack() {
+    this.router.navigate(['/organizations']);
   }
 }
 ```
@@ -13886,6 +12730,1319 @@ body {
   margin: 0;
   font-family: 'Roboto', sans-serif;
   background-color: #f3f4f6;
+}
+```
+
+## File: angular/src/app/core/services/organization.service.ts
+```typescript
+// src/app/core/services/organization.service.ts
+
+import { Injectable, inject, signal, computed } from '@angular/core';
+import {
+  Firestore,
+  doc,
+  docData,
+  collection,
+  collectionData,
+  query,
+  where,
+  addDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  getDoc,
+  getDocs,
+  DocumentData
+} from '@angular/fire/firestore';
+import { Observable, map, switchMap, combineLatest, of, catchError, throwError } from 'rxjs';
+import { 
+  Organization, 
+  OrganizationMember, 
+  Team,
+  TeamMember,
+  OrgRole,
+  TeamRole,
+  ProfileVO,
+  PermissionVO,
+  SettingsVO
+} from '../models/auth.model';
+import { ValidationUtils } from '../utils/validation.utils';
+
+@Injectable({ providedIn: 'root' })
+export class OrganizationService {
+  private firestore = inject(Firestore);
+
+  // Signals for state management
+  private _currentOrganization = signal<Organization | null>(null);
+  private _isLoading = signal(false);
+  private _error = signal<string | null>(null);
+
+  // Readonly signals
+  readonly currentOrganization = this._currentOrganization.asReadonly();
+  readonly isLoading = this._isLoading.asReadonly();
+  readonly error = this._error.asReadonly();
+
+  // Computed signals
+  readonly isOrganizationLoaded = computed(() => this._currentOrganization() !== null);
+  readonly organizationMembers = computed(() => {
+    const org = this._currentOrganization();
+    return org ? [] : []; // 這裡應該實現成員查詢
+  });
+
+  async createOrganization(
+    name: string,
+    login: string,
+    ownerId: string,
+    description?: string
+  ): Promise<string> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 驗證組織名稱
+      const nameValidation = ValidationUtils.validateOrganizationName(name);
+      if (!nameValidation.isValid) {
+        throw new Error(`組織名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
+      }
+
+      // 驗證登入名稱
+      const loginValidation = ValidationUtils.validateLogin(login);
+      if (!loginValidation.isValid) {
+        throw new Error(`登入名稱驗證失敗: ${loginValidation.errors.join(', ')}`);
+      }
+
+      const orgId = doc(collection(this.firestore, 'accounts')).id;
+
+      // 建立 ProfileVO
+      const profile: ProfileVO = {
+        name: name,
+        email: '', // 組織沒有電子郵件
+        avatar: 'https://firebasestorage.googleapis.com/v0/b/elite-chiller-455712-c4.firebasestorage.app/o/avatar.jpg?alt=media&token=e1474080-6528-4f01-a719-411ea3447060',
+        bio: description || '',
+        location: '',
+        website: ''
+      };
+
+      // 建立 PermissionVO
+      const permissions: PermissionVO = {
+        roles: ['organization'],
+        abilities: [
+          { action: 'read', resource: 'organization' },
+          { action: 'write', resource: 'organization' },
+          { action: 'admin', resource: 'organization' },
+          { action: 'read', resource: 'team' },
+          { action: 'write', resource: 'team' },
+          { action: 'admin', resource: 'team' },
+          { action: 'read', resource: 'member' },
+          { action: 'write', resource: 'member' },
+          { action: 'admin', resource: 'member' }
+        ]
+      };
+
+      // 建立 SettingsVO
+      const settings: SettingsVO = {
+        language: 'zh-TW',
+        theme: 'light',
+        notifications: { email: true, push: true, sms: false },
+        privacy: { profilePublic: true, showEmail: false },
+        organization: {
+          defaultMemberRole: OrgRole.MEMBER,
+          visibility: 'private'
+        }
+      };
+
+      await setDoc(doc(this.firestore, `accounts/${orgId}`), {
+        id: orgId,
+        type: 'organization',
+        login,
+        profile,
+        permissions,
+        settings,
+        projectsOwned: [],
+        description: description || '',
+        ownerId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      await this.addOrganizationMember(orgId, ownerId, OrgRole.OWNER);
+      return orgId;
+    } catch (error) {
+      this._error.set(`創建組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  getOrganization(orgId: string): Observable<Organization> {
+    const orgDoc = doc(this.firestore, `accounts/${orgId}`);
+    return docData(orgDoc, { idField: 'id' }).pipe(
+      map(data => {
+        if (data && (data as DocumentData)['type'] === 'organization') {
+          return data as Organization;
+        }
+        throw new Error(`組織不存在或類型不正確: ${orgId}`);
+      }),
+      catchError((error: any) => {
+        console.error('獲取組織失敗:', error);
+        return throwError(() => new Error('無法載入組織資訊，請稍後再試'));
+      })
+    );
+  }
+
+  /**
+   * 獲取用戶的所有組織
+   */
+  getUserOrganizations(userId: string): Observable<Organization[]> {
+    const accountsCol = collection(this.firestore, 'accounts');
+    return collectionData(accountsCol, { idField: 'id' }).pipe(
+      switchMap(async (accounts) => {
+        // 過濾出組織類型的帳戶
+        const organizations = accounts.filter(account => 
+          account['type'] === 'organization'
+        ) as Organization[];
+        
+        // 檢查用戶是否為這些組織的成員
+        const userOrganizations: Organization[] = [];
+        
+        for (const org of organizations) {
+          try {
+            const membersCol = collection(this.firestore, `accounts/${org.id}/members`);
+            const membersSnapshot = await getDocs(membersCol);
+            const isMember = membersSnapshot.docs.some(doc => doc.id === userId);
+            
+            if (isMember) {
+              userOrganizations.push(org);
+            }
+          } catch (error) {
+            console.warn(`檢查組織 ${org.id} 成員資格失敗:`, error);
+          }
+        }
+        
+        return userOrganizations;
+      }),
+      catchError((error: any) => {
+        console.error('獲取用戶組織失敗:', error);
+        return throwError(() => new Error('無法載入組織列表，請稍後再試'));
+      })
+    );
+  }
+
+  async loadOrganization(orgId: string): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const orgDoc = doc(this.firestore, `accounts/${orgId}`);
+      const orgData = await docData(orgDoc, { idField: 'id' }).pipe(
+        map(data => {
+          if (data && (data as DocumentData)['type'] === 'organization') {
+            return data as Organization;
+          }
+          return null;
+        })
+      ).toPromise();
+
+      this._currentOrganization.set(orgData || null);
+    } catch (error) {
+      this._error.set(`載入組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  getOrganizationMembers(orgId: string): Observable<OrganizationMember[]> {
+    const membersCol = collection(this.firestore, `accounts/${orgId}/members`);
+    return collectionData(membersCol, { idField: 'id' }) as Observable<OrganizationMember[]>;
+  }
+
+  async addOrganizationMember(
+    orgId: string,
+    userId: string,
+    role: OrgRole,
+    invitedBy?: string
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
+      await setDoc(memberRef, {
+        id: userId,
+        organizationId: orgId,
+        userId,
+        role,
+        joinedAt: new Date(),
+        invitedBy: invitedBy || '系統自動添加'
+      });
+    } catch (error) {
+      this._error.set(`添加組織成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async updateMemberRole(
+    orgId: string,
+    userId: string,
+    newRole: OrgRole
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
+      await updateDoc(memberRef, { role: newRole });
+    } catch (error) {
+      this._error.set(`更新成員角色失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async removeOrganizationMember(orgId: string, userId: string): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
+      await deleteDoc(memberRef);
+    } catch (error) {
+      this._error.set(`移除組織成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  getTeams(orgId: string): Observable<Team[]> {
+    const teamsCol = collection(this.firestore, `accounts/${orgId}/teams`);
+    return collectionData(teamsCol, { idField: 'id' }) as Observable<Team[]>;
+  }
+
+  /**
+   * 獲取組織的所有團隊（別名方法，保持向後兼容）
+   */
+  getOrganizationTeams(orgId: string): Observable<Team[]> {
+    return this.getTeams(orgId);
+  }
+
+  async createTeam(
+    orgId: string,
+    name: string,
+    slug: string,
+    description?: string,
+    privacy: 'open' | 'closed' = 'open',
+    permissions?: {
+      repository: { read: boolean; write: boolean; admin: boolean };
+      issues: { read: boolean; write: boolean; delete: boolean };
+      pullRequests: { read: boolean; write: boolean; merge: boolean };
+    }
+  ): Promise<string> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 驗證團隊名稱
+      const nameValidation = ValidationUtils.validateTeamName(name);
+      if (!nameValidation.isValid) {
+        throw new Error(`團隊名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
+      }
+
+      // 驗證團隊 slug
+      const slugValidation = ValidationUtils.validateTeamSlug(slug);
+      if (!slugValidation.isValid) {
+        throw new Error(`團隊 Slug 驗證失敗: ${slugValidation.errors.join(', ')}`);
+      }
+
+      const teamId = doc(collection(this.firestore, `accounts/${orgId}/teams`)).id;
+
+      // 使用預設權限或用戶設定的權限
+      const teamPermissions = permissions || {
+        repository: { read: true, write: false, admin: false },
+        issues: { read: true, write: false, delete: false },
+        pullRequests: { read: true, write: false, merge: false }
+      };
+
+      await setDoc(doc(this.firestore, `accounts/${orgId}/teams/${teamId}`), {
+        id: teamId,
+        organizationId: orgId,
+        name,
+        slug,
+        description: description || '',
+        privacy,
+        permissions: teamPermissions,
+        memberCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      return teamId;
+    } catch (error) {
+      this._error.set(`創建團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async updateTeam(
+    orgId: string,
+    teamId: string,
+    updates: Partial<Team>
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const teamRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}`);
+      await updateDoc(teamRef, {
+        ...updates,
+        updatedAt: new Date()
+      });
+    } catch (error) {
+      this._error.set(`更新團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async deleteTeam(orgId: string, teamId: string): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const teamRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}`);
+      await deleteDoc(teamRef);
+    } catch (error) {
+      this._error.set(`刪除團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  getTeamMembers(orgId: string, teamId: string): Observable<TeamMember[]> {
+    const membersCol = collection(this.firestore, `accounts/${orgId}/teams/${teamId}/members`);
+    return collectionData(membersCol, { idField: 'id' }) as Observable<TeamMember[]>;
+  }
+
+  async addTeamMember(
+    orgId: string,
+    teamId: string,
+    userId: string,
+    role: TeamRole,
+    addedBy?: string
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const memberRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}/members/${userId}`);
+      await setDoc(memberRef, {
+        id: userId,
+        teamId,
+        userId,
+        role,
+        joinedAt: new Date(),
+        addedBy
+      });
+    } catch (error) {
+      this._error.set(`添加團隊成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async removeTeamMember(
+    orgId: string,
+    teamId: string,
+    userId: string
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const memberRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}/members/${userId}`);
+      await deleteDoc(memberRef);
+    } catch (error) {
+      this._error.set(`移除團隊成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async updateOrganizationProfile(
+    orgId: string,
+    profile: ProfileVO
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 驗證 Profile
+      const profileErrors = ValidationUtils.validateProfile(profile);
+      if (profileErrors.length > 0) {
+        throw new Error(`Profile validation failed: ${profileErrors.join(', ')}`);
+      }
+
+      const orgRef = doc(this.firestore, `accounts/${orgId}`);
+      await updateDoc(orgRef, {
+        profile,
+        updatedAt: new Date()
+      });
+
+      // 更新本地狀態
+      const currentOrg = this._currentOrganization();
+      if (currentOrg) {
+        this._currentOrganization.set({ ...currentOrg, profile, updatedAt: new Date() });
+      }
+    } catch (error) {
+      this._error.set(`更新組織檔案失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async updateOrganizationSettings(
+    orgId: string,
+    settings: SettingsVO
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 驗證 Settings
+      const settingsErrors = ValidationUtils.validateSettings(settings);
+      if (settingsErrors.length > 0) {
+        throw new Error(`Settings validation failed: ${settingsErrors.join(', ')}`);
+      }
+
+      const orgRef = doc(this.firestore, `accounts/${orgId}`);
+      await updateDoc(orgRef, {
+        settings,
+        updatedAt: new Date()
+      });
+
+      // 更新本地狀態
+      const currentOrg = this._currentOrganization();
+      if (currentOrg) {
+        this._currentOrganization.set({ ...currentOrg, settings, updatedAt: new Date() });
+      }
+    } catch (error) {
+      this._error.set(`更新組織設定失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  // 清除錯誤
+  clearError() {
+    this._error.set(null);
+  }
+
+  // 清除組織上下文
+  clearOrganizationContext() {
+    this._currentOrganization.set(null);
+    this._error.set(null);
+  }
+}
+```
+
+## File: angular/src/app/features/organization/components/organization-create-dialog.component.ts
+```typescript
+import { Component, inject, signal, computed, Output, EventEmitter, effect } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+
+import { OrganizationService } from '../../../core/services/organization.service';
+import { ValidationService } from '../../../core/services/validation.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { 
+  OrganizationCreateRequest, 
+  OrganizationCreateFormState,
+  OrganizationCreatedEvent 
+} from '../models/organization-create.model';
+
+/**
+ * 組織建立對話框組件
+ * 單一職責：處理組織建立的用戶界面和表單提交
+ * 遵循單一職責原則：只負責組織建立的 UI 和用戶交互
+ */
+@Component({
+  selector: 'app-organization-create-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSelectModule,
+    MatProgressSpinnerModule,
+    MatCardModule,
+    MatDividerModule
+  ],
+  template: `
+    <div class="dialog-container">
+      <div class="dialog-header">
+        <h2 mat-dialog-title>
+          <mat-icon>business</mat-icon>
+          建立新組織
+        </h2>
+        <button mat-icon-button (click)="onCancel()" class="close-button">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="dialog-content">
+        <form (ngSubmit)="onSubmit()" #organizationForm="ngForm">
+          <mat-card class="form-card">
+            <mat-card-content>
+              <!-- 組織名稱 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>組織名稱 *</mat-label>
+                <input 
+                  matInput 
+                  [(ngModel)]="formState.values.name"
+                  name="name"
+                  placeholder="輸入組織名稱"
+                  required
+                  (input)="onInputChange()"
+                  (blur)="validateField('name')"
+                  [class.error]="formState.errors.name">
+                <mat-hint>組織的顯示名稱</mat-hint>
+                @if (formState.errors.name) {
+                  <mat-error>{{ formState.errors.name }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 組織登入名稱 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>組織標識符 *</mat-label>
+                <input 
+                  matInput 
+                  [(ngModel)]="formState.values.login"
+                  name="login"
+                  placeholder="輸入組織標識符"
+                  required
+                  (input)="onInputChange()"
+                  (blur)="validateField('login')"
+                  [class.error]="formState.errors.login">
+                <mat-hint>用於 URL 的唯一標識符</mat-hint>
+                @if (formState.errors.login) {
+                  <mat-error>{{ formState.errors.login }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 組織描述 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>組織描述</mat-label>
+                <textarea 
+                  matInput 
+                  [(ngModel)]="formState.values.description"
+                  name="description"
+                  placeholder="描述組織的用途和目標"
+                  rows="3"
+                  (input)="onInputChange()"
+                  (blur)="validateField('description')"
+                  [class.error]="formState.errors.description">
+                </textarea>
+                <mat-hint>可選的描述信息</mat-hint>
+                @if (formState.errors.description) {
+                  <mat-error>{{ formState.errors.description }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 隱私設定 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>隱私設定 *</mat-label>
+                <mat-select 
+                  [(ngModel)]="formState.values.privacy"
+                  name="privacy"
+                  required>
+                  <mat-option value="public">公開</mat-option>
+                  <mat-option value="private">私有</mat-option>
+                </mat-select>
+                <mat-hint>選擇組織的可見性</mat-hint>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+        </form>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="dialog-actions">
+        <button 
+          mat-button 
+          type="button" 
+          (click)="onCancel()"
+          [disabled]="formState.isSubmitting">
+          取消
+        </button>
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="button"
+          (click)="onSubmit()"
+          [disabled]="!formState.isValid || formState.isSubmitting">
+          @if (formState.isSubmitting) {
+            <mat-spinner diameter="20"></mat-spinner>
+            建立中...
+          } @else {
+            <ng-container>
+              <mat-icon>add</mat-icon>
+              建立組織
+            </ng-container>
+          }
+        </button>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .dialog-container {
+      min-width: 500px;
+      max-width: 600px;
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px 0 24px;
+    }
+
+    .dialog-header h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+
+    .close-button {
+      margin-left: auto;
+    }
+
+    .dialog-content {
+      padding: 24px;
+    }
+
+    .form-card {
+      box-shadow: none;
+      border: 1px solid #e0e0e0;
+    }
+
+    .full-width {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 16px 24px;
+    }
+
+    .error {
+      border-color: #f44336 !important;
+    }
+
+    mat-spinner {
+      margin-right: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .dialog-container {
+        min-width: 300px;
+        max-width: 90vw;
+      }
+      
+      .dialog-content {
+        padding: 16px;
+      }
+      
+      .dialog-actions {
+        padding: 16px;
+      }
+    }
+  `]
+})
+export class OrganizationCreateDialogComponent {
+  // 服務注入
+  private organizationService = inject(OrganizationService);
+  private validationService = inject(ValidationService);
+  private notificationService = inject(NotificationService);
+  private authService = inject(AuthService);
+  private dialogRef = inject(MatDialogRef<OrganizationCreateDialogComponent>);
+
+  // 事件發射器
+  @Output() organizationCreated = new EventEmitter<OrganizationCreatedEvent>();
+
+  // 表單狀態
+  formState: OrganizationCreateFormState = {
+    isSubmitting: false,
+    isValid: false,
+    errors: {},
+    values: {
+      name: '',
+      login: '',
+      description: '',
+      privacy: 'private'
+    }
+  };
+
+  // 計算屬性
+  readonly isFormValid = computed(() => {
+    return this.formState.values.name.trim().length > 0 &&
+           this.formState.values.login.trim().length > 0 &&
+           !this.formState.errors.name &&
+           !this.formState.errors.login &&
+           !this.formState.errors.description;
+  });
+
+  constructor() {
+    // 初始化表單有效性
+    this.updateFormValidity();
+  }
+
+  /**
+   * 驗證單個字段
+   */
+  validateField(field: string): void {
+    switch (field) {
+      case 'name':
+        const nameResult = this.validationService.validateOrganizationName(this.formState.values.name);
+        this.formState.errors.name = nameResult.errors[0] || '';
+        break;
+      case 'login':
+        const loginResult = this.validationService.validateOrganizationLogin(this.formState.values.login);
+        this.formState.errors.login = loginResult.errors[0] || '';
+        break;
+      case 'description':
+        const descResult = this.validationService.validateOrganizationDescription(this.formState.values.description);
+        this.formState.errors.description = descResult.errors[0] || '';
+        break;
+    }
+    
+    this.updateFormValidity();
+  }
+
+  /**
+   * 更新表單有效性
+   */
+  private updateFormValidity(): void {
+    // 直接計算表單有效性，不依賴 computed signal
+    this.formState.isValid = this.formState.values.name.trim().length > 0 &&
+                            this.formState.values.login.trim().length > 0 &&
+                            !this.formState.errors.name &&
+                            !this.formState.errors.login &&
+                            !this.formState.errors.description;
+  }
+
+  /**
+   * 處理輸入變化
+   */
+  onInputChange(): void {
+    this.updateFormValidity();
+  }
+
+  /**
+   * 提交表單
+   */
+  async onSubmit(): Promise<void> {
+    if (!this.formState.isValid || this.formState.isSubmitting) {
+      return;
+    }
+
+    // 驗證所有字段
+    this.validateField('name');
+    this.validateField('login');
+    this.validateField('description');
+
+    if (!this.formState.isValid) {
+      this.notificationService.showValidationErrors([
+        this.formState.errors.name,
+        this.formState.errors.login,
+        this.formState.errors.description
+      ].filter(error => error) as string[]);
+      return;
+    }
+
+    this.formState.isSubmitting = true;
+
+    try {
+      const currentUser = this.authService.currentAccount();
+      if (!currentUser) {
+        throw new Error('用戶未登入');
+      }
+
+      const request: OrganizationCreateRequest = {
+        name: this.formState.values.name.trim(),
+        login: this.formState.values.login.trim(),
+        description: this.formState.values.description.trim(),
+        privacy: this.formState.values.privacy,
+        ownerId: currentUser.id
+      };
+
+      const organizationId = await this.organizationService.createOrganization(
+        request.name,
+        request.login,
+        request.ownerId,
+        request.description
+      );
+
+      // 發射成功事件
+      this.organizationCreated.emit({
+        organization: {
+          id: organizationId,
+          name: request.name,
+          login: request.login,
+          description: request.description,
+          privacy: request.privacy,
+          ownerId: request.ownerId,
+          createdAt: new Date()
+        },
+        success: true
+      });
+
+      this.notificationService.showOrganizationCreatedSuccess(request.name);
+      this.dialogRef.close({ success: true, organizationId });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      
+      this.organizationCreated.emit({
+        organization: {} as any,
+        success: false,
+        error: errorMessage
+      });
+
+      this.notificationService.showOrganizationCreatedError(errorMessage);
+    } finally {
+      this.formState.isSubmitting = false;
+    }
+  }
+
+  /**
+   * 取消操作
+   */
+  onCancel(): void {
+    this.dialogRef.close({ success: false });
+  }
+}
+```
+
+## File: angular/src/app/features/organization/components/organization-list.component.ts
+```typescript
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { firstValueFrom } from 'rxjs';
+
+import { OrganizationService } from '../../../core/services/organization.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { OrganizationCardComponent } from '../components/organization-card.component';
+import { OrganizationCreateDialogComponent } from '../components/organization-create-dialog.component';
+import { OrganizationDetail } from '../models/organization.model';
+import { OrganizationCreatedEvent } from '../models/organization-create.model';
+
+/**
+ * 組織列表組件
+ * 單一職責：顯示組織列表和提供建立組織的功能
+ * 遵循單一職責原則：只負責組織列表的顯示和建立組織的入口
+ */
+@Component({
+  selector: 'app-organization-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
+    MatDialogModule,
+    MatProgressSpinnerModule,
+    MatGridListModule,
+    OrganizationCardComponent
+  ],
+  template: `
+    <div class="organization-list-container">
+      <!-- 頁面標題和操作按鈕 -->
+      <div class="page-header">
+        <div class="header-content">
+          <h1>組織管理</h1>
+          <p>管理您的組織和團隊</p>
+        </div>
+        <div class="header-actions">
+          <button 
+            mat-raised-button 
+            color="primary"
+            (click)="openCreateOrganizationDialog()"
+            [disabled]="isLoading()">
+            <mat-icon>add</mat-icon>
+            建立組織
+          </button>
+        </div>
+      </div>
+
+      <!-- 載入狀態 -->
+      @if (isLoading()) {
+        <div class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>載入組織列表中...</p>
+        </div>
+      }
+
+      <!-- 錯誤狀態 -->
+      @if (error()) {
+        <div class="error-container">
+          <mat-icon>error</mat-icon>
+          <p>{{ error() }}</p>
+          <button mat-button (click)="loadOrganizations()">重試</button>
+        </div>
+      }
+
+      <!-- 組織列表 -->
+      @if (!isLoading() && !error()) {
+        @if (organizations().length === 0) {
+          <!-- 空狀態 -->
+          <div class="empty-state">
+            <mat-icon>business</mat-icon>
+            <h2>尚未建立任何組織</h2>
+            <p>建立您的第一個組織來開始管理團隊和專案</p>
+            <button 
+              mat-raised-button 
+              color="primary"
+              (click)="openCreateOrganizationDialog()">
+              <mat-icon>add</mat-icon>
+              建立第一個組織
+            </button>
+          </div>
+        } @else {
+          <!-- 組織網格 -->
+          <mat-grid-list 
+            cols="1" 
+            rowHeight="400px" 
+            gutterSize="16px"
+            class="organization-grid">
+            @for (organization of organizations(); track organization.id) {
+              <mat-grid-tile>
+                <app-organization-card
+                  [organization]="createOrganizationSignal(organization)"
+                  [isSelected]="createIsSelectedSignal(false)"
+                  (view)="onViewOrganization($event)"
+                  (edit)="onEditOrganization($event)"
+                  (settings)="onOrganizationSettings($event)"
+                  (members)="onOrganizationMembers($event)"
+                  (teams)="onOrganizationTeams($event)"
+                  (delete)="onDeleteOrganization($event)">
+                </app-organization-card>
+              </mat-grid-tile>
+            }
+          </mat-grid-list>
+        }
+      }
+    </div>
+  `,
+  styles: [`
+    .organization-list-container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .header-content h1 {
+      margin: 0 0 8px 0;
+      font-size: 2rem;
+      font-weight: 500;
+      color: var(--mdc-theme-on-surface);
+    }
+
+    .header-content p {
+      margin: 0;
+      color: var(--mdc-theme-on-surface-variant);
+      font-size: 1rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+    }
+
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+      color: var(--mdc-theme-error);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+      text-align: center;
+    }
+
+    .empty-state mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      color: var(--mdc-theme-on-surface-variant);
+    }
+
+    .empty-state h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--mdc-theme-on-surface);
+    }
+
+    .empty-state p {
+      margin: 0;
+      color: var(--mdc-theme-on-surface-variant);
+      max-width: 400px;
+    }
+
+    .organization-grid {
+      margin-top: 16px;
+    }
+
+    @media (min-width: 768px) {
+      .organization-grid {
+        cols: 2;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .organization-grid {
+        cols: 3;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .organization-list-container {
+        padding: 16px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .header-actions {
+        justify-content: center;
+      }
+    }
+  `]
+})
+export class OrganizationListComponent implements OnInit {
+  // 服務注入
+  private organizationService = inject(OrganizationService);
+  private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
+  private dialog = inject(MatDialog);
+
+  // 狀態管理
+  private _organizations = signal<OrganizationDetail[]>([]);
+  private _isLoading = signal(false);
+  private _error = signal<string | null>(null);
+
+  // 只讀信號
+  readonly organizations = this._organizations.asReadonly();
+  readonly isLoading = this._isLoading.asReadonly();
+  readonly error = this._error.asReadonly();
+
+  ngOnInit(): void {
+    this.loadOrganizations();
+  }
+
+  /**
+   * 載入組織列表
+   */
+  async loadOrganizations(): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 獲取當前用戶
+      const currentUser = this.authService.getCurrentUser();
+      if (!currentUser) {
+        this._error.set('請先登入');
+        return;
+      }
+
+      // 調用服務方法獲取用戶的組織列表
+      const organizations = await firstValueFrom(
+        this.organizationService.getUserOrganizations(currentUser.uid)
+      );
+      
+      // 將 Organization 轉換為 OrganizationDetail
+      const organizationDetails: OrganizationDetail[] = organizations.map(org => ({
+        id: org.id,
+        slug: org.login, // 使用 login 作為 slug
+        name: org.profile.name,
+        description: org.description || '',
+        type: 'construction' as const, // 暫時設為 construction，可以後續優化
+        profile: {
+          website: org.profile.website,
+          location: org.profile.location,
+          email: org.profile.email,
+          phone: undefined, // ProfileVO 沒有 phone 字段
+          avatar: org.profile.avatar
+        },
+        members: [], // 暫時設為空數組，可以後續優化
+        teams: [],   // 暫時設為空數組，可以後續優化
+        securityManagers: [], // 暫時設為空數組，可以後續優化
+        organizationRoles: [], // 暫時設為空數組，可以後續優化
+        createdAt: org.createdAt,
+        updatedAt: org.updatedAt
+      }));
+      
+      this._organizations.set(organizationDetails);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '載入組織列表失敗';
+      this._error.set(errorMessage);
+      this.notificationService.showError(errorMessage);
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  /**
+   * 建立組織信號
+   */
+  createOrganizationSignal(organization: OrganizationDetail) {
+    return signal(organization);
+  }
+
+  /**
+   * 建立選中狀態信號
+   */
+  createIsSelectedSignal(isSelected: boolean) {
+    return signal(isSelected);
+  }
+
+  /**
+   * 打開建立組織對話框
+   */
+  openCreateOrganizationDialog(): void {
+    const dialogRef = this.dialog.open(OrganizationCreateDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.loadOrganizations(); // 重新載入組織列表
+      }
+    });
+  }
+
+  /**
+   * 檢視組織
+   */
+  onViewOrganization(organization: OrganizationDetail): void {
+    console.log('檢視組織:', organization);
+    // TODO: 導航到組織詳情頁面
+  }
+
+  /**
+   * 編輯組織
+   */
+  onEditOrganization(organization: OrganizationDetail): void {
+    console.log('編輯組織:', organization);
+    // TODO: 打開編輯組織對話框
+  }
+
+  /**
+   * 組織設定
+   */
+  onOrganizationSettings(organization: OrganizationDetail): void {
+    console.log('組織設定:', organization);
+    // TODO: 導航到組織設定頁面
+  }
+
+  /**
+   * 組織成員
+   */
+  onOrganizationMembers(organization: OrganizationDetail): void {
+    console.log('組織成員:', organization);
+    // TODO: 導航到組織成員頁面
+  }
+
+  /**
+   * 組織團隊
+   */
+  onOrganizationTeams(organization: OrganizationDetail): void {
+    console.log('組織團隊:', organization);
+    // TODO: 導航到組織團隊頁面
+  }
+
+  /**
+   * 刪除組織
+   */
+  onDeleteOrganization(organization: OrganizationDetail): void {
+    console.log('刪除組織:', organization);
+    // TODO: 顯示刪除確認對話框
+  }
 }
 ```
 

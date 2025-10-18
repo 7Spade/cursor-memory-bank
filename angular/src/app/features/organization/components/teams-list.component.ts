@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
 
 import { OrganizationService } from '../../../core/services/organization.service';
 import { PermissionService } from '../../../core/services/permission.service';
@@ -303,8 +304,12 @@ export class TeamsListComponent implements OnInit {
       this.isLoading.set(true);
       this.error.set(null);
       
-      // 暫時設為空數組，因為 getOrganizationTeams 方法不存在
-      this.teams.set([]);
+      // 使用 getOrganizationTeams 方法載入團隊列表
+      const teams = await firstValueFrom(
+        this.orgService.getOrganizationTeams(this.orgId)
+      );
+      
+      this.teams.set(teams);
       
     } catch (error) {
       this.error.set(`載入團隊列表失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
@@ -326,7 +331,22 @@ export class TeamsListComponent implements OnInit {
   }
 
   async deleteTeam(team: Team) {
-    // TODO: 實作刪除團隊對話框
-    this.notificationService.showInfo('刪除團隊功能即將推出');
+    // 確認對話框
+    const confirmed = confirm(`確定要刪除團隊 "${team.name}" 嗎？此操作無法復原。`);
+    
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await this.orgService.deleteTeam(this.orgId, team.id);
+      this.notificationService.showSuccess(`團隊 "${team.name}" 已成功刪除`);
+      
+      // 重新載入團隊列表
+      await this.loadTeams();
+      
+    } catch (error) {
+      this.notificationService.showError(`刪除團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    }
   }
 }

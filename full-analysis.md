@@ -10585,467 +10585,6 @@ export class ValidationUtils {
 }
 ```
 
-## File: angular/src/app/core/services/organization.service.ts
-```typescript
-// src/app/core/services/organization.service.ts
-
-import { Injectable, inject, signal, computed } from '@angular/core';
-import {
-  Firestore,
-  doc,
-  docData,
-  collection,
-  collectionData,
-  query,
-  where,
-  addDoc,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  getDoc,
-  DocumentData
-} from '@angular/fire/firestore';
-import { Observable, map, switchMap, combineLatest, of, catchError, throwError } from 'rxjs';
-import { 
-  Organization, 
-  OrganizationMember, 
-  Team,
-  TeamMember,
-  OrgRole,
-  TeamRole,
-  ProfileVO,
-  PermissionVO,
-  SettingsVO
-} from '../models/auth.model';
-import { ValidationUtils } from '../utils/validation.utils';
-
-@Injectable({ providedIn: 'root' })
-export class OrganizationService {
-  private firestore = inject(Firestore);
-
-  // Signals for state management
-  private _currentOrganization = signal<Organization | null>(null);
-  private _isLoading = signal(false);
-  private _error = signal<string | null>(null);
-
-  // Readonly signals
-  readonly currentOrganization = this._currentOrganization.asReadonly();
-  readonly isLoading = this._isLoading.asReadonly();
-  readonly error = this._error.asReadonly();
-
-  // Computed signals
-  readonly isOrganizationLoaded = computed(() => this._currentOrganization() !== null);
-  readonly organizationMembers = computed(() => {
-    const org = this._currentOrganization();
-    return org ? [] : []; // 這裡應該實現成員查詢
-  });
-
-  async createOrganization(
-    name: string,
-    login: string,
-    ownerId: string,
-    description?: string
-  ): Promise<string> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 驗證組織名稱
-      const nameValidation = ValidationUtils.validateOrganizationName(name);
-      if (!nameValidation.isValid) {
-        throw new Error(`組織名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
-      }
-
-      // 驗證登入名稱
-      const loginValidation = ValidationUtils.validateLogin(login);
-      if (!loginValidation.isValid) {
-        throw new Error(`登入名稱驗證失敗: ${loginValidation.errors.join(', ')}`);
-      }
-
-      const orgId = doc(collection(this.firestore, 'accounts')).id;
-
-      // 建立 ProfileVO
-      const profile: ProfileVO = {
-        name: name,
-        email: '', // 組織沒有電子郵件
-        avatar: 'https://firebasestorage.googleapis.com/v0/b/elite-chiller-455712-c4.firebasestorage.app/o/avatar.jpg?alt=media&token=e1474080-6528-4f01-a719-411ea3447060',
-        bio: description || '',
-        location: '',
-        website: ''
-      };
-
-      // 建立 PermissionVO
-      const permissions: PermissionVO = {
-        roles: ['organization'],
-        abilities: [
-          { action: 'read', resource: 'organization' },
-          { action: 'write', resource: 'organization' },
-          { action: 'admin', resource: 'organization' },
-          { action: 'read', resource: 'team' },
-          { action: 'write', resource: 'team' },
-          { action: 'admin', resource: 'team' },
-          { action: 'read', resource: 'member' },
-          { action: 'write', resource: 'member' },
-          { action: 'admin', resource: 'member' }
-        ]
-      };
-
-      // 建立 SettingsVO
-      const settings: SettingsVO = {
-        language: 'zh-TW',
-        theme: 'light',
-        notifications: { email: true, push: true, sms: false },
-        privacy: { profilePublic: true, showEmail: false },
-        organization: {
-          defaultMemberRole: OrgRole.MEMBER,
-          visibility: 'private'
-        }
-      };
-
-      await setDoc(doc(this.firestore, `accounts/${orgId}`), {
-        id: orgId,
-        type: 'organization',
-        login,
-        profile,
-        permissions,
-        settings,
-        projectsOwned: [],
-        description: description || '',
-        ownerId,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      });
-
-      await this.addOrganizationMember(orgId, ownerId, OrgRole.OWNER);
-      return orgId;
-    } catch (error) {
-      this._error.set(`創建組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  getOrganization(orgId: string): Observable<Organization> {
-    const orgDoc = doc(this.firestore, `accounts/${orgId}`);
-    return docData(orgDoc, { idField: 'id' }).pipe(
-      map(data => {
-        if (data && (data as DocumentData)['type'] === 'organization') {
-          return data as Organization;
-        }
-        throw new Error(`組織不存在或類型不正確: ${orgId}`);
-      }),
-      catchError((error: any) => {
-        console.error('獲取組織失敗:', error);
-        return throwError(() => new Error('無法載入組織資訊，請稍後再試'));
-      })
-    );
-  }
-
-  async loadOrganization(orgId: string): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const orgDoc = doc(this.firestore, `accounts/${orgId}`);
-      const orgData = await docData(orgDoc, { idField: 'id' }).pipe(
-        map(data => {
-          if (data && (data as DocumentData)['type'] === 'organization') {
-            return data as Organization;
-          }
-          return null;
-        })
-      ).toPromise();
-
-      this._currentOrganization.set(orgData || null);
-    } catch (error) {
-      this._error.set(`載入組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  getOrganizationMembers(orgId: string): Observable<OrganizationMember[]> {
-    const membersCol = collection(this.firestore, `accounts/${orgId}/members`);
-    return collectionData(membersCol, { idField: 'id' }) as Observable<OrganizationMember[]>;
-  }
-
-  async addOrganizationMember(
-    orgId: string,
-    userId: string,
-    role: OrgRole,
-    invitedBy?: string
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
-      await setDoc(memberRef, {
-        id: userId,
-        organizationId: orgId,
-        userId,
-        role,
-        joinedAt: new Date(),
-        invitedBy: invitedBy || '系統自動添加'
-      });
-    } catch (error) {
-      this._error.set(`添加組織成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async updateMemberRole(
-    orgId: string,
-    userId: string,
-    newRole: OrgRole
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
-      await updateDoc(memberRef, { role: newRole });
-    } catch (error) {
-      this._error.set(`更新成員角色失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async removeOrganizationMember(orgId: string, userId: string): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
-      await deleteDoc(memberRef);
-    } catch (error) {
-      this._error.set(`移除組織成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  getTeams(orgId: string): Observable<Team[]> {
-    const teamsCol = collection(this.firestore, `accounts/${orgId}/teams`);
-    return collectionData(teamsCol, { idField: 'id' }) as Observable<Team[]>;
-  }
-
-  async createTeam(
-    orgId: string,
-    name: string,
-    description?: string
-  ): Promise<string> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 驗證團隊名稱
-      const nameValidation = ValidationUtils.validateTeamName(name);
-      if (!nameValidation.isValid) {
-        throw new Error(`團隊名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
-      }
-
-      const teamId = doc(collection(this.firestore, `accounts/${orgId}/teams`)).id;
-      const slug = name.toLowerCase().replace(/\s+/g, '-');
-
-      await setDoc(doc(this.firestore, `accounts/${orgId}/teams/${teamId}`), {
-        id: teamId,
-        organizationId: orgId,
-        name,
-        slug,
-        description,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        permissions: {
-          repository: { read: true, write: true, admin: false },
-          issues: { read: true, write: true, delete: false },
-          pullRequests: { read: true, write: true, merge: false }
-        }
-      });
-
-      return teamId;
-    } catch (error) {
-      this._error.set(`創建團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async updateTeam(
-    orgId: string,
-    teamId: string,
-    updates: Partial<Team>
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const teamRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}`);
-      await updateDoc(teamRef, {
-        ...updates,
-        updatedAt: new Date()
-      });
-    } catch (error) {
-      this._error.set(`更新團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async deleteTeam(orgId: string, teamId: string): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const teamRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}`);
-      await deleteDoc(teamRef);
-    } catch (error) {
-      this._error.set(`刪除團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  getTeamMembers(orgId: string, teamId: string): Observable<TeamMember[]> {
-    const membersCol = collection(this.firestore, `accounts/${orgId}/teams/${teamId}/members`);
-    return collectionData(membersCol, { idField: 'id' }) as Observable<TeamMember[]>;
-  }
-
-  async addTeamMember(
-    orgId: string,
-    teamId: string,
-    userId: string,
-    role: TeamRole,
-    addedBy?: string
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const memberRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}/members/${userId}`);
-      await setDoc(memberRef, {
-        id: userId,
-        teamId,
-        userId,
-        role,
-        joinedAt: new Date(),
-        addedBy
-      });
-    } catch (error) {
-      this._error.set(`添加團隊成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async removeTeamMember(
-    orgId: string,
-    teamId: string,
-    userId: string
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      const memberRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}/members/${userId}`);
-      await deleteDoc(memberRef);
-    } catch (error) {
-      this._error.set(`移除團隊成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async updateOrganizationProfile(
-    orgId: string,
-    profile: ProfileVO
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 驗證 Profile
-      const profileErrors = ValidationUtils.validateProfile(profile);
-      if (profileErrors.length > 0) {
-        throw new Error(`Profile validation failed: ${profileErrors.join(', ')}`);
-      }
-
-      const orgRef = doc(this.firestore, `accounts/${orgId}`);
-      await updateDoc(orgRef, {
-        profile,
-        updatedAt: new Date()
-      });
-
-      // 更新本地狀態
-      const currentOrg = this._currentOrganization();
-      if (currentOrg) {
-        this._currentOrganization.set({ ...currentOrg, profile, updatedAt: new Date() });
-      }
-    } catch (error) {
-      this._error.set(`更新組織檔案失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  async updateOrganizationSettings(
-    orgId: string,
-    settings: SettingsVO
-  ): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 驗證 Settings
-      const settingsErrors = ValidationUtils.validateSettings(settings);
-      if (settingsErrors.length > 0) {
-        throw new Error(`Settings validation failed: ${settingsErrors.join(', ')}`);
-      }
-
-      const orgRef = doc(this.firestore, `accounts/${orgId}`);
-      await updateDoc(orgRef, {
-        settings,
-        updatedAt: new Date()
-      });
-
-      // 更新本地狀態
-      const currentOrg = this._currentOrganization();
-      if (currentOrg) {
-        this._currentOrganization.set({ ...currentOrg, settings, updatedAt: new Date() });
-      }
-    } catch (error) {
-      this._error.set(`更新組織設定失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  // 清除錯誤
-  clearError() {
-    this._error.set(null);
-  }
-
-  // 清除組織上下文
-  clearOrganizationContext() {
-    this._currentOrganization.set(null);
-    this._error.set(null);
-  }
-}
-```
-
 ## File: angular/src/app/core/services/validation.service.ts
 ```typescript
 import { Injectable } from '@angular/core';
@@ -12049,363 +11588,6 @@ export class OrganizationCreateComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['/organizations']);
-  }
-}
-```
-
-## File: angular/src/app/features/organization/components/organization-list.component.ts
-```typescript
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatGridListModule } from '@angular/material/grid-list';
-
-import { OrganizationService } from '../../../core/services/organization.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { NotificationService } from '../../../core/services/notification.service';
-import { OrganizationCardComponent } from '../components/organization-card.component';
-import { OrganizationCreateDialogComponent } from '../components/organization-create-dialog.component';
-import { OrganizationDetail } from '../models/organization.model';
-import { OrganizationCreatedEvent } from '../models/organization-create.model';
-
-/**
- * 組織列表組件
- * 單一職責：顯示組織列表和提供建立組織的功能
- * 遵循單一職責原則：只負責組織列表的顯示和建立組織的入口
- */
-@Component({
-  selector: 'app-organization-list',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatDialogModule,
-    MatProgressSpinnerModule,
-    MatGridListModule,
-    OrganizationCardComponent
-  ],
-  template: `
-    <div class="organization-list-container">
-      <!-- 頁面標題和操作按鈕 -->
-      <div class="page-header">
-        <div class="header-content">
-          <h1>組織管理</h1>
-          <p>管理您的組織和團隊</p>
-        </div>
-        <div class="header-actions">
-          <button 
-            mat-raised-button 
-            color="primary"
-            (click)="openCreateOrganizationDialog()"
-            [disabled]="isLoading()">
-            <mat-icon>add</mat-icon>
-            建立組織
-          </button>
-        </div>
-      </div>
-
-      <!-- 載入狀態 -->
-      @if (isLoading()) {
-        <div class="loading-container">
-          <mat-spinner></mat-spinner>
-          <p>載入組織列表中...</p>
-        </div>
-      }
-
-      <!-- 錯誤狀態 -->
-      @if (error()) {
-        <div class="error-container">
-          <mat-icon>error</mat-icon>
-          <p>{{ error() }}</p>
-          <button mat-button (click)="loadOrganizations()">重試</button>
-        </div>
-      }
-
-      <!-- 組織列表 -->
-      @if (!isLoading() && !error()) {
-        @if (organizations().length === 0) {
-          <!-- 空狀態 -->
-          <div class="empty-state">
-            <mat-icon>business</mat-icon>
-            <h2>尚未建立任何組織</h2>
-            <p>建立您的第一個組織來開始管理團隊和專案</p>
-            <button 
-              mat-raised-button 
-              color="primary"
-              (click)="openCreateOrganizationDialog()">
-              <mat-icon>add</mat-icon>
-              建立第一個組織
-            </button>
-          </div>
-        } @else {
-          <!-- 組織網格 -->
-          <mat-grid-list 
-            cols="1" 
-            rowHeight="400px" 
-            gutterSize="16px"
-            class="organization-grid">
-            @for (organization of organizations(); track organization.id) {
-              <mat-grid-tile>
-                <app-organization-card
-                  [organization]="createOrganizationSignal(organization)"
-                  [isSelected]="createIsSelectedSignal(false)"
-                  (view)="onViewOrganization($event)"
-                  (edit)="onEditOrganization($event)"
-                  (settings)="onOrganizationSettings($event)"
-                  (members)="onOrganizationMembers($event)"
-                  (teams)="onOrganizationTeams($event)"
-                  (delete)="onDeleteOrganization($event)">
-                </app-organization-card>
-              </mat-grid-tile>
-            }
-          </mat-grid-list>
-        }
-      }
-    </div>
-  `,
-  styles: [`
-    .organization-list-container {
-      padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 32px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .header-content h1 {
-      margin: 0 0 8px 0;
-      font-size: 2rem;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    .header-content p {
-      margin: 0;
-      color: var(--mdc-theme-on-surface-variant);
-      font-size: 1rem;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-    }
-
-    .error-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-      color: var(--mdc-theme-error);
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-      text-align: center;
-    }
-
-    .empty-state mat-icon {
-      font-size: 64px;
-      width: 64px;
-      height: 64px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .empty-state h2 {
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    .empty-state p {
-      margin: 0;
-      color: var(--mdc-theme-on-surface-variant);
-      max-width: 400px;
-    }
-
-    .organization-grid {
-      margin-top: 16px;
-    }
-
-    @media (min-width: 768px) {
-      .organization-grid {
-        cols: 2;
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .organization-grid {
-        cols: 3;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .organization-list-container {
-        padding: 16px;
-      }
-
-      .page-header {
-        flex-direction: column;
-        gap: 16px;
-        align-items: stretch;
-      }
-
-      .header-actions {
-        justify-content: center;
-      }
-    }
-  `]
-})
-export class OrganizationListComponent implements OnInit {
-  // 服務注入
-  private organizationService = inject(OrganizationService);
-  private authService = inject(AuthService);
-  private notificationService = inject(NotificationService);
-  private dialog = inject(MatDialog);
-
-  // 狀態管理
-  private _organizations = signal<OrganizationDetail[]>([]);
-  private _isLoading = signal(false);
-  private _error = signal<string | null>(null);
-
-  // 只讀信號
-  readonly organizations = this._organizations.asReadonly();
-  readonly isLoading = this._isLoading.asReadonly();
-  readonly error = this._error.asReadonly();
-
-  ngOnInit(): void {
-    this.loadOrganizations();
-  }
-
-  /**
-   * 載入組織列表
-   */
-  async loadOrganizations(): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 這裡應該調用實際的服務方法來獲取組織列表
-      // 由於現有的 OrganizationService 沒有 getOrganizations 方法，
-      // 我們暫時使用空數組
-      const organizations: OrganizationDetail[] = [];
-      this._organizations.set(organizations);
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '載入組織列表失敗';
-      this._error.set(errorMessage);
-      this.notificationService.showError(errorMessage);
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  /**
-   * 建立組織信號
-   */
-  createOrganizationSignal(organization: OrganizationDetail) {
-    return signal(organization);
-  }
-
-  /**
-   * 建立選中狀態信號
-   */
-  createIsSelectedSignal(isSelected: boolean) {
-    return signal(isSelected);
-  }
-
-  /**
-   * 打開建立組織對話框
-   */
-  openCreateOrganizationDialog(): void {
-    const dialogRef = this.dialog.open(OrganizationCreateDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-      disableClose: false
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result?.success) {
-        this.loadOrganizations(); // 重新載入組織列表
-      }
-    });
-  }
-
-  /**
-   * 檢視組織
-   */
-  onViewOrganization(organization: OrganizationDetail): void {
-    console.log('檢視組織:', organization);
-    // TODO: 導航到組織詳情頁面
-  }
-
-  /**
-   * 編輯組織
-   */
-  onEditOrganization(organization: OrganizationDetail): void {
-    console.log('編輯組織:', organization);
-    // TODO: 打開編輯組織對話框
-  }
-
-  /**
-   * 組織設定
-   */
-  onOrganizationSettings(organization: OrganizationDetail): void {
-    console.log('組織設定:', organization);
-    // TODO: 導航到組織設定頁面
-  }
-
-  /**
-   * 組織成員
-   */
-  onOrganizationMembers(organization: OrganizationDetail): void {
-    console.log('組織成員:', organization);
-    // TODO: 導航到組織成員頁面
-  }
-
-  /**
-   * 組織團隊
-   */
-  onOrganizationTeams(organization: OrganizationDetail): void {
-    console.log('組織團隊:', organization);
-    // TODO: 導航到組織團隊頁面
-  }
-
-  /**
-   * 刪除組織
-   */
-  onDeleteOrganization(organization: OrganizationDetail): void {
-    console.log('刪除組織:', organization);
-    // TODO: 顯示刪除確認對話框
   }
 }
 ```
@@ -13528,6 +12710,506 @@ body {
 }
 ```
 
+## File: angular/src/app/core/services/organization.service.ts
+```typescript
+// src/app/core/services/organization.service.ts
+
+import { Injectable, inject, signal, computed } from '@angular/core';
+import {
+  Firestore,
+  doc,
+  docData,
+  collection,
+  collectionData,
+  query,
+  where,
+  addDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  getDoc,
+  getDocs,
+  DocumentData
+} from '@angular/fire/firestore';
+import { Observable, map, switchMap, combineLatest, of, catchError, throwError } from 'rxjs';
+import { 
+  Organization, 
+  OrganizationMember, 
+  Team,
+  TeamMember,
+  OrgRole,
+  TeamRole,
+  ProfileVO,
+  PermissionVO,
+  SettingsVO
+} from '../models/auth.model';
+import { ValidationUtils } from '../utils/validation.utils';
+
+@Injectable({ providedIn: 'root' })
+export class OrganizationService {
+  private firestore = inject(Firestore);
+
+  // Signals for state management
+  private _currentOrganization = signal<Organization | null>(null);
+  private _isLoading = signal(false);
+  private _error = signal<string | null>(null);
+
+  // Readonly signals
+  readonly currentOrganization = this._currentOrganization.asReadonly();
+  readonly isLoading = this._isLoading.asReadonly();
+  readonly error = this._error.asReadonly();
+
+  // Computed signals
+  readonly isOrganizationLoaded = computed(() => this._currentOrganization() !== null);
+  readonly organizationMembers = computed(() => {
+    const org = this._currentOrganization();
+    return org ? [] : []; // 這裡應該實現成員查詢
+  });
+
+  async createOrganization(
+    name: string,
+    login: string,
+    ownerId: string,
+    description?: string
+  ): Promise<string> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 驗證組織名稱
+      const nameValidation = ValidationUtils.validateOrganizationName(name);
+      if (!nameValidation.isValid) {
+        throw new Error(`組織名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
+      }
+
+      // 驗證登入名稱
+      const loginValidation = ValidationUtils.validateLogin(login);
+      if (!loginValidation.isValid) {
+        throw new Error(`登入名稱驗證失敗: ${loginValidation.errors.join(', ')}`);
+      }
+
+      const orgId = doc(collection(this.firestore, 'accounts')).id;
+
+      // 建立 ProfileVO
+      const profile: ProfileVO = {
+        name: name,
+        email: '', // 組織沒有電子郵件
+        avatar: 'https://firebasestorage.googleapis.com/v0/b/elite-chiller-455712-c4.firebasestorage.app/o/avatar.jpg?alt=media&token=e1474080-6528-4f01-a719-411ea3447060',
+        bio: description || '',
+        location: '',
+        website: ''
+      };
+
+      // 建立 PermissionVO
+      const permissions: PermissionVO = {
+        roles: ['organization'],
+        abilities: [
+          { action: 'read', resource: 'organization' },
+          { action: 'write', resource: 'organization' },
+          { action: 'admin', resource: 'organization' },
+          { action: 'read', resource: 'team' },
+          { action: 'write', resource: 'team' },
+          { action: 'admin', resource: 'team' },
+          { action: 'read', resource: 'member' },
+          { action: 'write', resource: 'member' },
+          { action: 'admin', resource: 'member' }
+        ]
+      };
+
+      // 建立 SettingsVO
+      const settings: SettingsVO = {
+        language: 'zh-TW',
+        theme: 'light',
+        notifications: { email: true, push: true, sms: false },
+        privacy: { profilePublic: true, showEmail: false },
+        organization: {
+          defaultMemberRole: OrgRole.MEMBER,
+          visibility: 'private'
+        }
+      };
+
+      await setDoc(doc(this.firestore, `accounts/${orgId}`), {
+        id: orgId,
+        type: 'organization',
+        login,
+        profile,
+        permissions,
+        settings,
+        projectsOwned: [],
+        description: description || '',
+        ownerId,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      await this.addOrganizationMember(orgId, ownerId, OrgRole.OWNER);
+      return orgId;
+    } catch (error) {
+      this._error.set(`創建組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  getOrganization(orgId: string): Observable<Organization> {
+    const orgDoc = doc(this.firestore, `accounts/${orgId}`);
+    return docData(orgDoc, { idField: 'id' }).pipe(
+      map(data => {
+        if (data && (data as DocumentData)['type'] === 'organization') {
+          return data as Organization;
+        }
+        throw new Error(`組織不存在或類型不正確: ${orgId}`);
+      }),
+      catchError((error: any) => {
+        console.error('獲取組織失敗:', error);
+        return throwError(() => new Error('無法載入組織資訊，請稍後再試'));
+      })
+    );
+  }
+
+  /**
+   * 獲取用戶的所有組織
+   */
+  getUserOrganizations(userId: string): Observable<Organization[]> {
+    const accountsCol = collection(this.firestore, 'accounts');
+    return collectionData(accountsCol, { idField: 'id' }).pipe(
+      switchMap(async (accounts) => {
+        // 過濾出組織類型的帳戶
+        const organizations = accounts.filter(account => 
+          account['type'] === 'organization'
+        ) as Organization[];
+        
+        // 檢查用戶是否為這些組織的成員
+        const userOrganizations: Organization[] = [];
+        
+        for (const org of organizations) {
+          try {
+            const membersCol = collection(this.firestore, `accounts/${org.id}/members`);
+            const membersSnapshot = await getDocs(membersCol);
+            const isMember = membersSnapshot.docs.some(doc => doc.id === userId);
+            
+            if (isMember) {
+              userOrganizations.push(org);
+            }
+          } catch (error) {
+            console.warn(`檢查組織 ${org.id} 成員資格失敗:`, error);
+          }
+        }
+        
+        return userOrganizations;
+      }),
+      catchError((error: any) => {
+        console.error('獲取用戶組織失敗:', error);
+        return throwError(() => new Error('無法載入組織列表，請稍後再試'));
+      })
+    );
+  }
+
+  async loadOrganization(orgId: string): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const orgDoc = doc(this.firestore, `accounts/${orgId}`);
+      const orgData = await docData(orgDoc, { idField: 'id' }).pipe(
+        map(data => {
+          if (data && (data as DocumentData)['type'] === 'organization') {
+            return data as Organization;
+          }
+          return null;
+        })
+      ).toPromise();
+
+      this._currentOrganization.set(orgData || null);
+    } catch (error) {
+      this._error.set(`載入組織失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  getOrganizationMembers(orgId: string): Observable<OrganizationMember[]> {
+    const membersCol = collection(this.firestore, `accounts/${orgId}/members`);
+    return collectionData(membersCol, { idField: 'id' }) as Observable<OrganizationMember[]>;
+  }
+
+  async addOrganizationMember(
+    orgId: string,
+    userId: string,
+    role: OrgRole,
+    invitedBy?: string
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
+      await setDoc(memberRef, {
+        id: userId,
+        organizationId: orgId,
+        userId,
+        role,
+        joinedAt: new Date(),
+        invitedBy: invitedBy || '系統自動添加'
+      });
+    } catch (error) {
+      this._error.set(`添加組織成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async updateMemberRole(
+    orgId: string,
+    userId: string,
+    newRole: OrgRole
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
+      await updateDoc(memberRef, { role: newRole });
+    } catch (error) {
+      this._error.set(`更新成員角色失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async removeOrganizationMember(orgId: string, userId: string): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const memberRef = doc(this.firestore, `accounts/${orgId}/members/${userId}`);
+      await deleteDoc(memberRef);
+    } catch (error) {
+      this._error.set(`移除組織成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  getTeams(orgId: string): Observable<Team[]> {
+    const teamsCol = collection(this.firestore, `accounts/${orgId}/teams`);
+    return collectionData(teamsCol, { idField: 'id' }) as Observable<Team[]>;
+  }
+
+  async createTeam(
+    orgId: string,
+    name: string,
+    description?: string
+  ): Promise<string> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 驗證團隊名稱
+      const nameValidation = ValidationUtils.validateTeamName(name);
+      if (!nameValidation.isValid) {
+        throw new Error(`團隊名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
+      }
+
+      const teamId = doc(collection(this.firestore, `accounts/${orgId}/teams`)).id;
+      const slug = name.toLowerCase().replace(/\s+/g, '-');
+
+      await setDoc(doc(this.firestore, `accounts/${orgId}/teams/${teamId}`), {
+        id: teamId,
+        organizationId: orgId,
+        name,
+        slug,
+        description,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        permissions: {
+          repository: { read: true, write: true, admin: false },
+          issues: { read: true, write: true, delete: false },
+          pullRequests: { read: true, write: true, merge: false }
+        }
+      });
+
+      return teamId;
+    } catch (error) {
+      this._error.set(`創建團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async updateTeam(
+    orgId: string,
+    teamId: string,
+    updates: Partial<Team>
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const teamRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}`);
+      await updateDoc(teamRef, {
+        ...updates,
+        updatedAt: new Date()
+      });
+    } catch (error) {
+      this._error.set(`更新團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async deleteTeam(orgId: string, teamId: string): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const teamRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}`);
+      await deleteDoc(teamRef);
+    } catch (error) {
+      this._error.set(`刪除團隊失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  getTeamMembers(orgId: string, teamId: string): Observable<TeamMember[]> {
+    const membersCol = collection(this.firestore, `accounts/${orgId}/teams/${teamId}/members`);
+    return collectionData(membersCol, { idField: 'id' }) as Observable<TeamMember[]>;
+  }
+
+  async addTeamMember(
+    orgId: string,
+    teamId: string,
+    userId: string,
+    role: TeamRole,
+    addedBy?: string
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const memberRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}/members/${userId}`);
+      await setDoc(memberRef, {
+        id: userId,
+        teamId,
+        userId,
+        role,
+        joinedAt: new Date(),
+        addedBy
+      });
+    } catch (error) {
+      this._error.set(`添加團隊成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async removeTeamMember(
+    orgId: string,
+    teamId: string,
+    userId: string
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      const memberRef = doc(this.firestore, `accounts/${orgId}/teams/${teamId}/members/${userId}`);
+      await deleteDoc(memberRef);
+    } catch (error) {
+      this._error.set(`移除團隊成員失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async updateOrganizationProfile(
+    orgId: string,
+    profile: ProfileVO
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 驗證 Profile
+      const profileErrors = ValidationUtils.validateProfile(profile);
+      if (profileErrors.length > 0) {
+        throw new Error(`Profile validation failed: ${profileErrors.join(', ')}`);
+      }
+
+      const orgRef = doc(this.firestore, `accounts/${orgId}`);
+      await updateDoc(orgRef, {
+        profile,
+        updatedAt: new Date()
+      });
+
+      // 更新本地狀態
+      const currentOrg = this._currentOrganization();
+      if (currentOrg) {
+        this._currentOrganization.set({ ...currentOrg, profile, updatedAt: new Date() });
+      }
+    } catch (error) {
+      this._error.set(`更新組織檔案失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  async updateOrganizationSettings(
+    orgId: string,
+    settings: SettingsVO
+  ): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 驗證 Settings
+      const settingsErrors = ValidationUtils.validateSettings(settings);
+      if (settingsErrors.length > 0) {
+        throw new Error(`Settings validation failed: ${settingsErrors.join(', ')}`);
+      }
+
+      const orgRef = doc(this.firestore, `accounts/${orgId}`);
+      await updateDoc(orgRef, {
+        settings,
+        updatedAt: new Date()
+      });
+
+      // 更新本地狀態
+      const currentOrg = this._currentOrganization();
+      if (currentOrg) {
+        this._currentOrganization.set({ ...currentOrg, settings, updatedAt: new Date() });
+      }
+    } catch (error) {
+      this._error.set(`更新組織設定失敗: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      throw error;
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  // 清除錯誤
+  clearError() {
+    this._error.set(null);
+  }
+
+  // 清除組織上下文
+  clearOrganizationContext() {
+    this._currentOrganization.set(null);
+    this._error.set(null);
+  }
+}
+```
+
 ## File: angular/src/app/features/organization/components/organization-create-dialog.component.ts
 ```typescript
 import { Component, inject, signal, computed, Output, EventEmitter, effect } from '@angular/core';
@@ -13925,6 +13607,394 @@ export class OrganizationCreateDialogComponent {
    */
   onCancel(): void {
     this.dialogRef.close({ success: false });
+  }
+}
+```
+
+## File: angular/src/app/features/organization/components/organization-list.component.ts
+```typescript
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { firstValueFrom } from 'rxjs';
+
+import { OrganizationService } from '../../../core/services/organization.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { OrganizationCardComponent } from '../components/organization-card.component';
+import { OrganizationCreateDialogComponent } from '../components/organization-create-dialog.component';
+import { OrganizationDetail } from '../models/organization.model';
+import { OrganizationCreatedEvent } from '../models/organization-create.model';
+
+/**
+ * 組織列表組件
+ * 單一職責：顯示組織列表和提供建立組織的功能
+ * 遵循單一職責原則：只負責組織列表的顯示和建立組織的入口
+ */
+@Component({
+  selector: 'app-organization-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
+    MatDialogModule,
+    MatProgressSpinnerModule,
+    MatGridListModule,
+    OrganizationCardComponent
+  ],
+  template: `
+    <div class="organization-list-container">
+      <!-- 頁面標題和操作按鈕 -->
+      <div class="page-header">
+        <div class="header-content">
+          <h1>組織管理</h1>
+          <p>管理您的組織和團隊</p>
+        </div>
+        <div class="header-actions">
+          <button 
+            mat-raised-button 
+            color="primary"
+            (click)="openCreateOrganizationDialog()"
+            [disabled]="isLoading()">
+            <mat-icon>add</mat-icon>
+            建立組織
+          </button>
+        </div>
+      </div>
+
+      <!-- 載入狀態 -->
+      @if (isLoading()) {
+        <div class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>載入組織列表中...</p>
+        </div>
+      }
+
+      <!-- 錯誤狀態 -->
+      @if (error()) {
+        <div class="error-container">
+          <mat-icon>error</mat-icon>
+          <p>{{ error() }}</p>
+          <button mat-button (click)="loadOrganizations()">重試</button>
+        </div>
+      }
+
+      <!-- 組織列表 -->
+      @if (!isLoading() && !error()) {
+        @if (organizations().length === 0) {
+          <!-- 空狀態 -->
+          <div class="empty-state">
+            <mat-icon>business</mat-icon>
+            <h2>尚未建立任何組織</h2>
+            <p>建立您的第一個組織來開始管理團隊和專案</p>
+            <button 
+              mat-raised-button 
+              color="primary"
+              (click)="openCreateOrganizationDialog()">
+              <mat-icon>add</mat-icon>
+              建立第一個組織
+            </button>
+          </div>
+        } @else {
+          <!-- 組織網格 -->
+          <mat-grid-list 
+            cols="1" 
+            rowHeight="400px" 
+            gutterSize="16px"
+            class="organization-grid">
+            @for (organization of organizations(); track organization.id) {
+              <mat-grid-tile>
+                <app-organization-card
+                  [organization]="createOrganizationSignal(organization)"
+                  [isSelected]="createIsSelectedSignal(false)"
+                  (view)="onViewOrganization($event)"
+                  (edit)="onEditOrganization($event)"
+                  (settings)="onOrganizationSettings($event)"
+                  (members)="onOrganizationMembers($event)"
+                  (teams)="onOrganizationTeams($event)"
+                  (delete)="onDeleteOrganization($event)">
+                </app-organization-card>
+              </mat-grid-tile>
+            }
+          </mat-grid-list>
+        }
+      }
+    </div>
+  `,
+  styles: [`
+    .organization-list-container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .header-content h1 {
+      margin: 0 0 8px 0;
+      font-size: 2rem;
+      font-weight: 500;
+      color: var(--mdc-theme-on-surface);
+    }
+
+    .header-content p {
+      margin: 0;
+      color: var(--mdc-theme-on-surface-variant);
+      font-size: 1rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+    }
+
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+      color: var(--mdc-theme-error);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+      text-align: center;
+    }
+
+    .empty-state mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      color: var(--mdc-theme-on-surface-variant);
+    }
+
+    .empty-state h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--mdc-theme-on-surface);
+    }
+
+    .empty-state p {
+      margin: 0;
+      color: var(--mdc-theme-on-surface-variant);
+      max-width: 400px;
+    }
+
+    .organization-grid {
+      margin-top: 16px;
+    }
+
+    @media (min-width: 768px) {
+      .organization-grid {
+        cols: 2;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .organization-grid {
+        cols: 3;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .organization-list-container {
+        padding: 16px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .header-actions {
+        justify-content: center;
+      }
+    }
+  `]
+})
+export class OrganizationListComponent implements OnInit {
+  // 服務注入
+  private organizationService = inject(OrganizationService);
+  private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
+  private dialog = inject(MatDialog);
+
+  // 狀態管理
+  private _organizations = signal<OrganizationDetail[]>([]);
+  private _isLoading = signal(false);
+  private _error = signal<string | null>(null);
+
+  // 只讀信號
+  readonly organizations = this._organizations.asReadonly();
+  readonly isLoading = this._isLoading.asReadonly();
+  readonly error = this._error.asReadonly();
+
+  ngOnInit(): void {
+    this.loadOrganizations();
+  }
+
+  /**
+   * 載入組織列表
+   */
+  async loadOrganizations(): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 獲取當前用戶
+      const currentUser = this.authService.getCurrentUser();
+      if (!currentUser) {
+        this._error.set('請先登入');
+        return;
+      }
+
+      // 調用服務方法獲取用戶的組織列表
+      const organizations = await firstValueFrom(
+        this.organizationService.getUserOrganizations(currentUser.uid)
+      );
+      
+      // 將 Organization 轉換為 OrganizationDetail
+      const organizationDetails: OrganizationDetail[] = organizations.map(org => ({
+        id: org.id,
+        slug: org.login, // 使用 login 作為 slug
+        name: org.profile.name,
+        description: org.description || '',
+        type: 'construction' as const, // 暫時設為 construction，可以後續優化
+        profile: {
+          website: org.profile.website,
+          location: org.profile.location,
+          email: org.profile.email,
+          phone: undefined, // ProfileVO 沒有 phone 字段
+          avatar: org.profile.avatar
+        },
+        members: [], // 暫時設為空數組，可以後續優化
+        teams: [],   // 暫時設為空數組，可以後續優化
+        securityManagers: [], // 暫時設為空數組，可以後續優化
+        organizationRoles: [], // 暫時設為空數組，可以後續優化
+        createdAt: org.createdAt,
+        updatedAt: org.updatedAt
+      }));
+      
+      this._organizations.set(organizationDetails);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '載入組織列表失敗';
+      this._error.set(errorMessage);
+      this.notificationService.showError(errorMessage);
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  /**
+   * 建立組織信號
+   */
+  createOrganizationSignal(organization: OrganizationDetail) {
+    return signal(organization);
+  }
+
+  /**
+   * 建立選中狀態信號
+   */
+  createIsSelectedSignal(isSelected: boolean) {
+    return signal(isSelected);
+  }
+
+  /**
+   * 打開建立組織對話框
+   */
+  openCreateOrganizationDialog(): void {
+    const dialogRef = this.dialog.open(OrganizationCreateDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.loadOrganizations(); // 重新載入組織列表
+      }
+    });
+  }
+
+  /**
+   * 檢視組織
+   */
+  onViewOrganization(organization: OrganizationDetail): void {
+    console.log('檢視組織:', organization);
+    // TODO: 導航到組織詳情頁面
+  }
+
+  /**
+   * 編輯組織
+   */
+  onEditOrganization(organization: OrganizationDetail): void {
+    console.log('編輯組織:', organization);
+    // TODO: 打開編輯組織對話框
+  }
+
+  /**
+   * 組織設定
+   */
+  onOrganizationSettings(organization: OrganizationDetail): void {
+    console.log('組織設定:', organization);
+    // TODO: 導航到組織設定頁面
+  }
+
+  /**
+   * 組織成員
+   */
+  onOrganizationMembers(organization: OrganizationDetail): void {
+    console.log('組織成員:', organization);
+    // TODO: 導航到組織成員頁面
+  }
+
+  /**
+   * 組織團隊
+   */
+  onOrganizationTeams(organization: OrganizationDetail): void {
+    console.log('組織團隊:', organization);
+    // TODO: 導航到組織團隊頁面
+  }
+
+  /**
+   * 刪除組織
+   */
+  onDeleteOrganization(organization: OrganizationDetail): void {
+    console.log('刪除組織:', organization);
+    // TODO: 顯示刪除確認對話框
   }
 }
 ```

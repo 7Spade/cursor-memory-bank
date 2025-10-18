@@ -113,12 +113,15 @@
 ### Context7 整合指令
 - **u7** - 觸發 Context7 整合，使用 MCP Context7 服務器獲取最新文檔
 
+### Sequential Thinking 指令
+- **st7** - 觸發 Sequential Thinking，使用 MCP Sequential Thinking 服務器進行動態問題解決和反思
+
 ### Repomix 倉庫分析指令
-- **1rp** - 運行壓縮模式倉庫分析（精簡版）
+- **rp7** - 運行壓縮模式倉庫分析（精簡版）
   ```bash
   docker run --rm -v "D:\7Spade\cursor-memory-bank:/workspace" -w /workspace ghcr.io/yamadashy/repomix:latest --output compressed-analysis.md --style markdown --include "angular/src/**" --ignore "**/*.spec.ts,**/*.test.ts,**/*.stories.ts,**/node_modules/**,**/dist/**,**/coverage/**,**/*.d.ts,**/environments/environment.*.ts"
   ```
-- **1rp-full** - 運行完整模式倉庫分析
+- **rp7-f** - 運行完整模式倉庫分析
   ```bash
   docker run --rm -v "D:\7Spade\cursor-memory-bank:/workspace" -w /workspace ghcr.io/yamadashy/repomix:latest --output compressed-analysis.md --style markdown --include "angular/src/**"
   ```

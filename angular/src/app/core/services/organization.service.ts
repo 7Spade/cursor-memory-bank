@@ -286,10 +286,24 @@ export class OrganizationService {
     return collectionData(teamsCol, { idField: 'id' }) as Observable<Team[]>;
   }
 
+  /**
+   * 獲取組織的所有團隊（別名方法，保持向後兼容）
+   */
+  getOrganizationTeams(orgId: string): Observable<Team[]> {
+    return this.getTeams(orgId);
+  }
+
   async createTeam(
     orgId: string,
     name: string,
-    description?: string
+    slug: string,
+    description?: string,
+    privacy: 'open' | 'closed' = 'open',
+    permissions?: {
+      repository: { read: boolean; write: boolean; admin: boolean };
+      issues: { read: boolean; write: boolean; delete: boolean };
+      pullRequests: { read: boolean; write: boolean; merge: boolean };
+    }
   ): Promise<string> {
     try {
       this._isLoading.set(true);
@@ -301,22 +315,32 @@ export class OrganizationService {
         throw new Error(`團隊名稱驗證失敗: ${nameValidation.errors.join(', ')}`);
       }
 
+      // 驗證團隊 slug
+      const slugValidation = ValidationUtils.validateTeamSlug(slug);
+      if (!slugValidation.isValid) {
+        throw new Error(`團隊 Slug 驗證失敗: ${slugValidation.errors.join(', ')}`);
+      }
+
       const teamId = doc(collection(this.firestore, `accounts/${orgId}/teams`)).id;
-      const slug = name.toLowerCase().replace(/\s+/g, '-');
+
+      // 使用預設權限或用戶設定的權限
+      const teamPermissions = permissions || {
+        repository: { read: true, write: false, admin: false },
+        issues: { read: true, write: false, delete: false },
+        pullRequests: { read: true, write: false, merge: false }
+      };
 
       await setDoc(doc(this.firestore, `accounts/${orgId}/teams/${teamId}`), {
         id: teamId,
         organizationId: orgId,
         name,
         slug,
-        description,
+        description: description || '',
+        privacy,
+        permissions: teamPermissions,
+        memberCount: 0,
         createdAt: new Date(),
-        updatedAt: new Date(),
-        permissions: {
-          repository: { read: true, write: true, admin: false },
-          issues: { read: true, write: true, delete: false },
-          pullRequests: { read: true, write: true, merge: false }
-        }
+        updatedAt: new Date()
       });
 
       return teamId;

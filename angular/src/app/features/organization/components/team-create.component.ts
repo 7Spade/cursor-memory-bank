@@ -397,7 +397,10 @@ export class TeamCreateComponent implements OnInit {
       const teamId = await this.orgService.createTeam(
         this.orgId,
         this.formData.name.trim(),
-        this.formData.slug.trim()
+        this.formData.slug.trim(),
+        this.formData.description.trim(),
+        this.formData.privacy,
+        this.formData.permissions
       );
       
       this.notificationService.showSuccess('團隊已成功建立');
