@@ -5,8 +5,8 @@ alwaysApply: false
 ---
 # OPTIMIZED FILE VERIFICATION SYSTEM
 
-🚨 CRITICAL: MEMORY BANK VERIFICATION REQUIRED 🚨
-Memory Bank structure MUST exist before any file operations
+🚨 CRITICAL: graph bank VERIFICATION REQUIRED 🚨
+graph bank structure MUST exist before any file operations
 This check MUST be executed first in all verification processes
 
 > **TL;DR:** This system provides a structured approach to verify file structure integrity before task implementation, with emphasis on efficient checks and clear status reporting.
@@ -15,14 +15,14 @@ This check MUST be executed first in all verification processes
 
 ```mermaid
 graph TD
-    %% Critical Memory Bank verification - MUST be first
-    Start["Start File Verification"] --> MemBankCheck{"Memory Bank<br>Exists?"}
-    MemBankCheck -->|"No"| CreateMemBank["CREATE MEMORY BANK<br>[CRITICAL]"]
-    MemBankCheck -->|"Yes"| VerifyMemBankComplete["Verify Memory Bank<br>Structure Complete"]
+    %% Critical graph bank verification - MUST be first
+    Start["Start File Verification"] --> MemBankCheck{"graph bank<br>Exists?"}
+    MemBankCheck -->|"No"| CreateMemBank["CREATE graph bank<br>[CRITICAL]"]
+    MemBankCheck -->|"Yes"| VerifyMemBankComplete["Verify graph bank<br>Structure Complete"]
     CreateMemBank --> VerifyMemBankComplete
     
     VerifyMemBankComplete --> PassCheck{"All Critical<br>Checks Pass?"}
-    PassCheck -->|"No"| AbortAll["⛔ ABORT ALL OPERATIONS<br>Fix Memory Bank First"]
+    PassCheck -->|"No"| AbortAll["⛔ ABORT ALL OPERATIONS<br>Fix graph bank First"]
     PassCheck -->|"Yes"| MainVerification
 
     %% Regular verification flow continues here
@@ -56,39 +56,39 @@ graph TD
     style Complete fill:#10b981,stroke:#059669,color:white
 ```
 
-## 🧩 MEMORY BANK VERIFICATION - CRITICAL COMPONENT
+## 🧩 graph bank VERIFICATION - CRITICAL COMPONENT
 
-Memory Bank verification MUST be executed first in any file verification process:
+graph bank verification MUST be executed first in any file verification process:
 
 ```javascript
 function verifyMemoryBank() {
-  // Check if Memory Bank exists
-  const memoryBankExists = checkDirectoryExists("memory-bank");
+  // Check if graph bank exists
+  const memoryBankExists = checkDirectoryExists("graph-bank");
   if (!memoryBankExists) {
-    console.error("⛔ CRITICAL ERROR: Memory Bank does not exist");
+    console.error("⛔ CRITICAL ERROR: graph bank does not exist");
     createMemoryBankStructure();
     return verifyMemoryBankCreation();
   }
   
   // Check required subdirectories
   const requiredDirs = [
-    "memory-bank/active-context",
-    "memory-bank/system-patterns",
-    "memory-bank/creative-phase",
-    "memory-bank/implementation"
+    "graph-bank/active-context",
+    "graph-bank/system-patterns",
+    "graph-bank/creative-phase",
+    "graph-bank/implementation"
   ];
   
   const missingDirs = requiredDirs.filter(dir => !checkDirectoryExists(dir));
   if (missingDirs.length > 0) {
-    console.error(`⛔ CRITICAL ERROR: Missing Memory Bank directories: ${missingDirs.join(", ")}`);
+    console.error(`⛔ CRITICAL ERROR: Missing graph bank directories: ${missingDirs.join(", ")}`);
     createMissingDirectories(missingDirs);
     return verifyMemoryBankCreation();
   }
   
   // Check critical files
   const criticalFiles = [
-    "memory-bank/active-context/activeContext.md",
-    "memory-bank/system-patterns/systemPatterns.md"
+    "graph-bank/active-context/activeContext.md",
+    "graph-bank/system-patterns/systemPatterns.md"
   ];
   
   const missingFiles = criticalFiles.filter(file => !checkFileExists(file));
@@ -98,27 +98,27 @@ function verifyMemoryBank() {
     return verifyMemoryBankCreation();
   }
   
-  return true; // Memory Bank verification successful
+  return true; // graph bank verification successful
 }
 
 // MANDATORY: This must be called before any other verification
 const memoryBankVerified = verifyMemoryBank();
 if (!memoryBankVerified) {
-  throw new Error("⛔ MEMORY BANK VERIFICATION FAILED - CANNOT PROCEED");
+  throw new Error("⛔ graph bank VERIFICATION FAILED - CANNOT PROCEED");
 }
 ```
 
-## 📋 MEMORY BANK VERIFICATION CHECKLIST
+## 📋 graph bank VERIFICATION CHECKLIST
 
 ```
-✓ MEMORY BANK VERIFICATION CHECKLIST
-- Memory Bank directory exists? [YES/NO]
+✓ graph bank VERIFICATION CHECKLIST
+- graph bank directory exists? [YES/NO]
 - Required subdirectories exist? [YES/NO]
 - Critical files exist? [YES/NO]
 - File content is valid? [YES/NO]
 
-→ If ALL YES: Memory Bank verification passed - Continue file verification
-→ If ANY NO: STOP ALL PROCESSING and FIX MEMORY BANK
+→ If ALL YES: graph bank verification passed - Continue file verification
+→ If ANY NO: STOP ALL PROCESSING and FIX graph bank
 ```
 
 ## 🔍 BATCH VERIFICATION WORKFLOW
@@ -139,16 +139,16 @@ graph TD
 #### Windows (PowerShell)
 ```powershell
 # Create all directories in one command
-mkdir memory-bank, docs, docs\archive -ErrorAction SilentlyContinue
+mkdir graph-bank, docs, docs\archive -ErrorAction SilentlyContinue
 
 # Create all required files
 $files = @(".cursorrules", "tasks.md", 
-           "memory-bank\projectbrief.md", 
-           "memory-bank\productContext.md",
-           "memory-bank\systemPatterns.md",
-           "memory-bank\techContext.md",
-           "memory-bank\activeContext.md",
-           "memory-bank\progress.md")
+           "graph-bank\projectbrief.md", 
+           "graph-bank\productContext.md",
+           "graph-bank\systemPatterns.md",
+           "graph-bank\techContext.md",
+           "graph-bank\activeContext.md",
+           "graph-bank\progress.md")
 
 foreach ($file in $files) {
     if (-not (Test-Path $file)) {
@@ -160,16 +160,16 @@ foreach ($file in $files) {
 #### Mac/Linux (Bash)
 ```bash
 # Create all directories in one command
-mkdir -p memory-bank docs/archive
+mkdir -p graph-bank docs/archive
 
 # Create all required files
 touch .cursorrules tasks.md \
-      memory-bank/projectbrief.md \
-      memory-bank/productContext.md \
-      memory-bank/systemPatterns.md \
-      memory-bank/techContext.md \
-      memory-bank/activeContext.md \
-      memory-bank/progress.md
+      graph-bank/projectbrief.md \
+      graph-bank/productContext.md \
+      graph-bank/systemPatterns.md \
+      graph-bank/techContext.md \
+      graph-bank/activeContext.md \
+      graph-bank/progress.md
 ```
 
 ## 📝 STREAMLINED VERIFICATION PROCESS
@@ -178,14 +178,14 @@ Instead of checking each component separately, perform batch verification:
 
 ```powershell
 # Windows - PowerShell
-$requiredDirs = @("memory-bank", "docs", "docs\archive")
+$requiredDirs = @("graph-bank", "docs", "docs\archive")
 $requiredFiles = @(".cursorrules", "tasks.md")
 $mbFiles = @("projectbrief.md", "productContext.md", "systemPatterns.md", 
              "techContext.md", "activeContext.md", "progress.md")
 
 $missingDirs = $requiredDirs | Where-Object { -not (Test-Path $_) -or -not (Test-Path $_ -PathType Container) }
 $missingFiles = $requiredFiles | Where-Object { -not (Test-Path $_) -or (Test-Path $_ -PathType Container) }
-$missingMBFiles = $mbFiles | ForEach-Object { "memory-bank\$_" } | 
+$missingMBFiles = $mbFiles | ForEach-Object { "graph-bank\$_" } | 
                   Where-Object { -not (Test-Path $_) -or (Test-Path $_ -PathType Container) }
 
 if ($missingDirs.Count -eq 0 -and $missingFiles.Count -eq 0 -and $missingMBFiles.Count -eq 0) {
@@ -210,7 +210,7 @@ Optimize template creation with a single script:
 # Windows - PowerShell
 $templates = @{
     "tasks.md" = @"
-# Memory Bank: Tasks
+# graph bank: Tasks
 
 ## Current Task
 [Task not yet defined]
@@ -225,8 +225,8 @@ $templates = @{
 [No requirements defined yet]
 "@
 
-    "memory-bank\activeContext.md" = @"
-# Memory Bank: Active Context
+    "graph-bank\activeContext.md" = @"
+# graph bank: Active Context
 
 ## Current Focus
 [No active focus defined]
@@ -253,10 +253,10 @@ foreach ($file in $templates.Keys) {
 1. **Batch Operations**: Always use batch operations instead of individual commands
    ```
    # GOOD: Create all directories at once
-   mkdir memory-bank docs docs\archive
+   mkdir graph-bank docs docs\archive
    
    # BAD: Create directories one at a time
-   mkdir memory-bank
+   mkdir graph-bank
    mkdir docs
    mkdir docs\archive
    ```
@@ -272,7 +272,7 @@ foreach ($file in $templates.Keys) {
 
 3. **Error Handling**: Include error handling in all commands
    ```
-   mkdir memory-bank, docs, docs\archive -ErrorAction SilentlyContinue
+   mkdir graph-bank, docs, docs\archive -ErrorAction SilentlyContinue
    ```
 
 4. **Platform Adaptation**: Auto-detect platform and use appropriate commands
@@ -286,7 +286,7 @@ foreach ($file in $templates.Keys) {
 
 5. **One-Pass Verification**: Verify directory structure in a single pass
    ```
-   $requiredPaths = @("memory-bank", "docs", "docs\archive", ".cursorrules", "tasks.md")
+   $requiredPaths = @("graph-bank", "docs", "docs\archive", ".cursorrules", "tasks.md")
    $missingPaths = $requiredPaths | Where-Object { -not (Test-Path $_) }
    ```
 
@@ -298,5 +298,5 @@ foreach ($file in $templates.Keys) {
 - Created files: [list]
 - All components verified
 
-Memory Bank system ready for use.
+graph bank system ready for use.
 ``` 

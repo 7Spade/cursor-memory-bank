@@ -31,7 +31,7 @@ graph TD
     IntegrationTesting --> E2EFeatureTesting["7. End-to-End Feature Testing<br>(Validate against user stories & requirements)"]
     E2EFeatureTesting --> AccessibilityCheck["8. Accessibility & Responsiveness Check<br>(If UI is involved)"]
     AccessibilityCheck --> CodeCleanup["9. Code Cleanup & Refinement"]
-    CodeCleanup --> UpdateMB["10. Update Memory Bank<br>(`tasks.md` sub-tasks, `progress.md` details)"]
+    CodeCleanup --> UpdateMB["10. Update graph bank<br>(`tasks.md` sub-tasks, `progress.md` details)"]
     UpdateMB --> FinalFeatureReview["11. Final Feature Review (Conceptual Peer Review if possible)"]
     FinalFeatureReview --> ImplementationDone["L3 Implementation Complete<br>Ready for REFLECT Mode"]
 
@@ -43,7 +43,7 @@ graph TD
 ## 🔑 Key Considerations for Level 3 Implementation
 
   * **Modularity & Encapsulation:** Design and build the feature in well-defined, reusable, and loosely coupled modules or components.
-  * **Adherence to Design:** Strictly follow the decisions documented in `memory-bank/creative-*.md` files and the `memory-bank/style-guide.md`. Deviations must be justified and documented.
+  * **Adherence to Design:** Strictly follow the decisions documented in `graph-bank/creative-*.md` files and the `graph-bank/style-guide.md`. Deviations must be justified and documented.
   * **State Management:** If the feature introduces or significantly interacts with complex application state, ensure the state management strategy (potentially defined in CREATIVE mode) is correctly implemented and tested.
   * **API Interactions:**
       * If consuming new or existing APIs, ensure requests and responses are handled correctly, including error states.
@@ -61,8 +61,8 @@ graph TD
 
 ## 📝 Documentation During Implementation
 
-  * **`memory-bank/tasks.md`:** Update the status of sub-tasks related to the feature as they are completed. Note any blockers or changes in estimates.
-  * **`memory-bank/progress.md`:** Make regular entries detailing:
+  * **`graph-bank/tasks.md`:** Update the status of sub-tasks related to the feature as they are completed. Note any blockers or changes in estimates.
+  * **`graph-bank/progress.md`:** Make regular entries detailing:
       * Modules/components completed.
       * Key decisions made during implementation (if minor and not warranting a full CREATIVE cycle).
       * Files significantly modified

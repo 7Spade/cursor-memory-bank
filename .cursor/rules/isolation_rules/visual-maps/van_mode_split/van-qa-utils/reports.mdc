@@ -49,7 +49,7 @@ function Generate-SuccessReport {
 "@
     
     # Save validation status (used by BUILD mode prevention mechanism)
-    "PASS" | Set-Content -Path "memory-bank\.qa_validation_status"
+    "PASS" | Set-Content -Path "graph-bank\.qa_validation_status"
     
     return $report
 }
@@ -139,7 +139,7 @@ Type 'VAN QA' after fixing the issues to re-validate.
 "@
     
     # Save validation status (used by BUILD mode prevention mechanism)
-    "FAIL" | Set-Content -Path "memory-bank\.qa_validation_status"
+    "FAIL" | Set-Content -Path "graph-bank\.qa_validation_status"
     
     return $report
 }

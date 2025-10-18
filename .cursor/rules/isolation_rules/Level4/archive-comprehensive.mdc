@@ -491,12 +491,12 @@ flowchart TD
 2. Create a cross-reference index linking all documentation
 3. Version all documentation appropriately
 4. Archive in the designated repository
-5. Update Memory Bank with relevant information
+5. Update graph bank with relevant information
 6. Establish appropriate access controls
 7. Announce availability to relevant stakeholders
 8. Verify archiving completeness and accessibility
 
-## 📋 MEMORY BANK INTEGRATION
+## 📋 graph bank INTEGRATION
 
 ```mermaid
 flowchart TD
@@ -510,16 +510,16 @@ flowchart TD
     Archiving --> TC[techContext.md]
     Archiving --> P[progress.md]
     
-    PB & PC & AC & SP & TC & P --> MBI[Memory Bank<br>Integration]
+    PB & PC & AC & SP & TC & P --> MBI[graph bank<br>Integration]
     MBI --> Next[Repository of<br>Knowledge]
     
     class PB,PC,AC,SP,TC,P memfile
     class Archiving,MBI,Next process
 ```
 
-### Memory Bank Updates
+### graph bank Updates
 
-Specific updates to make to Memory Bank files:
+Specific updates to make to graph bank files:
 
 1. **projectbrief.md**
    - Update with final system description
@@ -622,8 +622,8 @@ Project History
 - Lessons learned documented? [YES/NO]
 - Future enhancements suggested? [YES/NO]
 
-Memory Bank Integration
-- All Memory Bank files updated? [YES/NO]
+graph bank Integration
+- All graph bank files updated? [YES/NO]
 - Cross-references created? [YES/NO]
 - Documentation properly versioned? [YES/NO]
 - Archive repository established? [YES/NO]
@@ -668,8 +668,8 @@ For situations requiring a more compact archiving approach:
 - **Critical Knowledge Areas**: [Areas requiring special expertise]
 - **Training Resources**: [Links to training materials]
 
-### Memory Bank Links
-- [Links to updated Memory Bank files]
+### graph bank Links
+- [Links to updated graph bank files]
 ```
 
 ## 🚨 ARCHIVING ENFORCEMENT PRINCIPLE

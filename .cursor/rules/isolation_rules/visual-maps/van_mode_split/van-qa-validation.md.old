@@ -82,7 +82,7 @@ graph TD
 
 ## 🔄 INTEGRATION WITH DESIGN DECISIONS
 
-Reads Creative Phase outputs (e.g., `memory-bank/systemPatterns.md`) to inform validation:
+Reads Creative Phase outputs (e.g., `graph-bank/systemPatterns.md`) to inform validation:
 
 ```mermaid
 graph TD
@@ -104,8 +104,8 @@ graph TD
 function Extract-TechnologyChoices {
     $techChoices = @{}
     # Read from systemPatterns.md
-    if (Test-Path "memory-bank\systemPatterns.md") {
-        $content = Get-Content "memory-bank\systemPatterns.md" -Raw
+    if (Test-Path "graph-bank\systemPatterns.md") {
+        $content = Get-Content "graph-bank\systemPatterns.md" -Raw
         if ($content -match "Framework:\s*(\w+)") { $techChoices["framework"] = $Matches[1] }
         if ($content -match "UI Library:\s*(\w+)") { $techChoices["ui_library"] = $Matches[1] }
         if ($content -match "State Management:\s*([^\n]+)") { $techChoices["state_management"] = $Matches[1].Trim() }
@@ -321,7 +321,7 @@ graph TD
 ```powershell
 # Example: Check QA status before allowing BUILD
 function Check-QAValidationStatus {
-    $qaStatusFile = "memory-bank\.qa_validation_status" # Assumes status is written here
+    $qaStatusFile = "graph-bank\.qa_validation_status" # Assumes status is written here
     if (Test-Path $qaStatusFile) {
         if ((Get-Content $qaStatusFile -Raw) -match "PASS") { return $true }
     }

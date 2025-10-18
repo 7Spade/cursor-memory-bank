@@ -150,9 +150,9 @@ For minimal mode, use this format:
 ✓ TIME: Est [X] vs. Actual [Y] ([Z%] variance)
 ```
 
-## 🔄 INTEGRATION WITH MEMORY BANK
+## 🔄 INTEGRATION WITH graph bank
 
-Reflection integrates with Memory Bank:
+Reflection integrates with graph bank:
 
 ```mermaid
 graph TD

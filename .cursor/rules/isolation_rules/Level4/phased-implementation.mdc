@@ -513,7 +513,7 @@ Update `tasks.md` to track phased implementation progress:
 ...
 ```
 
-## 📋 MEMORY BANK INTEGRATION
+## 📋 graph bank INTEGRATION
 
 ```mermaid
 flowchart TD
@@ -527,16 +527,16 @@ flowchart TD
     Implementation --> TC[techContext.md]
     Implementation --> P[progress.md]
     
-    PB & PC & AC & SP & TC & P --> MBI[Memory Bank<br>Integration]
+    PB & PC & AC & SP & TC & P --> MBI[graph bank<br>Integration]
     MBI --> Implementation
     
     class PB,PC,AC,SP,TC,P memfile
     class Implementation,MBI process
 ```
 
-### Memory Bank Updates
+### graph bank Updates
 
-Update the following Memory Bank files during phased implementation:
+Update the following graph bank files during phased implementation:
 
 1. **projectbrief.md**
    - Update implementation approach
@@ -610,8 +610,8 @@ Finalization Phase
 - Production deployment plan ready? [YES/NO]
 - Final system review completed? [YES/NO]
 
-Memory Bank Integration
-- All Memory Bank files updated? [YES/NO]
+graph bank Integration
+- All graph bank files updated? [YES/NO]
 - Implementation status reflected? [YES/NO]
 - Technical decisions documented? [YES/NO]
 - Progress tracking current? [YES/NO]
@@ -639,8 +639,8 @@ For situations requiring a more compact implementation approach:
 ### Verification Status
 - [List of verification steps and their status]
 
-### Memory Bank Updates
-- [List of Memory Bank files that need updating]
+### graph bank Updates
+- [List of graph bank files that need updating]
 ```
 
 ## 🚨 IMPLEMENTATION VERIFICATION PRINCIPLE

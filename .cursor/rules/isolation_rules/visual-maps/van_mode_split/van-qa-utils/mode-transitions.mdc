@@ -29,7 +29,7 @@ graph TD
 ```powershell
 # Check QA status before allowing BUILD mode
 function Check-QAValidationStatus {
-    $qaStatusFile = "memory-bank\.qa_validation_status" # Assumes status is written by reports.mdc
+    $qaStatusFile = "graph-bank\.qa_validation_status" # Assumes status is written by reports.mdc
     
     if (Test-Path $qaStatusFile) {
         $status = Get-Content $qaStatusFile -Raw

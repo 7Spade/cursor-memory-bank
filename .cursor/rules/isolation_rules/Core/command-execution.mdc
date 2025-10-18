@@ -1,5 +1,5 @@
 ---
-description: Command execution guidelines for isolation-focused Memory Bank
+description: Command execution guidelines for isolation-focused graph bank
 globs: command-execution.mdc
 alwaysApply: false
 ---

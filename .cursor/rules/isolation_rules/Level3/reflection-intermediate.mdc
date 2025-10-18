@@ -9,7 +9,7 @@ alwaysApply: false
 
 ## 🔍 Level 3 Reflection Process
 
-The goal is to create a comprehensive `memory-bank/reflection/reflection-[feature_id].md` document.
+The goal is to create a comprehensive `graph-bank/reflection/reflection-[feature_id].md` document.
 
 ```mermaid
 graph TD
@@ -31,7 +31,7 @@ graph TD
     style ReflectionDone fill:#d1c4e9,stroke:#b39ddb
 ````
 
-## 📝 Structure for `memory-bank/reflection-[feature_id].md`
+## 📝 Structure for `graph-bank/reflection-[feature_id].md`
 
   * **Feature Name & ID:**
   * **Date of Reflection:**
@@ -48,7 +48,7 @@ graph TD
       * Were the right aspects flagged for CREATIVE mode?
       * How effective were the design decisions made in `creative-*.md` documents?
       * Did these designs translate well into practical implementation? Any friction points?
-      * Was `memory-bank/style-guide.md` clear and sufficient for UI aspects?
+      * Was `graph-bank/style-guide.md` clear and sufficient for UI aspects?
   * **4. Implementation Phase Review:**
       * What were the major successes during implementation? (e.g., efficient module development, good use of libraries)
       * What were the biggest challenges or roadblocks? How were they overcome?

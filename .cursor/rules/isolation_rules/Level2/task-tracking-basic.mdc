@@ -160,9 +160,9 @@ For minimal mode, use this format:
 ✓ NEXT: [Next action]
 ```
 
-## 🔄 INTEGRATION WITH MEMORY BANK
+## 🔄 INTEGRATION WITH graph bank
 
-Task tracking integrates with Memory Bank:
+Task tracking integrates with graph bank:
 
 ```mermaid
 graph TD

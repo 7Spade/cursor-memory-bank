@@ -44,7 +44,7 @@ graph TD
 **Steps:**
 1. Platform detection
 2. Critical file verification
-3. Memory Bank structure loading
+3. graph bank structure loading
 4. Task creation in tasks.md
 5. Initial task scope definition
 
@@ -53,7 +53,7 @@ graph TD
 ✓ INITIALIZATION CHECKPOINT
 - Platform detected and configured? [YES/NO]
 - Critical files verified? [YES/NO]
-- Memory Bank loaded? [YES/NO]
+- graph bank loaded? [YES/NO]
 - Task created in tasks.md? [YES/NO]
 - Initial scope defined? [YES/NO]
 
@@ -202,7 +202,7 @@ graph TD
 2. Gather implementation details
 3. Create archive document
 4. Create cross-references
-5. Update Memory Bank files
+5. Update graph bank files
 
 **Milestone Checkpoint:**
 ```
@@ -211,7 +211,7 @@ graph TD
 - Implementation details gathered? [YES/NO]
 - Archive document created? [YES/NO]
 - Cross-references created? [YES/NO]
-- Memory Bank files updated? [YES/NO]
+- graph bank files updated? [YES/NO]
 
 → If all YES: Task Complete
 → If any NO: Complete archiving steps
@@ -226,7 +226,7 @@ graph TD
 - tasks.md fully updated? [YES/NO]
 - Reflection document created? [YES/NO]
 - Archive document created? [YES/NO]
-- Memory Bank fully updated? [YES/NO]
+- graph bank fully updated? [YES/NO]
 
 → If all YES: Level 2 Task Successfully Completed
 → If any NO: Address outstanding items
@@ -262,7 +262,7 @@ graph TD
     L34Trigger --> L34Switch["Switch to<br>Level 3/4 Workflow"]
 ```
 
-## 🔄 INTEGRATION WITH MEMORY BANK
+## 🔄 INTEGRATION WITH graph bank
 
 ```mermaid
 graph TD
@@ -271,7 +271,7 @@ graph TD
     Workflow --> TM["Maintain<br>tasks.md"]
     Workflow --> PM["Update<br>progress.md"]
     
-    PB & AC & TM & PM --> MB["Memory Bank<br>Integration"]
+    PB & AC & TM & PM --> MB["graph bank<br>Integration"]
     MB --> NextTask["Transition to<br>Next Task"]
 ```
 

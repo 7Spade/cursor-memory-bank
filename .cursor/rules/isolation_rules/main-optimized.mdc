@@ -3,11 +3,11 @@ description: Optimized main rule for improved token efficiency
 globs: main-optimized.mdc
 alwaysApply: false
 ---
-# 🔍 OPTIMIZED MEMORY BANK SYSTEM
+# 🔍 OPTIMIZED graph bank SYSTEM
 
-🚨 CRITICAL RULE: MEMORY BANK CREATION IS MANDATORY 🚨
-Memory Bank MUST be created BEFORE any other operation in ANY mode
-NO process can continue without verifying Memory Bank existence
+🚨 CRITICAL RULE: graph bank CREATION IS MANDATORY 🚨
+graph bank MUST be created BEFORE any other operation in ANY mode
+NO process can continue without verifying graph bank existence
 
 > **TL;DR:** This system uses optimized context management and adaptive rule loading to maximize token efficiency while preserving the structured development approach.
 
@@ -15,7 +15,7 @@ NO process can continue without verifying Memory Bank existence
 
 ```mermaid
 graph TD
-    subgraph "Memory Bank Core"
+    subgraph "graph bank Core"
         Context["Context Manager"]
         Rules["Rule Loader"]
         FileIO["File Manager"]
@@ -77,7 +77,7 @@ Rules are loaded hierarchically to optimize context usage:
 
 ```mermaid
 graph TD
-    Root["Memory Bank<br>Common Rules"] --> Core["Core Rules<br>Shared Across Modes"]
+    Root["graph bank<br>Common Rules"] --> Core["Core Rules<br>Shared Across Modes"]
     
     Core --> L1["Level 1<br>Rules"]
     Core --> L2["Level 2<br>Rules"]
@@ -143,11 +143,11 @@ sequenceDiagram
     Next->>Next: Continue with preserved context
 ```
 
-## 📊 MEMORY BANK EFFICIENT UPDATES
+## 📊 graph bank EFFICIENT UPDATES
 
 ```mermaid
 graph TD
-    subgraph "Memory Bank Files"
+    subgraph "graph bank Files"
         tasks["tasks.md<br>Source of Truth"]
         active["activeContext.md<br>Current Focus"]
         creative["creative-*.md<br>Design Decisions"]
@@ -223,7 +223,7 @@ Optimizations in this version:
 1. Hierarchical rule loading (65% token reduction)
 2. Progressive creative phase documentation (60% token reduction)
 3. Context preservation during mode transitions (40% token reduction)
-4. Differential Memory Bank updates (30% token reduction)
+4. Differential graph bank updates (30% token reduction)
 5. Complexity-based template scaling (varies by level)
 
 ## 💡 USAGE GUIDANCE

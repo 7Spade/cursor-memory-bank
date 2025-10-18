@@ -5,8 +5,8 @@ alwaysApply: false
 ---
 # VAN MODE: INITIALIZATION PROCESS MAP
 
-🚨 MANDATORY FIRST STEP: MEMORY BANK CREATION 🚨
-NO OPERATION CAN PROCEED WITHOUT MEMORY BANK STRUCTURE
+🚨 MANDATORY FIRST STEP: graph bank CREATION 🚨
+NO OPERATION CAN PROCEED WITHOUT graph bank STRUCTURE
 
 > **TL;DR:** This visual map defines the VAN mode process for project initialization, task analysis, and technical validation. It guides users through platform detection, file verification, complexity determination, and technical validation to ensure proper setup before implementation.
 
@@ -20,11 +20,11 @@ graph TD
     CheckPath --> AdaptCmds["Adapt Commands if Needed"]
     AdaptCmds --> PlatformCP["⛔ PLATFORM CHECKPOINT"]
     
-    %% Add Critical Memory Bank Checkpoint
-    PlatformCP --> MemoryBankCheck{"Memory Bank<br>Exists?"}
-    MemoryBankCheck -->|"No"| CreateMemoryBank["CREATE MEMORY BANK<br>[CRITICAL STEP]"]
+    %% Add Critical graph bank Checkpoint
+    PlatformCP --> MemoryBankCheck{"graph bank<br>Exists?"}
+    MemoryBankCheck -->|"No"| CreateMemoryBank["CREATE graph bank<br>[CRITICAL STEP]"]
     MemoryBankCheck -->|"Yes"| BasicFileVerify["BASIC FILE VERIFICATION"]
-    CreateMemoryBank --> MemoryBankCP["⛔ MEMORY BANK VERIFICATION [REQUIRED]"]
+    CreateMemoryBank --> MemoryBankCP["⛔ graph bank VERIFICATION [REQUIRED]"]
     MemoryBankCP --> BasicFileVerify
     
     %% Basic File Verification with checkpoint
@@ -43,7 +43,7 @@ graph TD
     CRITICALGATE --> ForceExit["Exit to PLAN mode"]
     
     %% Level 1 continues normally
-    ComplexityCP --> InitSystem["INITIALIZE MEMORY BANK"]
+    ComplexityCP --> InitSystem["INITIALIZE graph bank"]
     InitSystem --> Complete1["LEVEL 1 INITIALIZATION COMPLETE"]
     
     %% For Level 2+ tasks after PLAN and CREATIVE modes
@@ -103,11 +103,11 @@ graph TD
 ```mermaid
 graph TD
     FV["File Verification"] --> CheckFiles["Check Essential Files"]
-    CheckFiles --> CheckMB["Check Memory Bank<br>Structure"]
-    CheckMB --> MBExists{"Memory Bank<br>Exists?"}
+    CheckFiles --> CheckMB["Check graph bank<br>Structure"]
+    CheckMB --> MBExists{"graph bank<br>Exists?"}
     
-    MBExists -->|"Yes"| VerifyMB["Verify Memory Bank<br>Contents"]
-    MBExists -->|"No"| CreateMB["Create Memory Bank<br>Structure"]
+    MBExists -->|"Yes"| VerifyMB["Verify graph bank<br>Contents"]
+    MBExists -->|"No"| CreateMB["Create graph bank<br>Structure"]
     
     CheckFiles --> CheckDocs["Check Documentation<br>Files"]
     CheckDocs --> DocsExist{"Docs<br>Exist?"}
@@ -115,7 +115,7 @@ graph TD
     DocsExist -->|"Yes"| VerifyDocs["Verify Documentation<br>Structure"]
     DocsExist -->|"No"| CreateDocs["Create Documentation<br>Structure"]
     
-    VerifyMB & CreateMB --> MBCP["Memory Bank<br>Checkpoint"]
+    VerifyMB & CreateMB --> MBCP["graph bank<br>Checkpoint"]
     VerifyDocs & CreateDocs --> DocsCP["Documentation<br>Checkpoint"]
     
     MBCP & DocsCP --> FileComplete["File Verification<br>Complete"]
@@ -822,8 +822,8 @@ function Extract-TechnologyChoices {
     $techChoices = @{}
     
     # Read from systemPatterns.md
-    if (Test-Path "memory-bank\systemPatterns.md") {
-        $content = Get-Content "memory-bank\systemPatterns.md" -Raw
+    if (Test-Path "graph-bank\systemPatterns.md") {
+        $content = Get-Content "graph-bank\systemPatterns.md" -Raw
         
         # Extract framework choice
         if ($content -match "Framework:\s*(\w+)") {
@@ -852,7 +852,7 @@ If QA validation fails, the system prevents moving to BUILD mode:
 ```powershell
 # Example: Enforce QA validation before allowing BUILD mode
 function Check-QAValidationStatus {
-    $qaStatusFile = "memory-bank\.qa_validation_status"
+    $qaStatusFile = "graph-bank\.qa_validation_status"
     
     if (Test-Path $qaStatusFile) {
         $status = Get-Content $qaStatusFile -Raw

@@ -6,7 +6,7 @@ alwaysApply: false
 
 # MODE TRANSITION OPTIMIZATION
 
-> **TL;DR:** This file implements optimized mode transitions to preserve context efficiently between different phases of the Memory Bank system.
+> **TL;DR:** This file implements optimized mode transitions to preserve context efficiently between different phases of the graph bank system.
 
 ## 🔄 UNIFIED CONTEXT TRANSFER PROTOCOL
 
@@ -142,11 +142,11 @@ function invalidateRule(rulePath) {
 }
 ```
 
-## ⚡ DIFFERENTIAL MEMORY BANK UPDATES
+## ⚡ DIFFERENTIAL graph bank UPDATES
 
 ```mermaid
 graph TD
-    Start["Memory Bank<br>Update Request"] --> Check{"File<br>Changed?"}
+    Start["graph bank<br>Update Request"] --> Check{"File<br>Changed?"}
     Check -->|"No"| Skip["Skip Update<br>(No Changes)"]
     Check -->|"Yes"| Changed{"Specific<br>Section Changed?"}
     Changed -->|"No"| Full["Full File<br>Update"]
@@ -357,5 +357,5 @@ This optimization provides:
 2. Better context preservation between modes
 3. Improved efficiency through rule caching
 4. Targeted loading of only necessary rules
-5. Optimized memory bank updates
+5. Optimized graph bank updates
 6. Clear transition documents that preserve critical context

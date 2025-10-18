@@ -24,7 +24,7 @@ graph LR
 
     %% Document connections for each phase (conceptual links to mode guidance)
     Init -.-> InitDocs["Core Rules & L3 Confirmation"]
-    DocSetup -.-> DocSetupDocs["Memory Bank Setup for L3"]
+    DocSetup -.-> DocSetupDocs["graph bank Setup for L3"]
     Plan -.-> PlanDocs["Comprehensive Feature Plan"]
     Creative -.-> CreativeDocs["Targeted Design Documents"]
     Impl -.-> ImplDocs["Feature Implementation & Testing"]
@@ -72,17 +72,17 @@ This phase is largely completed in VAN mode, which identifies the task as Level 
 
   * **Input:** User request leading to an "Intermediate Feature" classification.
   * **Key Existing Files (from VAN):**
-      * `memory-bank/tasks.md`: Entry created, complexity set to Level 3.
-      * `memory-bank/activeContext.md`: Initial context set.
-      * Relevant Core Rules loaded (e.g., `Core/memory-bank-paths.mdc`, `Core/main-optimized.mdc`).
+      * `graph-bank/tasks.md`: Entry created, complexity set to Level 3.
+      * `graph-bank/activeContext.md`: Initial context set.
+      * Relevant Core Rules loaded (e.g., `Core/graph-bank-paths.mdc`, `Core/main-optimized.mdc`).
   * **Steps within this Workflow File (Confirmation):**
-    1.  Confirm task is Level 3 by checking `memory-bank/tasks.md`.
-    2.  Ensure core Memory Bank structure and paths are known (AI should have internalized from `main` rule).
+    1.  Confirm task is Level 3 by checking `graph-bank/tasks.md`.
+    2.  Ensure core graph bank structure and paths are known (AI should have internalized from `main` rule).
   * **Milestone Checkpoint:**
     ```
     ✓ INITIALIZATION CONFIRMED (L3)
     - Task correctly identified as Level 3 in tasks.md? [YES/NO]
-    - Core Memory Bank files (tasks.md, activeContext.md) accessible via canonical paths? [YES/NO]
+    - Core graph bank files (tasks.md, activeContext.md) accessible via canonical paths? [YES/NO]
 
     → If all YES: Proceed to Documentation Setup for L3.
     → If any NO: Revisit VAN mode or core file setup.
@@ -90,7 +90,7 @@ This phase is largely completed in VAN mode, which identifies the task as Level 
 
 ### Phase 2: DOCUMENTATION SETUP (L3 Specific)
 
-Prepare the Memory Bank for a Level 3 feature.
+Prepare the graph bank for a Level 3 feature.
 
 ```mermaid
 graph TD
@@ -106,9 +106,9 @@ graph TD
 
   * **Steps:**
     1.  Load Level 3 specific planning (`Level3/planning-comprehensive.mdc`) and task tracking (`Level3/task-tracking-intermediate.mdc`) rules.
-    2.  Review `memory-bank/projectbrief.md`: Briefly note the new feature if it impacts the overall brief.
-    3.  Update `memory-bank/activeContext.md`: Set current focus to "Level 3 Feature Planning: [Feature Name]".
-    4.  Ensure `memory-bank/tasks.md` is ready for the detailed planning sections outlined in `Level3/planning-comprehensive.mdc`.
+    2.  Review `graph-bank/projectbrief.md`: Briefly note the new feature if it impacts the overall brief.
+    3.  Update `graph-bank/activeContext.md`: Set current focus to "Level 3 Feature Planning: [Feature Name]".
+    4.  Ensure `graph-bank/tasks.md` is ready for the detailed planning sections outlined in `Level3/planning-comprehensive.mdc`.
   * **Milestone Checkpoint:**
     ```
     ✓ L3 DOCUMENTATION SETUP CHECKPOINT
@@ -145,7 +145,7 @@ graph TD
     3.  Develop an implementation strategy: outline the main steps or stages for building the feature.
     4.  Identify dependencies (technical, data, other features) and potential risks, along with mitigation ideas.
     5.  **Critical for L3:** Explicitly identify and flag parts of the feature that require CREATIVE mode (e.g., specific UI/UX challenges, new architectural patterns for the feature, complex algorithms).
-    6.  Document the complete plan (requirements, components, strategy, dependencies, risks, creative flags) in `memory-bank/tasks.md` under the Level 3 feature task entry.
+    6.  Document the complete plan (requirements, components, strategy, dependencies, risks, creative flags) in `graph-bank/tasks.md` under the Level 3 feature task entry.
   * **Milestone Checkpoint:**
     ```
     ✓ L3 FEATURE PLANNING CHECKPOINT
@@ -182,13 +182,13 @@ graph TD
     1.  For each aspect flagged in `tasks.md` for creative exploration:
         a.  Load relevant `creative-phase-*.mdc` rule (e.g., UI/UX, architecture).
         b.  Define the problem, explore options, analyze trade-offs.
-        c.  Make a design decision and document it with rationale in a new `memory-bank/creative-[aspect_name].md` file.
+        c.  Make a design decision and document it with rationale in a new `graph-bank/creative-[aspect_name].md` file.
         d.  Update `tasks.md`: mark the creative sub-task as complete and link to the decision document.
   * **Milestone Checkpoint:**
     ```
     ✓ L3 CREATIVE PHASES CHECKPOINT
     - All flagged aspects from PLAN phase addressed? [YES/NO]
-    - Design decisions documented in respective `memory-bank/creative-*.md` files? [YES/NO]
+    - Design decisions documented in respective `graph-bank/creative-*.md` files? [YES/NO]
     - Rationale for decisions clearly stated? [YES/NO]
     - tasks.md updated to reflect completion of creative sub-tasks and links to decision docs? [YES/NO]
 
@@ -206,7 +206,7 @@ graph TD
     ReviewPlanDesign --> SetupDevEnv["Setup Dev Environment<br>(Branch, Dependencies, Tools)"]
     SetupDevEnv --> BuildModules["Implement Feature Modules/Components<br>Iteratively or Sequentially"]
     BuildModules --> UnitIntegrationTests["Conduct Unit & Integration Tests<br>for Each Module/Feature Part"]
-    UnitIntegrationTests --> StyleAdherence["Ensure Adherence to<br>`memory-bank/style-guide.md`"]
+    UnitIntegrationTests --> StyleAdherence["Ensure Adherence to<br>`graph-bank/style-guide.md`"]
     StyleAdherence --> UpdateProgressDocs["Regularly Update `tasks.md` (sub-tasks)<br>& `progress.md` (milestones)"]
     UpdateProgressDocs --> E2EFeatureTest["End-to-End Feature Testing<br>Against Requirements"]
     E2EFeatureTest --> ImplComplete["L3 Feature Implementation<br>Complete"]
@@ -216,18 +216,18 @@ graph TD
 ```
 
   * **Steps:**
-    1.  Thoroughly review the feature plan in `memory-bank/tasks.md` and all relevant `memory-bank/creative-*.md` decision documents.
+    1.  Thoroughly review the feature plan in `graph-bank/tasks.md` and all relevant `graph-bank/creative-*.md` decision documents.
     2.  Set up the development environment (new branch, install any new dependencies, configure tools).
     3.  Implement the feature, building out modules/components as planned. Prioritize clean code and adherence to design specifications.
     4.  Perform unit tests for new logic and integration tests as components are assembled.
-    5.  Ensure all UI elements strictly follow `memory-bank/style-guide.md`.
-    6.  Update `memory-bank/tasks.md` with progress on sub-tasks, and `memory-bank/progress.md` with details of implemented parts, commands used, and any significant findings.
+    5.  Ensure all UI elements strictly follow `graph-bank/style-guide.md`.
+    6.  Update `graph-bank/tasks.md` with progress on sub-tasks, and `graph-bank/progress.md` with details of implemented parts, commands used, and any significant findings.
     7.  Conduct end-to-end testing of the completed feature against its requirements.
   * **Milestone Checkpoint:**
     ```
     ✓ L3 IMPLEMENTATION CHECKPOINT
     - Feature fully implemented as per plan and creative designs? [YES/NO]
-    - All UI elements adhere to `memory-bank/style-guide.md`? [YES/NO]
+    - All UI elements adhere to `graph-bank/style-guide.md`? [YES/NO]
     - Unit and integration tests performed and passing? [YES/NO]
     - End-to-end feature testing successful? [YES/NO]
     - `tasks.md` and `progress.md` updated with implementation status? [YES/NO]
@@ -259,8 +259,8 @@ graph TD
     2.  Analyze what went well, what was challenging, and any deviations from the original plan or design.
     3.  Document key lessons learned regarding technology, architecture, process, or team collaboration relevant to this feature.
     4.  Specifically assess how effective the creative phase decisions were during actual implementation.
-    5.  Create the `memory-bank/reflection-[feature_id].md` document.
-    6.  Update `memory-bank/tasks.md` to mark the reflection stage for the feature as complete.
+    5.  Create the `graph-bank/reflection-[feature_id].md` document.
+    6.  Update `graph-bank/tasks.md` to mark the reflection stage for the feature as complete.
   * **Milestone Checkpoint:**
     ```
     ✓ L3 REFLECTION CHECKPOINT
@@ -292,13 +292,13 @@ graph TD
 
   * **Steps:**
     1.  Consolidate all documentation related to the feature: the plan section from `tasks.md`, all `creative-*.md` files, the `reflection-*.md` file, and relevant summaries from `progress.md`.
-    2.  Create a dedicated feature archive summary document in `memory-bank/archive/feature-[feature_id]_YYYYMMDD.md`. This summary should briefly describe the feature, its purpose, key decisions, and link to the more detailed documents.
-    3.  Update `memory-bank/tasks.md` to mark the entire Level 3 feature task as "COMPLETED" and "ARCHIVED," providing a link to the new archive summary.
-    4.  Update `memory-bank/activeContext.md` to clear information related to the completed feature, preparing for the next task.
+    2.  Create a dedicated feature archive summary document in `graph-bank/archive/feature-[feature_id]_YYYYMMDD.md`. This summary should briefly describe the feature, its purpose, key decisions, and link to the more detailed documents.
+    3.  Update `graph-bank/tasks.md` to mark the entire Level 3 feature task as "COMPLETED" and "ARCHIVED," providing a link to the new archive summary.
+    4.  Update `graph-bank/activeContext.md` to clear information related to the completed feature, preparing for the next task.
   * **Milestone Checkpoint:**
     ```
     ✓ L3 ARCHIVING CHECKPOINT
-    - Feature archive summary created in `memory-bank/archive/`? [YES/NO]
+    - Feature archive summary created in `graph-bank/archive/`? [YES/NO]
     - Archive summary links to all relevant planning, creative, and reflection docs? [YES/NO]
     - `tasks.md` shows the feature as COMPLETED and ARCHIVED with a link to the archive? [YES/NO]
     - `activeContext.md` cleared and ready for a new task? [YES/NO]

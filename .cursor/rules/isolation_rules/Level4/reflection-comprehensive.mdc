@@ -30,7 +30,7 @@ flowchart TD
     Business --> Strategic[Define Strategic<br>Actions]
     Strategic --> Timeline[Analyze Timeline<br>Performance]
     Timeline --> Documentation[Complete Reflection<br>Documentation]
-    Documentation --> Integration[Integrate with<br>Memory Bank]
+    Documentation --> Integration[Integrate with<br>graph bank]
     Integration --> Verification{Reflection<br>Verification}
     Verification -->|Pass| Complete([Reflection<br>Complete])
     Verification -->|Fail| Revise[Revise<br>Reflection]
@@ -502,7 +502,7 @@ flowchart TD
 1. Draft comprehensive reflection document using the template
 2. Review draft with key stakeholders and participants
 3. Incorporate feedback and finalize document
-4. Update Memory Bank with key insights and learnings
+4. Update graph bank with key insights and learnings
 5. Create action register for tracking improvement actions
 6. Archive project documents with reflection document
 7. Verify documentation completeness and quality
@@ -569,7 +569,7 @@ flowchart TD
     class Observe,Question,Connect,Contrast,Hypothesize,Test,Refine,Apply step
 ```
 
-## 📋 MEMORY BANK INTEGRATION
+## 📋 graph bank INTEGRATION
 
 ```mermaid
 flowchart TD
@@ -583,16 +583,16 @@ flowchart TD
     Reflection --> TC[techContext.md]
     Reflection --> P[progress.md]
     
-    PB & PC & AC & SP & TC & P --> MBI[Memory Bank<br>Integration]
+    PB & PC & AC & SP & TC & P --> MBI[graph bank<br>Integration]
     MBI --> Next[Enhanced Future<br>Projects]
     
     class PB,PC,AC,SP,TC,P memfile
     class Reflection,MBI,Next process
 ```
 
-### Memory Bank Updates
+### graph bank Updates
 
-Specific updates to make to Memory Bank files:
+Specific updates to make to graph bank files:
 
 1. **projectbrief.md**
    - Update with strategic insights
@@ -658,7 +658,7 @@ Knowledge Transfer
 - Process knowledge transfer planned? [YES/NO]
 - Documentation updates identified? [YES/NO]
 
-Memory Bank Integration
+graph bank Integration
 - projectbrief.md updated with insights? [YES/NO]
 - productContext.md updated with insights? [YES/NO]
 - activeContext.md updated with insights? [YES/NO]
@@ -704,8 +704,8 @@ For situations requiring a more compact reflection:
 2. [Short-term improvement with owner and timeline]
 3. [Medium-term initiative with owner and timeline]
 
-### Memory Bank Updates
-- [List of specific Memory Bank updates needed]
+### graph bank Updates
+- [List of specific graph bank updates needed]
 ```
 
 ## 🚨 REFLECTION ENFORCEMENT PRINCIPLE
