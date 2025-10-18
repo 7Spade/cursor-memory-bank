@@ -1,4 +1,16 @@
 {
+  "retry": {
+    "globalEnabled": true,
+    "defaultMaxAttempts": 3,
+    "defaultDelay": 2000,
+    "defaultBackoffMultiplier": 1.5,
+    "defaultMaxDelay": 10000
+  },
+  "errorHandling": {
+    "logRetries": true,
+    "logErrors": true,
+    "fallbackEnabled": true
+  },
   "mcpServers": {
     "filesystem": {
       "command": "npx",
@@ -51,7 +63,14 @@
         "search_nodes",
         "open_nodes",
         "add_observations"
-      ]
+      ],
+      "retry": {
+        "enabled": true,
+        "maxAttempts": 5,
+        "delay": 1000,
+        "backoffMultiplier": 2.0,
+        "maxDelay": 15000
+      }
     },
     "fetch": {
       "command": "npx",
@@ -85,7 +104,37 @@
       "autoApprove": [
         "resolve-library-id",
         "get-library-docs"
-      ]
+      ],
+      "retry": {
+        "enabled": true,
+        "maxAttempts": 3,
+        "delay": 3000,
+        "backoffMultiplier": 1.5,
+        "maxDelay": 12000
+      }
+    },
+    "repomix": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "repomix",
+        "--mcp"
+      ],
+      "disabled": false,
+      "autoApprove": [
+        "pack_codebase",
+        "pack_remote_repository",
+        "read_repomix_output",
+        "grep_repomix_output",
+        "read_file_from_filesystem"
+      ],
+      "retry": {
+        "enabled": true,
+        "maxAttempts": 3,
+        "delay": 2000,
+        "backoffMultiplier": 1.5,
+        "maxDelay": 10000
+      }
     }
   }
 }
