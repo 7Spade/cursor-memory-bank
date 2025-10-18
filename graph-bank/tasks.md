@@ -1,40 +1,50 @@
 # Memory Bank: Tasks
 
 ## Current Task
-PLAN 模式 - 檔案路徑結構化改進規劃完成
+BUILD 模式 - 檔案重命名與函數規範優化完成
 
-### 📋 PLAN 模式檔案路徑結構化改進規劃
+### 📋 BUILD 模式檔案重命名與函數規範優化
 
-基於 VAN 分析結果，專注於規劃階段 2（重構導入語句）和階段 5（優化檔案組織）：
+成功完成檔案重命名和函數規範優化：
 
-#### ✅ 規劃完成狀況
-1. **階段 2 規劃**：TypeScript 路徑別名配置 ✅
-2. **階段 2 規劃**：批量替換相對路徑策略 ✅
-3. **階段 2 規劃**：組件導入語句更新清單 ✅
-4. **階段 5 規劃**：檔案重命名清單 ✅
-5. **階段 5 規劃**：檔案移動策略 ✅
-6. **階段 5 規劃**：模組結構統一方案 ✅
+#### ✅ 檔案重命名完成
+1. **github-aligned-api.service.ts** → **organization-api.service.ts** ✅
+2. **permission-calculation.service.ts** → **permission.service.ts** ✅
 
-#### ✅ 規劃成果
-1. **路徑別名配置**：@core/*, @features/*, @shared/* 等
-2. **檔案重命名**：5個檔案重命名方案
-3. **檔案移動**：5個檔案移動到正確目錄
-4. **模組結構**：統一的 features 模組組織
-5. **實施檢查點**：8個檢查點確保品質
-6. **風險評估**：低-中風險，有緩解策略
+#### ✅ 類別名稱更新完成
+1. **GitHubAlignedApiService** → **OrganizationApiService** ✅
+2. **PermissionCalculationService** → **PermissionService** ✅
 
-#### ✅ 預期效果
-- 提升可維護性：清晰的路徑別名和模組結構
-- 減少重構成本：統一的導入模式
-- 改善開發體驗：自動完成和路徑提示
-- 增強可讀性：一致的檔案組織方式
-- 便於團隊協作：標準化的專案結構
+#### ✅ 函數命名優化完成
+**PermissionService 函數重命名：**
+- `calculatePermission()` → `calculateUserPermission()` ✅
+- `checkDirectPermission()` → `checkUserDirectPermission()` ✅
+- `checkTeamInheritedPermission()` → `checkUserTeamPermission()` ✅
+- `checkOrganizationRolePermission()` → `checkUserRolePermission()` ✅
+- `checkSecurityManagerPermission()` → `checkUserSecurityPermission()` ✅
 
-### 🎯 下一步行動
-- **準備 IMPLEMENT 模式**：開始實施階段 2 和階段 5
-- **實施時程**：預計 5-7 小時完成
-- **風險控制**：分階段實施，每階段完成後測試
-- **品質保證**：8個檢查點確保實施品質
+#### ✅ 引用更新完成
+1. **index.ts 導出文件更新** ✅
+2. **organization-roles.component.ts 引用更新** ✅
+3. **security-manager.component.ts 引用更新** ✅
+4. **所有服務注入更新** ✅
+
+#### ✅ 編譯測試通過
+- **構建成功**：無編譯錯誤 ✅
+- **警告處理**：僅有預算警告和 Material Icons 警告（非關鍵） ✅
+- **功能完整**：所有重命名後功能正常 ✅
+
+#### ✅ 優化成果
+- **檔案命名統一**：符合 Angular 命名規範
+- **類別名稱簡潔**：移除冗餘前綴
+- **函數命名明確**：增加 `User` 前綴提高可讀性
+- **導入語句整潔**：所有引用正確更新
+- **代碼可維護性提升**：命名更加直觀和一致
+
+### 🎯 下一步建議
+- **準備 REFLECT 模式**：回顧重命名過程和效果
+- **考慮進一步優化**：如需要可繼續其他檔案組織優化
+- **文檔更新**：更新相關文檔以反映新的命名規範
 
 #### ✅ 更新的文件
 1. **app.routes.ts** - 添加 organizations/:orgId 路由
