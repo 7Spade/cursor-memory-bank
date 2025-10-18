@@ -19,235 +19,25 @@ alwaysApply: false
 請選擇分析模式：
 
 1️⃣  [完整模式] - 深度分析，完整理解 (351,116 tokens)
-   📋 適用：新專案架構分析、完整代碼審查、系統重構規劃
-
 2️⃣  [壓縮模式] - 快速審查，代碼分析 (307,073 tokens)  
-   📋 適用：快速代碼審查、性能瓶頸分析、代碼品質評估
-
 3️⃣  [源碼模式] - 功能開發，代碼生成 (44,080 tokens)
-   📋 適用：新功能開發、代碼生成和補全、模組設計
-
 4️⃣  [極致節省] - 成本敏感，快速概覽 (41,433 tokens)
-   📋 適用：成本敏感分析、快速專案概覽、基本架構理解
-
 5️⃣  [MCP 整合模式] - 與 MCP 服務器整合分析 (50,000 tokens)
-   📋 適用：MCP 工具整合、服務器配置分析、協議兼容性檢查
-
 6️⃣  [智能分析模式] - AI 驅動的深度分析 (200,000 tokens)
-   📋 適用：AI 代碼分析、智能重構建議、架構優化建議
 
 💡 提示：輸入對應數字 (1-6) 或模式名稱來選擇
 ```
 
-## 🎯 REPO MODE 概述
+## 📊 六種模式綜合對比
 
-REPO 模式專門用於使用 repomix 進行倉庫分析和文檔生成，提供六種不同的輸出模式：
-
-1. **完整模式** - 深度分析，完整理解
-2. **壓縮模式** - 快速審查，代碼分析  
-3. **源碼模式** - 功能開發，代碼生成
-4. **極致節省** - 成本敏感，快速概覽
-5. **MCP 整合模式** - 與 MCP 服務器整合分析
-6. **智能分析模式** - AI 驅動的深度分析
-
-## 📊 六種輸出模式詳解
-
-### 1. 完整模式 (Complete Mode)
-**用途**: 深度分析、完整理解、架構審查  
-**Token 使用**: 351,116 tokens (100%)  
-**文件數量**: 147 個文件  
-**適用場景**: 
-- 新專案架構分析
-- 完整代碼審查
-- 系統重構規劃
-- 技術債務評估
-
-```bash
-# 完整模式命令 - 選擇後直接執行
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --style markdown \
-  --top-files-len 20 \
-  --output complete-analysis.md
-```
-
-**輸出特點**:
-- 包含所有源碼文件
-- 完整的目錄結構
-- 詳細的文件摘要
-- Git 歷史信息（可選）
-
-### 2. 壓縮模式 (Compressed Mode)
-**用途**: 快速審查、代碼分析、性能評估  
-**Token 使用**: 307,073 tokens (87.5%)  
-**文件數量**: 147 個文件  
-**適用場景**:
-- 快速代碼審查
-- 性能瓶頸分析
-- 代碼品質評估
-- 技術選型分析
-
-```bash
-# 壓縮模式命令 - 選擇後直接執行
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --compress \
-  --style markdown \
-  --top-files-len 10 \
-  --output compressed-analysis.md
-```
-
-**輸出特點**:
-- 使用 Tree-sitter 壓縮
-- 保留核心代碼結構
-- 移除冗餘信息
-- 保持可讀性
-
-### 3. 源碼模式 (Source Code Mode)
-**用途**: 功能開發、代碼生成、模組設計  
-**Token 使用**: 44,080 tokens (12.6%)  
-**文件數量**: 5 個文件  
-**適用場景**:
-- 新功能開發
-- 代碼生成和補全
-- 模組設計和重構
-- API 開發
-
-```bash
-# 源碼模式命令 - 選擇後直接執行
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --include "src/**/*.ts,src/**/*.html,src/**/*.scss,*.md,*.json" \
-  --style markdown \
-  --top-files-len 5 \
-  --output source-code.md
-```
-
-**輸出特點**:
-- 只包含核心源碼文件
-- 排除測試和構建文件
-- 包含配置文件
-- 專注於開發相關內容
-
-### 4. 極致節省模式 (Minimal Mode)
-**用途**: 成本敏感、快速概覽、基本分析  
-**Token 使用**: 41,433 tokens (11.8%)  
-**文件數量**: 4 個文件  
-**適用場景**:
-- 成本敏感的分析
-- 快速專案概覽
-- 基本架構理解
-- 初步技術評估
-
-```bash
-# 極致節省模式命令 - 選擇後直接執行
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --compress \
-  --remove-comments \
-  --remove-empty-lines \
-  --no-file-summary \
-  --no-directory-structure \
-  --include "src/**/*.ts,src/**/*.html,*.md" \
-  --style markdown \
-  --output minimal-analysis.md
-```
-
-**輸出特點**:
-- 最大程度節省令牌
-- 移除註釋和空行
-- 省略文件摘要
-- 只保留核心代碼
-
-### 5. MCP 整合模式 (MCP Integration Mode)
-**用途**: MCP 服務器整合、協議分析、工具配置  
-**Token 使用**: 50,000 tokens (14.2%)  
-**文件數量**: 8 個文件  
-**適用場景**:
-- MCP 服務器配置分析
-- 協議兼容性檢查
-- 工具整合評估
-- 服務器性能分析
-
-```bash
-# MCP 整合模式命令 - 選擇後直接執行
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --include "**/*.mcp.*,**/*mcp*,**/*.json,**/*.yaml,**/*.yml" \
-  --style markdown \
-  --top-files-len 8 \
-  --output mcp-integration-analysis.md
-```
-
-**輸出特點**:
-- 專注於 MCP 相關文件
-- 包含配置文件分析
-- 協議兼容性檢查
-- 服務器配置評估
-
-### 6. 智能分析模式 (AI Analysis Mode)
-**用途**: AI 驅動分析、智能重構、架構優化  
-**Token 使用**: 200,000 tokens (57.0%)  
-**文件數量**: 50 個文件  
-**適用場景**:
-- AI 代碼分析
-- 智能重構建議
-- 架構優化建議
-- 代碼品質提升
-
-```bash
-# 智能分析模式命令 - 選擇後直接執行
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --compress \
-  --include "src/**/*,*.md,*.json,*.yaml,*.yml" \
-  --style markdown \
-  --top-files-len 15 \
-  --output ai-analysis.md
-```
-
-**輸出特點**:
-- AI 優化的代碼分析
-- 智能重構建議
-- 架構模式識別
-- 性能優化建議
-
-## 📊 性能對比表
-
-| 模式 | Token 數量 | 節省比例 | 文件數量 | 處理時間 | 適用場景 |
-|------|------------|----------|----------|----------|----------|
-| **完整模式** | 351,116 | - | 147 | 長 | 深度分析 |
-| **壓縮模式** | 307,073 | 12.5% | 147 | 中 | 快速審查 |
-| **源碼模式** | 44,080 | 87.4% | 5 | 短 | 功能開發 |
-| **極致節省** | 41,433 | 88.2% | 4 | 最短 | 成本控制 |
-| **MCP 整合** | 50,000 | 85.8% | 8 | 短 | MCP 分析 |
-| **智能分析** | 200,000 | 43.0% | 50 | 中長 | AI 分析 |
-
-## 🎯 使用場景對應
-
-### 場景 1: 新專案接手
-**推薦模式**: 完整模式  
-**原因**: 需要全面理解專案架構和技術棧  
-**輸出**: 完整的專案概覽和分析
-
-### 場景 2: 代碼審查
-**推薦模式**: 壓縮模式  
-**原因**: 快速識別問題和改進機會  
-**輸出**: 精簡但完整的代碼分析
-
-### 場景 3: 功能開發
-**推薦模式**: 源碼模式  
-**原因**: 專注於代碼實現和模組設計  
-**輸出**: 核心源碼和開發相關文件
-
-### 場景 4: 成本控制
-**推薦模式**: 極致節省模式  
-**原因**: 最大化令牌節省  
-**輸出**: 最小化的核心內容
-
-### 場景 5: MCP 整合
-**推薦模式**: MCP 整合模式  
-**原因**: 專注於 MCP 服務器和協議分析  
-**輸出**: MCP 相關配置和分析
-
-### 場景 6: AI 驅動分析
-**推薦模式**: 智能分析模式  
-**原因**: 需要 AI 深度分析和智能建議  
-**輸出**: AI 優化的分析報告
+| 模式 | Token | 文件數 | 適用場景 | 命令 |
+|------|-------|--------|----------|------|
+| **完整模式** | 351,116 | 147 | 新專案架構分析、完整代碼審查 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --style markdown --top-files-len 20 --output complete-analysis.md` |
+| **壓縮模式** | 307,073 | 147 | 快速代碼審查、性能瓶頸分析 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --style markdown --top-files-len 10 --output compressed-analysis.md` |
+| **源碼模式** | 44,080 | 5 | 新功能開發、代碼生成和補全 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "src/**/*.ts,src/**/*.html,src/**/*.scss,*.md,*.json" --style markdown --top-files-len 5 --output source-code.md` |
+| **極致節省** | 41,433 | 4 | 成本敏感分析、快速專案概覽 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --remove-comments --remove-empty-lines --no-file-summary --no-directory-structure --include "src/**/*.ts,src/**/*.html,*.md" --style markdown --output minimal-analysis.md` |
+| **MCP 整合** | 50,000 | 8 | MCP 服務器配置分析、協議兼容性檢查 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "**/*.mcp.*,**/*mcp*,**/*.json,**/*.yaml,**/*.yml" --style markdown --top-files-len 8 --output mcp-integration-analysis.md` |
+| **智能分析** | 200,000 | 50 | AI 代碼分析、智能重構建議 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --include "src/**/*,*.md,*.json,*.yaml,*.yml" --style markdown --top-files-len 15 --output ai-analysis.md` |
 
 ## 📋 模式選擇決策樹
 
@@ -256,6 +46,7 @@ graph TD
     Start["開始 REPO 分析"] --> Q1{"需要完整理解?"}
     Q1 -->|Yes| Q2{"成本敏感?"}
     Q1 -->|No| Q3{"專注代碼開發?"}
+    Q1 -->|MCP整合| MCP["MCP 整合模式"]
     
     Q2 -->|Yes| Minimal["極致節省模式"]
     Q2 -->|No| Complete["完整模式"]
@@ -266,8 +57,6 @@ graph TD
     Q4 -->|Yes| AI["智能分析模式"]
     Q4 -->|No| Source["源碼模式"]
     
-    Q1 -->|MCP 整合| MCP["MCP 整合模式"]
-    
     Complete --> Execute["執行分析"]
     Compressed --> Execute
     Source --> Execute
@@ -276,153 +65,39 @@ graph TD
     AI --> Execute
 ```
 
-## 🎮 模式選擇處理邏輯
-
-### 用戶輸入處理
-當用戶輸入 `repo` 後，系統會：
-
-1. **顯示模式選擇選單** - 如上方的選單格式
-2. **等待用戶選擇** - 接受數字 (1-6) 或模式名稱
-3. **直接執行對應模式** - 根據選擇立即執行相應的 repomix 命令
-
-### 選擇處理規則
-```
-用戶輸入 → 對應模式 → 直接執行命令
-"1" 或 "完整模式" → 完整模式 → docker run ... --output complete-analysis.md
-"2" 或 "壓縮模式" → 壓縮模式 → docker run ... --compress --output compressed-analysis.md
-"3" 或 "源碼模式" → 源碼模式 → docker run ... --include "src/**/*" --output source-code.md
-"4" 或 "極致節省" → 極致節省模式 → docker run ... --compress --remove-comments --output minimal-analysis.md
-"5" 或 "MCP整合" → MCP 整合模式 → docker run ... --include "**/*mcp*" --output mcp-integration-analysis.md
-"6" 或 "智能分析" → 智能分析模式 → docker run ... --compress --include "src/**/*" --output ai-analysis.md
-```
-
-### 模式執行流程
-```mermaid
-graph TD
-    Input["用戶輸入: repo"] --> Menu["顯示模式選擇選單"]
-    Menu --> Wait["等待用戶選擇"]
-    Wait --> Choice{"用戶選擇"}
-    Choice -->|1| Complete["執行完整模式命令"]
-    Choice -->|2| Compressed["執行壓縮模式命令"]
-    Choice -->|3| Source["執行源碼模式命令"]
-    Choice -->|4| Minimal["執行極致節省模式命令"]
-    Choice -->|5| MCP["執行 MCP 整合模式命令"]
-    Choice -->|6| AI["執行智能分析模式命令"]
-    Complete --> Output["生成 complete-analysis.md"]
-    Compressed --> Output2["生成 compressed-analysis.md"]
-    Source --> Output3["生成 source-code.md"]
-    Minimal --> Output4["生成 minimal-analysis.md"]
-    MCP --> Output5["生成 mcp-integration-analysis.md"]
-    AI --> Output6["生成 ai-analysis.md"]
-```
-
-### 快速選擇指令
-用戶也可以直接使用以下指令跳過選單：
+## 🎮 快速選擇指令
 
 ```bash
-# 直接執行完整模式
-repo complete
-
-# 直接執行壓縮模式  
-repo compressed
-
-# 直接執行源碼模式
-repo source
-
-# 直接執行極致節省模式
-repo minimal
-
-# 直接執行 MCP 整合模式
-repo mcp
-
-# 直接執行智能分析模式
-repo ai
-```
-
-## 🔄 REPO MODE 工作流程
-
-### Phase 1: 模式選擇
-```mermaid
-graph TD
-    Start["REPO Mode 啟動"] --> Analyze["分析需求"]
-    Analyze --> Select["選擇輸出模式"]
-    Select --> Complete["完整模式"]
-    Select --> Compressed["壓縮模式"]
-    Select --> Source["源碼模式"]
-    Select --> Minimal["極致節省模式"]
-    Select --> MCP["MCP 整合模式"]
-    Select --> AI["智能分析模式"]
-```
-
-### Phase 2: 執行分析
-```mermaid
-graph TD
-    Mode["選定模式"] --> Generate["生成 repomix 輸出"]
-    Generate --> Process["處理輸出文件"]
-    Process --> Analyze["分析結果"]
-    Analyze --> Document["文檔化分析"]
-```
-
-### Phase 3: 結果應用
-```mermaid
-graph TD
-    Document["分析文檔"] --> AI["提供給 AI 分析"]
-    Document --> Review["代碼審查"]
-    Document --> Development["功能開發"]
-    Document --> Planning["專案規劃"]
-    Document --> MCP["MCP 服務器整合"]
-    Document --> Optimization["架構優化"]
+# 直接執行模式（跳過選單）
+repo complete    # 完整模式
+repo compressed  # 壓縮模式
+repo source      # 源碼模式
+repo minimal     # 極致節省模式
+repo mcp         # MCP 整合模式
+repo ai          # 智能分析模式
 ```
 
 ## 🔧 進階配置選項
 
 ### 自定義包含模式
 ```bash
-# 只包含特定技術棧
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --include "src/**/*.ts,src/**/*.html,src/**/*.scss" \
-  --style markdown \
-  --output typescript-only.md
+# 特定技術棧
+docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "src/**/*.ts,src/**/*.html,src/**/*.scss" --style markdown --output typescript-only.md
 
-# 包含配置文件
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --include "*.json,*.yaml,*.yml,*.config.*" \
-  --style markdown \
-  --output config-files.md
+# 配置文件
+docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "*.json,*.yaml,*.yml,*.config.*" --style markdown --output config-files.md
 
-# MCP 專用配置
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --include "**/*.mcp.*,**/*mcp*,**/*.json" \
-  --style markdown \
-  --output mcp-config.md
+# Git 歷史
+docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include-logs --include-diffs --style markdown --output with-history.md
+
+# 不同格式
+docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --style json --output project-data.json
+docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --style xml --output project-structure.xml
 ```
 
-### 包含 Git 歷史
-```bash
-# 包含提交歷史
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --include-logs \
-  --include-diffs \
-  --style markdown \
-  --output with-history.md
-```
+## 🚀 最佳實踐
 
-### 不同輸出格式
-```bash
-# JSON 格式
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --style json \
-  --output project-data.json
-
-# XML 格式
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
-  --style xml \
-  --output project-structure.xml
-```
-
-## 🚀 REPO MODE 最佳實踐
-
-### 1. 模式選擇原則
+### 模式選擇原則
 - **完整模式**: 新專案、重大重構、架構分析
 - **壓縮模式**: 代碼審查、性能分析、技術評估
 - **源碼模式**: 功能開發、模組設計、API 開發
@@ -430,45 +105,22 @@ docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
 - **MCP 整合**: MCP 服務器配置、協議分析、工具整合
 - **智能分析**: AI 驅動分析、智能重構、架構優化
 
-### 2. 輸出優化技巧
+### 輸出優化技巧
 - 使用 `--top-files-len` 控制摘要長度
 - 利用 `--include` 和 `--ignore` 精確控制內容
 - 根據需要選擇不同的輸出格式
 - 定期更新 repomix 輸出以保持同步
-- 針對 MCP 整合使用專用配置
 
-### 3. AI 分析整合
-- 將 repomix 輸出提供給 AI 進行深度分析
-- 使用分段分析處理大型輸出
-- 結合多種模式獲得更全面的理解
-- 建立分析結果的知識庫
-- 利用 MCP 協議進行工具整合
+## 📋 檢查清單
 
-## 📋 REPO MODE 檢查清單
-
-### 模式選擇檢查
 ```
-✓ REPO MODE SELECTION CHECKLIST
+✓ REPO MODE 檢查清單
 - 分析目標明確? [YES/NO]
 - 成本限制考慮? [YES/NO]
-- 時間要求評估? [YES/NO]
-- 輸出格式確定? [YES/NO]
-- MCP 整合需求? [YES/NO]
-- AI 分析需求? [YES/NO]
-
-→ 如果全部 YES: 選擇適當模式
-→ 如果有 NO: 重新評估需求
-```
-
-### 執行檢查
-```
-✓ REPO MODE EXECUTION CHECKLIST
 - Docker 環境正常? [YES/NO]
 - 專案路徑正確? [YES/NO]
 - 輸出文件生成? [YES/NO]
 - 內容完整性驗證? [YES/NO]
-- MCP 服務器連接? [YES/NO]
-- AI 分析完成? [YES/NO]
 
 → 如果全部 YES: REPO 分析完成
 → 如果有 NO: 檢查環境和配置
@@ -476,81 +128,22 @@ docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix \
 
 ## 🔄 與其他模式整合
 
-### REPO → VAN 整合
-```markdown
-REPO 模式輸出 → VAN 模式分析
-- 專案結構分析
-- 技術棧識別
-- 複雜度評估
-- 架構模式識別
-```
+| 整合模式 | 用途 | 輸出 |
+|----------|------|------|
+| **REPO → VAN** | 專案結構分析、技術棧識別、複雜度評估 | VAN 模式分析 |
+| **REPO → PLAN** | 基於代碼結構制定計劃、識別依賴關係 | PLAN 模式規劃 |
+| **REPO → CREATIVE** | 分析現有架構、識別改進機會 | CREATIVE 模式設計 |
+| **REPO → MCP** | MCP 工具配置、協議兼容性檢查 | MCP 服務器整合 |
 
-### REPO → PLAN 整合
-```markdown
-REPO 模式輸出 → PLAN 模式規劃
-- 基於代碼結構制定計劃
-- 識別依賴關係
-- 規劃實施順序
-- 評估技術風險
-```
+## 🚨 常見問題解決
 
-### REPO → CREATIVE 整合
-```markdown
-REPO 模式輸出 → CREATIVE 模式設計
-- 分析現有架構
-- 識別改進機會
-- 設計新功能
-- 優化現有系統
-```
-
-### REPO → MCP 整合
-```markdown
-REPO 模式輸出 → MCP 服務器整合
-- MCP 工具配置
-- 協議兼容性檢查
-- 服務器性能分析
-- 工具整合評估
-```
-
-## 🚨 常見問題和解決方案
-
-### 問題 1: Docker 權限錯誤
-**解決方案**: 確保 Docker 有適當的目錄訪問權限
-```bash
-# Windows
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix
-
-# Linux/Mac
-docker run -v $(pwd):/app -it --rm ghcr.io/yamadashy/repomix
-```
-
-### 問題 2: 輸出文件過大
-**解決方案**: 使用壓縮模式或源碼模式
-```bash
-# 使用壓縮模式
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress
-```
-
-### 問題 3: 包含不需要的文件
-**解決方案**: 使用 `--ignore` 選項排除
-```bash
-# 排除測試文件
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --ignore "*.test.*,*.spec.*"
-```
-
-### 問題 4: MCP 服務器連接失敗
-**解決方案**: 檢查 MCP 服務器配置和網絡連接
-```bash
-# 檢查 MCP 服務器狀態
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "**/*mcp*" --output mcp-debug.md
-```
-
-### 問題 5: AI 分析結果不準確
-**解決方案**: 使用智能分析模式並檢查配置
-```bash
-# 使用智能分析模式
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --include "src/**/*" --output ai-analysis.md
-```
+| 問題 | 解決方案 |
+|------|----------|
+| **Docker 權限錯誤** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix` |
+| **輸出文件過大** | 使用壓縮模式：`--compress` |
+| **包含不需要的文件** | 使用 `--ignore "*.test.*,*.spec.*"` |
+| **MCP 服務器連接失敗** | 檢查 MCP 服務器配置和網絡連接 |
+| **AI 分析結果不準確** | 使用智能分析模式並檢查配置 |
 
 ## 📚 相關資源
 
@@ -558,7 +151,6 @@ docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --includ
 - [Docker 使用指南](https://docs.docker.com/)
 - [MCP 協議文檔](https://docs.claude.com/en/docs/agents-and-tools/mcp-connector)
 - [Graph Bank 整合指南](graph-bank-integration.md)
-- [AI 代碼分析最佳實踐](ai-analysis-best-practices.md)
 
 ---
 
