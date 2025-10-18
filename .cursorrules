@@ -16,12 +16,13 @@
 - **模式特定視覺地圖**：每個開發階段的清晰視覺表示
 
 ## 自定義模式
-1. **VAN** (🔍) - 初始化：分析專案結構並確定複雜度
-2. **PLAN** (📋) - 任務規劃：建立詳細的實施計劃
-3. **CREATIVE** (🎨) - 設計決策：探索複雜組件的設計選項
-4. **IMPLEMENT** (⚒️) - 代碼實施：系統性地構建計劃的組件
-5. **REFLECT** (🔍) - 審查：回顧並記錄經驗教訓
-6. **ARCHIVE** (📁) - 歸檔：建立全面的文件
+1. **INIT** (🚀) - 系統初始化：統一系統健康檢查和環境驗證
+2. **VAN** (🔍) - 專案分析：分析專案結構並確定複雜度
+3. **PLAN** (📋) - 任務規劃：建立詳細的實施計劃
+4. **CREATIVE** (🎨) - 設計決策：探索複雜組件的設計選項
+5. **IMPLEMENT** (⚒️) - 代碼實施：系統性地構建計劃的組件
+6. **REFLECT** (🔍) - 審查：回顧並記錄經驗教訓
+7. **ARCHIVE** (📁) - 歸檔：建立全面的文件
 
 ### 增強模式配置
 - **基礎配置**：使用本文件的核心模式定義
@@ -31,6 +32,7 @@
 > **配置選擇**：Level 1-2 任務使用基礎配置，Level 3-4 任務建議使用詳細配置
 
 ### 詳細模式規則文件
+- `init-mode-detailed.mdc` - INIT 模式詳細指令
 - `van-mode-detailed.mdc` - VAN 模式詳細指令
 - `plan-mode-detailed.mdc` - PLAN 模式詳細指令
 - `creative-mode-detailed.mdc` - CREATIVE 模式詳細指令
@@ -38,9 +40,9 @@
 - `reflect-archive-mode-detailed.mdc` - REFLECT+ARCHIVE 模式詳細指令
 
 ## 工作流程
-- **Level 1 任務**：VAN → IMPLEMENT
-- **Level 2 任務**：VAN → PLAN → IMPLEMENT → REFLECT
-- **Level 3-4 任務**：VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
+- **Level 1 任務**：INIT → VAN → IMPLEMENT
+- **Level 2 任務**：INIT → VAN → PLAN → IMPLEMENT → REFLECT
+- **Level 3-4 任務**：INIT → VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
 
 ## 核心文件
 - `tasks.md`：任務追蹤的中央真實來源

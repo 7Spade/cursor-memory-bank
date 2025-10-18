@@ -1,0 +1,277 @@
+---
+description: Detailed INIT mode instructions for comprehensive system initialization and health checks
+globs: "**/init-mode-detailed*/**"
+alwaysApply: false
+---
+
+# INIT MODE - 詳細系統初始化指令
+
+> **TL;DR:** 提供統一的系統初始化、健康檢查和環境驗證流程，確保所有組件準備就緒後才開始後續模式。
+
+```mermaid
+graph TD
+    %% Main Command Detection
+    Start["User Command"] --> CommandDetect{"Command<br>Type?"}
+    
+    CommandDetect -->|"INIT"| INIT["INIT Mode"]
+    CommandDetect -->|"VAN"| VAN["VAN Mode"]
+    CommandDetect -->|"PLAN"| Plan["PLAN Mode"]
+    CommandDetect -->|"CREATIVE"| Creative["CREATIVE Mode"]
+    CommandDetect -->|"IMPLEMENT"| Implement["IMPLEMENT Mode"]
+    CommandDetect -->|"QA"| QA["QA Mode"]
+    
+    %% Immediate Response Node
+    INIT --> InitResp["Respond: OK INIT"]
+    VAN --> VanResp["Respond: OK VAN"]
+    Plan --> PlanResp["Respond: OK PLAN"]
+    Creative --> CreativeResp["Respond: OK CREATIVE"]
+    Implement --> ImplResp["Respond: OK IMPLEMENT"]
+    QA --> QAResp["Respond: OK QA"]
+    
+    %% System Health Check
+    InitResp --> HealthCheck["System Health Check"]
+    HealthCheck --> MCPCheck["MCP Memory Server<br>Status Check"]
+    MCPCheck --> GraphCheck["Graph Bank<br>Structure Check"]
+    GraphCheck --> EnvCheck["Environment<br>Validation"]
+    EnvCheck --> DepCheck["Dependencies<br>Check"]
+    
+    %% Initialization Process
+    DepCheck --> InitMCP["Initialize MCP<br>Memory Server"]
+    InitMCP --> InitGraph["Initialize Graph Bank<br>Files"]
+    InitGraph --> InitContext["Establish Base<br>Context"]
+    InitContext --> StatusReport["Generate Status<br>Report"]
+    
+    %% Verification
+    StatusReport --> VerifyInit{"System<br>Ready?"}
+    VerifyInit -->|"Yes"| CompleteInit["INIT Process<br>Complete"]
+    VerifyInit -->|"No"| FixIssues["Fix Identified<br>Issues"]
+    FixIssues --> HealthCheck
+    
+    %% Mode Transitions
+    CompleteInit -->|"Ready for VAN"| TransToVan["→ VAN Mode"]
+    CompleteInit -->|"Ready for PLAN"| TransToPlan["→ PLAN Mode"]
+    CompleteInit -->|"Ready for IMPLEMENT"| TransToImpl["→ IMPLEMENT Mode"]
+    
+    %% Other modes continue with Graph Bank Check
+    VanResp --> CheckGB_Van["Check Graph Bank<br>& tasks.md Status"]
+    PlanResp --> CheckGB_Plan["Check Graph Bank<br>& tasks.md Status"]
+    CreativeResp --> CheckGB_Creative["Check Graph Bank<br>& tasks.md Status"]
+    ImplResp --> CheckGB_Impl["Check Graph Bank<br>& tasks.md Status"]
+    QAResp --> CheckGB_QA["Check Graph Bank<br>& tasks.md Status"]
+    
+    %% Rule Loading for other modes
+    CheckGB_Van --> LoadVan["Load Rule:<br>isolation_rules/visual-maps/van_mode_split/van-mode-map"]
+    CheckGB_Plan --> LoadPlan["Load Rule:<br>isolation_rules/visual-maps/plan-mode-map"]
+    CheckGB_Creative --> LoadCreative["Load Rule:<br>isolation_rules/visual-maps/creative-mode-map"]
+    CheckGB_Impl --> LoadImpl["Load Rule:<br>isolation_rules/visual-maps/implement-mode-map"]
+    CheckGB_QA --> LoadQA["Load Rule:<br>isolation_rules/visual-maps/qa-mode-map"]
+    
+    %% Rule Execution
+    LoadVan --> ExecVan["Execute Process<br>in Rule"]
+    LoadPlan --> ExecPlan["Execute Process<br>in Rule"]
+    LoadCreative --> ExecCreative["Execute Process<br>in Rule"]
+    LoadImpl --> ExecImpl["Execute Process<br>in Rule"]
+    LoadQA --> ExecQA["Execute Process<br>in Rule"]
+    
+    %% Graph Bank Updates
+    ExecVan --> UpdateGB_Van["Update Graph Bank<br>& tasks.md"]
+    ExecPlan --> UpdateGB_Plan["Update Graph Bank<br>& tasks.md"]
+    ExecCreative --> UpdateGB_Creative["Update Graph Bank<br>& tasks.md"]
+    ExecImpl --> UpdateGB_Impl["Update Graph Bank<br>& tasks.md"]
+    ExecQA --> UpdateGB_QA["Update Graph Bank<br>& tasks.md"]
+    
+    %% Completion
+    UpdateGB_Van --> CompleteVan["VAN Process<br>Complete"]
+    UpdateGB_Plan --> CompletePlan["PLAN Process<br>Complete"]
+    UpdateGB_Creative --> CompleteCreative["CREATIVE Process<br>Complete"]
+    UpdateGB_Impl --> CompleteImpl["IMPLEMENT Process<br>Complete"]
+    UpdateGB_QA --> CompleteQA["QA Process<br>Complete"]
+    
+    %% Styling
+    style INIT fill:#4da6ff,stroke:#0066cc,color:white
+    style HealthCheck fill:#ffa64d,stroke:#cc7a30,color:white
+    style MCPCheck fill:#4dbb5f,stroke:#36873f,color:white
+    style GraphCheck fill:#d94dbb,stroke:#a3378a,color:white
+    style EnvCheck fill:#4dbbbb,stroke:#368787,color:white
+    style DepCheck fill:#d971ff,stroke:#a33bc2,color:white
+    style CompleteInit fill:#71c2ff,stroke:#3b8ac2,color:white
+```
+
+## 🚀 INIT 模式核心功能
+
+### 📋 系統健康檢查
+
+#### 1. MCP Memory Server 狀態檢查
+```markdown
+## MCP Memory Server 驗證
+- [ ] memory.json 文件存在且格式正確
+- [ ] MCP Memory Server 連接狀態正常
+- [ ] 記憶體數據完整性檢查
+- [ ] 語義搜索功能可用性測試
+```
+
+#### 2. Graph Bank 結構檢查
+```markdown
+## Graph Bank 文件驗證
+- [ ] graph-bank/ 目錄存在
+- [ ] tasks.md 文件可讀寫
+- [ ] activeContext.md 文件可讀寫
+- [ ] progress.md 文件可讀寫
+- [ ] 其他必要文件完整性檢查
+```
+
+#### 3. 環境驗證
+```markdown
+## 開發環境檢查
+- [ ] Node.js 版本符合要求
+- [ ] yarn 包管理器可用
+- [ ] Cursor IDE 版本檢查
+- [ ] 文件系統權限驗證
+- [ ] 網路連接狀態檢查
+```
+
+#### 4. 依賴檢查
+```markdown
+## 專案依賴驗證
+- [ ] package.json 文件存在
+- [ ] node_modules 目錄完整
+- [ ] 關鍵依賴版本檢查
+- [ ] 配置文件完整性驗證
+```
+
+### 🔧 初始化流程
+
+#### 1. MCP Memory Server 初始化
+```markdown
+## MCP Memory Server 設置
+1. 檢查 memory.json 狀態
+2. 載入現有記憶體上下文
+3. 驗證記憶體系統功能
+4. 建立記憶體連接
+5. 測試語義搜索功能
+```
+
+#### 2. Graph Bank 文件初始化
+```markdown
+## Graph Bank 文件設置
+1. 檢查 graph-bank/ 目錄結構
+2. 驗證 tasks.md 文件狀態
+3. 初始化 activeContext.md
+4. 設置 progress.md 追蹤
+5. 建立必要的子目錄
+```
+
+#### 3. 基礎上下文建立
+```markdown
+## 系統上下文設置
+1. 載入專案配置信息
+2. 建立用戶偏好設定
+3. 初始化系統狀態
+4. 設置工作環境變數
+5. 建立會話基線
+```
+
+### 📊 狀態報告生成
+
+#### 系統狀態概覽
+```markdown
+## INIT 完成報告
+### ✅ 系統組件狀態
+- MCP Memory Server: [READY/ERROR]
+- Graph Bank: [READY/ERROR]
+- 開發環境: [READY/ERROR]
+- 專案依賴: [READY/ERROR]
+
+### 📋 下一步建議
+- Level 1 任務: → VAN → IMPLEMENT
+- Level 2 任務: → VAN → PLAN → IMPLEMENT → REFLECT
+- Level 3-4 任務: → VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
+
+### ⚠️ 注意事項
+- 任何組件狀態為 ERROR 時，請先修復問題
+- 確保所有檢查項目都通過後再進行後續模式
+```
+
+## 🔄 與其他模式的整合
+
+### VAN 模式整合
+```markdown
+## VAN 模式準備
+INIT 完成後，VAN 模式可以專注於：
+- 專案結構分析
+- 複雜度確定
+- 技術棧識別
+- 任務級別評估
+
+不再需要重複進行系統初始化檢查
+```
+
+### 其他模式整合
+```markdown
+## 模式間協作
+- PLAN 模式: 專注於任務規劃和分解
+- CREATIVE 模式: 專注於設計決策和架構探索
+- IMPLEMENT 模式: 專注於代碼實施和構建
+- REFLECT 模式: 專注於代碼審查和學習
+- ARCHIVE 模式: 專注於文件歸檔和知識管理
+```
+
+## 📝 使用指南
+
+### 何時使用 INIT 模式
+- 開始新專案時
+- 系統環境發生變化時
+- 長時間未使用系統後重新啟動時
+- 遇到系統錯誤需要重新初始化時
+- 升級系統組件後需要驗證時
+
+### INIT 模式檢查清單
+```markdown
+## INIT 模式執行清單
+- [ ] 執行系統健康檢查
+- [ ] 驗證 MCP Memory Server 狀態
+- [ ] 檢查 Graph Bank 文件結構
+- [ ] 驗證開發環境配置
+- [ ] 檢查專案依賴完整性
+- [ ] 初始化系統組件
+- [ ] 建立基礎上下文
+- [ ] 生成狀態報告
+- [ ] 確認系統準備就緒
+- [ ] 提供下一步建議
+```
+
+## 🎯 成功標準
+
+### INIT 模式成功完成標誌
+- 所有系統組件狀態為 READY
+- MCP Memory Server 連接正常
+- Graph Bank 文件結構完整
+- 開發環境配置正確
+- 專案依賴完整可用
+- 系統上下文建立完成
+- 狀態報告生成成功
+
+### 錯誤處理
+```markdown
+## 常見問題解決
+- MCP Memory Server 連接失敗: 檢查 memory.json 文件
+- Graph Bank 文件缺失: 重新創建必要文件
+- 環境配置錯誤: 檢查 Node.js 和 yarn 安裝
+- 依賴問題: 執行 yarn install 重新安裝
+- 權限問題: 檢查文件系統權限設置
+```
+
+## 🔄 持續改進
+
+### 監控和優化
+- 定期檢查系統健康狀態
+- 優化初始化流程效率
+- 改進錯誤檢測和處理
+- 增強狀態報告詳細度
+- 完善與其他模式的整合
+
+### 版本更新
+- 跟隨 MCP Memory Server 更新
+- 適配 Graph Bank 結構變化
+- 支持新的開發環境要求
+- 整合新的依賴和工具
