@@ -151,7 +151,49 @@
         "Standalone Components：無需 NgModule",
         "inject() 函數：現代化依賴注入",
         "Computed Signals：自動計算衍生狀態",
-        "現代化的開發工具鏈"
+        "現代化的開發工具鏈",
+        "Signal-based Inputs：使用 input() 函數替代 @Input() 裝飾器",
+        "Type Narrowing：更好的類型安全和控制流分析",
+        "Performance Optimization：更高效的變更檢測和渲染"
+      ]
+    },
+    {
+      "name": "Angular_v20_Control_Flow",
+      "entityType": "technology",
+      "observations": [
+        "@if 語法：替代 *ngIf，支援 @else 分支",
+        "@for 語法：替代 *ngFor，必須使用 track 表達式優化性能",
+        "@switch 語法：替代 *ngSwitch，支援 @case 和 @default",
+        "內建控制流：無需導入 CommonModule",
+        "類型縮小：在控制流中自動進行類型推斷",
+        "性能優化：更高效的 DOM 更新和變更檢測",
+        "語法簡潔：更直觀的模板語法"
+      ]
+    },
+    {
+      "name": "Angular_v20_Signal_Inputs",
+      "entityType": "technology",
+      "observations": [
+        "input() 函數：替代 @Input() 裝飾器",
+        "類型安全：更好的 TypeScript 支援",
+        "不可變性：Signal inputs 是只讀的",
+        "控制流相容：與新的控制流語法完美整合",
+        "自動遷移：提供遷移工具從 @Input() 到 input()",
+        "性能提升：更高效的變更檢測",
+        "語法簡潔：更現代的 API 設計"
+      ]
+    },
+    {
+      "name": "Angular_v20_Modern_Design_Patterns",
+      "entityType": "design_pattern",
+      "observations": [
+        "Signal-based Architecture：使用 Signals 進行狀態管理",
+        "Control Flow Patterns：使用新的控制流語法",
+        "Type Narrowing Patterns：利用類型縮小提高代碼安全性",
+        "Performance Patterns：使用 track 表達式優化列表渲染",
+        "Modern DI Patterns：使用 inject() 函數進行依賴注入",
+        "Standalone Component Patterns：無需 NgModule 的組件設計",
+        "Reactive Patterns：基於 Signals 的響應式編程模式"
       ]
     },
     {
@@ -373,9 +415,34 @@
       "relationType": "supports"
     },
     {
-      "from": "Firestore_Database_Design",
-      "to": "Security_Design_Patterns",
-      "relationType": "enforces"
+      "from": "Angular_v20_Control_Flow",
+      "to": "Angular_v20_Modern_Features",
+      "relationType": "extends"
+    },
+    {
+      "from": "Angular_v20_Signal_Inputs",
+      "to": "Angular_v20_Modern_Features",
+      "relationType": "extends"
+    },
+    {
+      "from": "Angular_v20_Modern_Design_Patterns",
+      "to": "Angular_v20_Control_Flow",
+      "relationType": "uses"
+    },
+    {
+      "from": "Angular_v20_Modern_Design_Patterns",
+      "to": "Angular_v20_Signal_Inputs",
+      "relationType": "uses"
+    },
+    {
+      "from": "Modern_UI_Design_Patterns",
+      "to": "Angular_v20_Control_Flow",
+      "relationType": "uses"
+    },
+    {
+      "from": "Modern_UI_Design_Patterns",
+      "to": "Angular_v20_Signal_Inputs",
+      "relationType": "uses"
     }
   ]
 }
