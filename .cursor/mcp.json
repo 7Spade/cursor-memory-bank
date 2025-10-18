@@ -40,7 +40,7 @@
         "@modelcontextprotocol/server-memory"
       ],
       "env": {
-        "MEMORY_FILE_PATH": "./memory-bank/memory.json",
+        "MEMORY_FILE_PATH": "./memory.json",
         "NODE_OPTIONS": "--max-old-space-size=2048"
       },
       "disabled": false,

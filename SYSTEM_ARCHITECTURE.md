@@ -122,11 +122,11 @@
 
 ### Shared Services (共享服務)
 ├── Authentication (認證服務)
-│   ├── Firebase Auth Integration
-│   ├── @delon/auth Integration  
+│   ├── Auth Service Integration
+│   ├── Auth Integration  
 │   └── Token Management
 ├── Authorization (授權服務)
-│   ├── @delon/acl Integration
+│   ├── ACL Integration
 │   ├── Role-Based Access Control
 │   └── Permission Management
 ├── File Storage (檔案儲存)
@@ -141,19 +141,19 @@
 ## Technical Integration Layer (技術整合層)
 
 ### Authentication & Authorization Stack (認證授權技術棧)
-├── Firebase Authentication (Firebase 認證)
+├── Authentication Service (認證服務)
 │   ├── Email/Password Authentication (郵箱密碼認證)
 │   ├── Social Login Integration (社交登入整合)
 │   ├── Email Verification (郵箱驗證)
 │   ├── Password Reset (密碼重置)
-│   └── ID Token Management (ID令牌管理)
-├── @delon/auth Integration (@delon/auth 整合)
+│   └── Token Management (令牌管理)
+├── Auth Integration (認證整合)
 │   ├── Token Storage & Management (令牌儲存管理)
 │   ├── Authentication State Management (認證狀態管理)
 │   ├── Auto Token Refresh (自動令牌刷新)
 │   ├── Login/Logout Interceptors (登入登出攔截器)
 │   └── Route Guards (路由守衛)
-└── @delon/acl Authorization (@delon/acl 授權)
+└── Authorization Service (授權服務)
     ├── Role-Based Access Control (角色權限控制)
     ├── Permission Management (權限管理)
     ├── Route-Level Protection (路由層級保護)
@@ -163,27 +163,26 @@
 
 #### Canonical Login Flow（登入鏈與 Token 橋接）
 1. 使用者於 UI 輸入憑證。
-2. 透過 `@angular/fire` 呼叫 Firebase Auth 完成登入並取得 Firebase ID Token。
-3. `Auth Integration Service` 將 Firebase ID Token 正規化，透過 `@delon/auth` 的 `TokenService` 儲存（預設 localStorage）。
-4. `token.interceptor.ts` 為對外 API 請求自動附加 `Authorization: Bearer <Firebase ID Token>`。
-5. `@delon/auth` 維護登入狀態；UI 依狀態切換（登入/登出/過期）。
-6. 以使用者檔案 + 當前 `organizationId` 組裝 ACL 能力集合，初始化 `@delon/acl` 權限樹。
-7. `ACLGuard` 保護受控路由；`*appAcl` 指令/管道於元件層控管顯示。
-8. 監聽 Firebase `onIdTokenChanged` 或等效事件，於 Token 更新時同步 `TokenService` 並重算 ACL（避免權限漂移）。
+2. 透過認證服務完成登入並取得 ID Token。
+3. 認證整合服務將 ID Token 正規化並儲存。
+4. Token 攔截器為對外 API 請求自動附加 Authorization 標頭。
+5. 認證服務維護登入狀態；UI 依狀態切換（登入/登出/過期）。
+6. 以使用者檔案 + 當前組織ID 組裝權限能力集合，初始化權限樹。
+7. 權限守衛保護受控路由；權限指令/管道於元件層控管顯示。
+8. 監聽 Token 更新事件，於 Token 更新時同步並重算權限（避免權限漂移）。
 
 #### ACL 映射規則（摘要）
-- **來源**：使用者檔案中的角色/權限 + Context（`organizationId`、必要時 `projectId`）。
-- **轉換**：映射為 `@delon/acl` 的 `roles` 與 `abilities`（能力集合），保存在 ACL 服務內存。
-- **切換**：使用者切換組織時，重新計算映射並更新 ACL；確保路由守衛與模板條件立刻生效。
+- **來源**：使用者檔案中的角色/權限 + Context（組織ID、必要時專案ID）。
+- **轉換**：映射為權限系統的角色與能力集合，保存在權限服務內存。
+- **切換**：使用者切換組織時，重新計算映射並更新權限；確保路由守衛與模板條件立刻生效。
 
 #### 攔截器與守衛責任邊界
-- **token.interceptor.ts**：注入 `Authorization` 標頭，來源為 `@delon/auth TokenService`。
-- **auth.interceptor.ts**：集中處理未授權/過期等錯誤與導流邏輯（避免與 Token 注入重疊責任）。
-- **ACLGuard**：路由守衛，以 `@delon/acl` 權限樹判斷可達性。
-- 參考：本檔「# 9. 用戶認證與權限管理流程圖」與「MVP 落地實作指南/認證與授權」。
+- **Token 攔截器**：注入 Authorization 標頭，來源為認證服務的 Token 儲存。
+- **認證攔截器**：集中處理未授權/過期等錯誤與導流邏輯（避免與 Token 注入重疊責任）。
+- **權限守衛**：路由守衛，以權限樹判斷可達性。
 
 ### Data Persistence Architecture (資料持久化架構)
-├── Firestore Collections (Firestore 集合設計)
+├── Database Collections (資料庫集合設計)
 │   ├── Users Collection (/users)
 │   │   ├── User Profile Data (用戶檔案資料)
 │   │   ├── User Settings (用戶設定)
@@ -481,32 +480,32 @@ graph TB
     end
     
     subgraph "User Infrastructure Layer (用戶基礎設施層)"
-        subgraph "Firebase認證整合"
-            UCFAS[Firebase Auth Service<br/>Firebase認證服務]
-            UCFAU[Firebase Auth Utils<br/>Firebase認證工具]
-            UCFAI[Firebase Auth Interceptor<br/>Firebase認證攔截器]
+        subgraph "認證整合"
+            UCFAS[Auth Service<br/>認證服務]
+            UCFAU[Auth Utils<br/>認證工具]
+            UCFAI[Auth Interceptor<br/>認證攔截器]
         end
         
-        subgraph "@delon/auth整合"
-            UCDAS[Delon Auth Service<br/>Delon認證服務]
-            UCDAI[Delon Auth Interceptor<br/>Delon認證攔截器]
-            UCDAU[Delon Auth Utils<br/>Delon認證工具]
-            UCDTS[Delon Token Service<br/>Delon令牌服務]
+        subgraph "認證服務整合"
+            UCDAS[Auth Service<br/>認證服務]
+            UCDAI[Auth Interceptor<br/>認證攔截器]
+            UCDAU[Auth Utils<br/>認證工具]
+            UCDTS[Token Service<br/>令牌服務]
         end
         
-        subgraph "@delon/acl整合"
-            UCDACL[Delon ACL Service<br/>Delon權限服務]
-            UCDAG[Delon ACL Guard<br/>Delon權限守衛]
-            UCDAD[Delon ACL Directive<br/>Delon權限指令]
-            UCDAP[Delon ACL Pipe<br/>Delon權限管道]
+        subgraph "權限服務整合"
+            UCDACL[ACL Service<br/>權限服務]
+            UCDAG[ACL Guard<br/>權限守衛]
+            UCDAD[ACL Directive<br/>權限指令]
+            UCDAP[ACL Pipe<br/>權限管道]
         end
         
         subgraph "資料持久化"
-            UCIR[Firestore User Repository<br/>Firestore用戶儲存庫]
-            UCIPR[Firestore Profile Repository<br/>Firestore檔案儲存庫]
-            UCICR[Firestore Certificate Repository<br/>Firestore證照儲存庫]
-            UCIAR[Firestore Achievement Repository<br/>Firestore成就儲存庫]
-            UCINR[Firestore Notification Repository<br/>Firestore通知儲存庫]
+            UCIR[User Repository<br/>用戶儲存庫]
+            UCIPR[Profile Repository<br/>檔案儲存庫]
+            UCICR[Certificate Repository<br/>證照儲存庫]
+            UCIAR[Achievement Repository<br/>成就儲存庫]
+            UCINR[Notification Repository<br/>通知儲存庫]
         end
         
         subgraph "事件處理"
@@ -534,18 +533,18 @@ graph TB
     end
     
     %% 技術棧整合連接 (特殊顏色標記)
-    %% Firebase Auth 連接
+    %% 認證服務 連接
     UCLA --> UCFAS
     UCRA --> UCFAS
     UCFA --> UCFAS
     UCVA --> UCFAS
     
-    %% @delon/auth 連接
+    %% 認證整合 連接
     UCFAS --> UCDAS
     UCDAS --> UCAS
     UCDTS --> UCAS
     
-    %% @delon/acl 連接
+    %% 權限服務 連接
     UCDAS --> UCDACL
     UCDACL --> UCDAG
     UCDACL --> UCDAD
@@ -654,9 +653,9 @@ graph TB
 sequenceDiagram
     participant User as 新用戶
     participant UI as Angular UI
-    participant FA as FirebaseAuthService
-    participant DA as DelonAuthService
-    participant ACL as DelonAclService
+    participant FA as AuthService
+    participant DA as AuthIntegrationService
+    participant ACL as ACLService
     participant US as UserService
     participant UR as UserRepository
     participant ES as EmailService
@@ -664,8 +663,8 @@ sequenceDiagram
 
     User->>UI: 填寫註冊資料
     UI->>FA: createUserWithEmailAndPassword()
-    FA->>FA: Firebase 建立用戶帳戶
-    FA-->>UI: 返回 Firebase User
+    FA->>FA: 認證服務建立用戶帳戶
+    FA-->>UI: 返回 User
     
     UI->>US: createUserProfile(userInfo)
     US->>UR: saveUser(userEntity)
@@ -684,7 +683,7 @@ sequenceDiagram
         UI->>DA: login(credentials)
         DA->>FA: signInWithEmailAndPassword()
         FA-->>DA: 返回 ID Token
-        DA->>DA: 儲存 token 到 localStorage
+        DA->>DA: 儲存 token 到本地儲存
         DA->>ACL: setUser(userProfile)
         ACL->>ACL: 設定基本用戶權限
         ACL-->>DA: 權限設定完成
@@ -772,7 +771,7 @@ graph TB
     end
     
     subgraph "Organization Infrastructure Layer"
-        OCIR[Firestore Organization Repository]
+        OCIR[Organization Repository]
         OCIE[Organization Event Handler]
         OCIW[External Organization Service]
         OCIS[Organization Infrastructure Service]
@@ -924,19 +923,19 @@ sequenceDiagram
 sequenceDiagram
     participant User as 用戶
     participant UI as Angular UI
-    participant FA as FirebaseAuthService
-    participant AS as AuthService (@delon/auth)
-    participant ACL as DelonAclService (@delon/acl)
+    participant FA as AuthService
+    participant AS as AuthService
+    participant ACL as ACLService
     participant Router as Angular Router
     participant Component as Angular Component
 
     User->>UI: 輸入登入資料
     UI->>FA: loginWithEmail(credentials)
-    FA->>FA: Firebase Authentication
-    FA-->>FA: 取得 Firebase ID Token
+    FA->>FA: 認證服務認證
+    FA-->>FA: 取得 ID Token
     FA-->>AS: 返回 UserProfile + ID Token
     
-    AS->>AS: 儲存 token 到 localStorage
+    AS->>AS: 儲存 token 到本地儲存
     AS->>AS: 管理認證狀態
     AS-->>AS: 提供用戶資訊
     
@@ -963,7 +962,7 @@ sequenceDiagram
     participant UI as Angular UI
     participant OM as Organization Module
     participant OS as Organization Service
-    participant ACL as DelonAclService
+    participant ACL as ACLService
     participant Router as Angular Router
     participant Component as Organization Component
 
@@ -1117,10 +1116,10 @@ graph TB
     
     subgraph "Project Infrastructure Layer (專案基礎設施層)"
         subgraph "資料持久化"
-            PCIR[Firestore Project Repository<br/>Firestore 專案儲存庫]
-            PCITR[Firestore Task Repository<br/>Firestore 任務儲存庫]
-            PCIDR[Firestore Document Repository<br/>Firestore 文件儲存庫]
-            PCICR[Firestore Cost Repository<br/>Firestore 成本儲存庫]
+            PCIR[Project Repository<br/>專案儲存庫]
+            PCITR[Task Repository<br/>任務儲存庫]
+            PCIDR[Document Repository<br/>文件儲存庫]
+            PCICR[Cost Repository<br/>成本儲存庫]
         end
         
         subgraph "事件處理"
@@ -1349,9 +1348,9 @@ graph TB
     
     subgraph "Social Infrastructure Layer (社交基礎設施層)"
         subgraph "資料持久化"
-            SCIR[Firestore Social Repository<br/>Firestore社交儲存庫]
-            SCIRR[Firestore Relationship Repository<br/>Firestore關係儲存庫]
-            SCINR[Firestore Network Repository<br/>Firestore網絡儲存庫]
+            SCIR[Social Repository<br/>社交儲存庫]
+            SCIRR[Relationship Repository<br/>關係儲存庫]
+            SCINR[Network Repository<br/>網絡儲存庫]
         end
         
         subgraph "推薦引擎"
@@ -1526,10 +1525,10 @@ graph TB
     
     subgraph "Achievement Infrastructure Layer (成就基礎設施層)"
         subgraph "資料持久化"
-            ACIR[Firestore Achievement Repository<br/>Firestore成就儲存庫]
-            ACRR[Firestore Rule Repository<br/>Firestore規則儲存庫]
-            ACPR[Firestore Progress Repository<br/>Firestore進度儲存庫]
-            ACLR[Firestore Leaderboard Repository<br/>Firestore排行榜儲存庫]
+            ACIR[Achievement Repository<br/>成就儲存庫]
+            ACRR[Rule Repository<br/>規則儲存庫]
+            ACPR[Progress Repository<br/>進度儲存庫]
+            ACLR[Leaderboard Repository<br/>排行榜儲存庫]
         end
         
         subgraph "規則引擎"
@@ -1710,16 +1709,16 @@ graph TB
     
     subgraph "Notification Infrastructure Layer (通知基礎設施層)"
         subgraph "資料持久化"
-            NOIR[Firestore Notification Repository<br/>Firestore通知儲存庫]
-            NOTR[Firestore Template Repository<br/>Firestore模板儲存庫]
-            NOPR[Firestore Preference Repository<br/>Firestore偏好儲存庫]
+            NOIR[Notification Repository<br/>通知儲存庫]
+            NOTR[Template Repository<br/>模板儲存庫]
+            NOPR[Preference Repository<br/>偏好儲存庫]
         end
         
         subgraph "推送服務整合"
-            NOFCM[Firebase Cloud Messaging<br/>Firebase雲端訊息]
-            NOSES[SendGrid Email Service<br/>SendGrid郵件服務]
-            NOTWS[Twilio SMS Service<br/>Twilio簡訊服務]
-            NOAPN[Apple Push Notification<br/>Apple推送通知]
+            NOFCM[Cloud Messaging<br/>雲端訊息]
+            NOSES[Email Service<br/>郵件服務]
+            NOTWS[SMS Service<br/>簡訊服務]
+            NOAPN[Push Notification<br/>推送通知]
         end
         
         subgraph "事件處理"
@@ -1881,8 +1880,8 @@ sequenceDiagram
 │ └─────────┘ └─────────────┘ └──────────────┘ │
 │ │
 │ Integration Stack (技術整合) │
-│ Firebase Auth → @delon/auth → @delon/acl │
-│ Firestore → Event Bus → External Services │
+│ Auth Service → Auth Integration → ACL Service │
+│ Database → Event Bus → External Services │
 └─────────────────────────────────────────────────────────────────┘
 
 ### Module Interaction Matrix (模組互動矩陣)
@@ -1900,16 +1899,16 @@ Legend: ● = Self ✓ = Strong Dependency ○ = Event Integration
 │ TECHNOLOGY STACK │
 ├─────────────────────────────────────────────────────────────────┤
 │ Frontend Framework │
-│ Angular 20 + Standalone Components + Signals │
+│ Modern Web Framework + Standalone Components + Signals │
 │ │
 │ UI Framework │
-│ ng-alain + ng-zorro-antd + @delon/* │
+│ UI Component Library + Theme System + Utilities │
 │ │
 │ Authentication & Authorization │
-│ Firebase Auth → @delon/auth → @delon/acl │
+│ Auth Service → Auth Integration → ACL Service │
 │ │
 │ Database & Storage │
-│ Firestore + Firebase Storage + Cloud Functions │
+│ NoSQL Database + Cloud Storage + Serverless Functions │
 │ │
 │ Architecture Pattern │
 │ DDD + CQRS + Event-Driven + Clean Architecture │
@@ -1962,114 +1961,81 @@ Legend: ● = Self ✓ = Strong Dependency ○ = Event Integration
 ## MVP 落地實作指南（Phase 1 可交付）
 
 ### 1) 環境與基礎建置
-- **Angular 20**：Standalone + Signals，ESBuild/Vite 預設建置
-- **套件**：`@angular/fire`、`firebase`、`@delon/auth`、`@delon/acl`、`ng-alain`/`@delon/abc`
+- **現代 Web 框架**：Standalone + Signals，現代建置工具
+- **套件**：認證服務、資料庫服務、UI 組件庫、權限管理
 - **設定**：
-  - 在 `environment.ts` 放置 Firebase 專案參數
-  - 初始化 `provideFirebaseApp`、`provideAuth`、`provideFirestore`、`provideStorage`、`provideMessaging`
-  - 啟用 `HttpInterceptor`（token 注入與錯誤處理）
+  - 在環境配置中放置服務參數
+  - 初始化認證服務、資料庫服務、儲存服務、訊息服務
+  - 啟用 HTTP 攔截器（token 注入與錯誤處理）
 
 #### Phase 1 依賴套件（最小必要）
 
 - 運行時依賴
-  - `@angular/core`
-  - `@angular/common`
-  - `@angular/router`
-  - `@angular/forms`
-  - `@angular/platform-browser`
-  - `@angular/animations`
-  - `@angular/cdk`
-  - `@angular/fire`
-  - `firebase`
-  - `ng-zorro-antd`
-  - `ng-alain`
-  - `@delon/abc`
-  - `@delon/theme`
-  - `@delon/util`
-  - `@delon/auth`
-  - `@delon/acl`
-  - `rxjs`
-  - `zone.js`
-  - `tslib`
+  - 核心框架
+  - 通用模組
+  - 路由模組
+  - 表單模組
+  - 平台瀏覽器模組
+  - 動畫模組
+  - 組件開發套件
+  - 認證服務
+  - 資料庫服務
+  - UI 組件庫
+  - 主題系統
+  - 工具庫
+  - 權限管理
+  - 響應式程式庫
+  - 運行時環境
+  - 類型庫
 
 - 開發依賴（建置必需）
-  - `@angular/cli`
-  - `@angular/build`
-  - `@angular/compiler-cli`
-  - `typescript`
+  - 命令行工具
+  - 建置工具
+  - 編譯器
+  - TypeScript
 
 ### 2) 認證與授權（對應 #9）
-- **登入流程**：AngularFire Auth 登入 → 取得 ID Token → `@delon/auth` 儲存 Token（localStorage）
-- **ACL 初始化**：登入後根據「使用者檔案 + 當前 `organizationId`」建立 `@delon/acl` 角色與權限樹
-- **路由守衛**：受保護路由使用 `ACLGuard`；元件層以 `*appAcl` 控制按鈕/區塊顯示
-- **組織切換**（對應 #10）：切換時重建 ACL 映射（角色/權限依當前組織）
+- **登入流程**：認證服務登入 → 取得 ID Token → 認證整合服務儲存 Token（本地儲存）
+- **權限初始化**：登入後根據「使用者檔案 + 當前組織ID」建立權限系統角色與權限樹
+- **路由守衛**：受保護路由使用權限守衛；元件層以權限指令控制按鈕/區塊顯示
+- **組織切換**（對應 #10）：切換時重建權限映射（角色/權限依當前組織）
 
-### 3) Firestore 結構與規則基線（對應 技術整合層/資料持久化架構）
+### 3) 資料庫結構與規則基線（對應 技術整合層/資料持久化架構）
 - 先落地集合：`/users`、`/organizations`、`/projects`（含 `/tasks`、`/documents`、`/costs`）
 - 重要欄位：所有文件存 `orgId`/`projectId` 以利規則與查詢
-- 規則（摘錄示意）：
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    function isSignedIn() { return request.auth != null; }
-    function hasOrgRole(orgId, roles) {
-      return isSignedIn() && orgId in request.auth.token.orgRoles &&
-             count([r in roles where r in request.auth.token.orgRoles[orgId]]) > 0;
-    }
-
-    match /users/{userId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() && request.auth.uid == userId;
-    }
-
-    match /organizations/{orgId} {
-      allow read: if isSignedIn();
-      allow write: if hasOrgRole(orgId, ['owner','admin']);
-    }
-
-    match /projects/{projectId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() &&
-                   (projectId in request.auth.token.projectRoles) &&
-                   ('manager' in request.auth.token.projectRoles[projectId]);
-    }
-  }
-}
-```
+- 規則：基線資料庫安全規則覆蓋核心集合的 CRUD 權限
 
 ### 4) 事件匯流排與規則引擎 MVP（對應 #19 與各模組事件）
-- **最小落地**：Cloud Functions 事件觸發
-  - Firestore Triggers：`users.onCreate`、`organizations.onCreate`、`projects.onCreate` 等
+- **最小落地**：雲端函數事件觸發
+  - 資料庫觸發器：`users.onCreate`、`organizations.onCreate`、`projects.onCreate` 等
   - 事件處理：建立歡迎通知、預設設定、審計紀錄
-- **規則引擎（成就/通知）**：以 Functions 觸發器 + 規則表（Firestore 集合）先行；後續再擴充 CEP/批次
+- **規則引擎（成就/通知）**：以函數觸發器 + 規則表（資料庫集合）先行；後續再擴充 CEP/批次
 
 ### 5) 通知 MVP（對應 通知模組）
 - **In-App**：`/notifications` 集合（狀態：unread/read，類型：achievement/follow/...）
-- **Email**：SendGrid（Functions HTTP/觸發）
-- **Web Push**：FCM（Service Worker + 使用者授權 + Token 維護）
+- **Email**：郵件服務（函數 HTTP/觸發）
+- **Web Push**：雲端訊息（Service Worker + 使用者授權 + Token 維護）
 
 ### 6) 報表/甘特圖資料策略（對應 #12 的虛線聚合）
-- **預先彙總**：以 Functions 產彙總文件（例：每日/每專案統計），前端直接查詢
-- **即時視圖**：小型列表直接以 Firestore 查詢 + 客端過濾；大型報表改用彙總文件
+- **預先彙總**：以函數產彙總文件（例：每日/每專案統計），前端直接查詢
+- **即時視圖**：小型列表直接以資料庫查詢 + 客端過濾；大型報表改用彙總文件
 - **甘特圖資料**：將任務/里程碑轉換為適配前端的扁平結構（含依賴/時間窗）
 
 ### 7) Phase 1 DoD（Definition of Done）
 - 使用者登入/登出/重設密碼，可見個人檔案
-- 組織建立/查看/切換，路由/按鈕受 ACL 控制
+- 組織建立/查看/切換，路由/按鈕受權限控制
 - 專案建立/任務建立（最小字段），文件可上傳與列表
 - 基本事件：使用者/組織/專案建立 → 產生 In-App 通知
-- 規則：基線 Firestore Security Rules 覆蓋核心集合的 CRUD 權限
+- 規則：基線資料庫安全規則覆蓋核心集合的 CRUD 權限
 - 最少 1 份分析或日報以「彙總文件」方式呈現
 
 ### 8) 技術棧對照（落地映射）
-- **@angular/fire**：Auth（Email/Password）、Firestore（集合/即時/離線）、Storage、Messaging（FCM）
-- **@delon/auth**：Token 儲存/刷新、HTTP 攔截、認證狀態
-- **@delon/acl**：路由守衛、指令/管道、動態權限更新、組織上下文切換
-- **ng-alain / @delon/abc**：清單/表單/卡片/圖表等 UI 組件與樣板
+- **認證服務**：Auth（Email/Password）、資料庫（集合/即時/離線）、Storage、Messaging
+- **認證整合**：Token 儲存/刷新、HTTP 攔截、認證狀態
+- **權限管理**：路由守衛、指令/管道、動態權限更新、組織上下文切換
+- **UI 組件庫**：清單/表單/卡片/圖表等 UI 組件與樣板
 
 ---
 
-**總結**: 這是一個基於 Angular 20 + Firebase + ng-alain 的企業級建築工程管理平台，採用 DDD 架構設計，支援用戶管理、組織管理、專案管理、社交功能、成就系統和通知系統。預估開發週期 8-12 個月，適合中大型開發團隊實施。
+**總結**: 這是一個基於現代 Web 技術的企業級建築工程管理平台，採用 DDD 架構設計，支援用戶管理、組織管理、專案管理、社交功能、成就系統和通知系統。預估開發週期 8-12 個月，適合中大型開發團隊實施。
 
