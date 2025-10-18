@@ -1,0 +1,492 @@
+---
+description: MCP Command Mapping for Zero-Cognition AI Agent Integration
+globs: "**/mcp*/**", "**/command*/**", "**/mapping*/**"
+alwaysApply: false
+---
+
+# MCP COMMAND MAPPING - ZERO-COGNITION INTERFACE
+
+> **TL;DR:** This file serves as the technical lookup table that maps abstract, user-friendly commands to specific MCP tool calls, enabling zero-cognition AI agent integration.
+
+## 🎯 PURPOSE AND SCOPE
+
+### Core Function
+- **Command Translation**: Maps abstract commands to concrete MCP tool calls
+- **Parameter Conversion**: Converts user-friendly parameters to MCP-specific formats
+- **Result Processing**: Transforms MCP responses into user-friendly formats
+- **Error Handling**: Provides fallback mechanisms for failed operations
+
+### Integration Points
+- **Abstract Commands**: From `.cursorrules` and `AGENTS.md`
+- **Concrete Tools**: From `mcp.json` configuration
+- **AI Agent Interface**: Zero-cognition abstraction layer
+
+## 📋 MCP MEMORY SERVER COMMAND MAPPING
+
+### Abstract Command → MCP Tool Mapping
+
+#### `MEMORY.CHECK` → MCP Memory Server Status Check
+```yaml
+Abstract Command: MEMORY.CHECK
+Purpose: Verify MCP Memory Server status and connectivity
+MCP Tools Used:
+  - read_graph: Check graph database connectivity
+  - search_nodes: Verify node search functionality
+Parameters:
+  - query: "system:health"
+  - limit: 1
+Result Processing:
+  - Success: Return "MCP Memory Server: ✅ Connected"
+  - Failure: Return "MCP Memory Server: ❌ Disconnected"
+Error Handling:
+  - Connection timeout: Retry with exponential backoff
+  - Invalid response: Fallback to basic connectivity test
+```
+
+#### `MEMORY.LOAD` → MCP Memory Server Context Loading
+```yaml
+Abstract Command: MEMORY.LOAD
+Purpose: Load MCP Memory Server context and historical data
+MCP Tools Used:
+  - read_graph: Load full graph structure
+  - search_nodes: Search for relevant nodes
+  - open_nodes: Access specific node details
+Parameters:
+  - query: "user:preferences OR project:history"
+  - limit: 50
+Result Processing:
+  - Extract user preferences
+  - Load project history
+  - Build context baseline
+Error Handling:
+  - Empty results: Initialize with default context
+  - Partial results: Use available data with warnings
+```
+
+#### `MEMORY.SAVE` → MCP Memory Server Data Storage
+```yaml
+Abstract Command: MEMORY.SAVE
+Purpose: Save new information to MCP Memory Server
+MCP Tools Used:
+  - create_entities: Create new entities
+  - create_relations: Establish relationships
+  - add_observations: Add observations to existing entities
+Parameters:
+  - entity_type: "task|decision|learning"
+  - content: "Actual content to store"
+  - tags: ["tag1", "tag2"]
+Result Processing:
+  - Success: Return entity ID and confirmation
+  - Failure: Return error details and suggestions
+Error Handling:
+  - Duplicate entities: Merge or update existing
+  - Invalid content: Validate and sanitize
+```
+
+#### `MEMORY.FIND` → MCP Memory Server Search
+```yaml
+Abstract Command: MEMORY.FIND
+Purpose: Search for specific information in MCP Memory Server
+MCP Tools Used:
+  - search_nodes: Search for matching nodes
+  - read_graph: Read graph structure for context
+Parameters:
+  - query: "Search terms or criteria"
+  - filters: ["type", "date", "tags"]
+Result Processing:
+  - Rank results by relevance
+  - Format for user consumption
+  - Provide context and metadata
+Error Handling:
+  - No results: Suggest alternative searches
+  - Too many results: Apply additional filters
+```
+
+#### `MEMORY.RECALL` → MCP Memory Server Retrieval
+```yaml
+Abstract Command: MEMORY.RECALL
+Purpose: Retrieve specific information from MCP Memory Server
+MCP Tools Used:
+  - open_nodes: Access specific node details
+  - read_graph: Read related graph context
+Parameters:
+  - node_id: "Specific node identifier"
+  - include_context: true/false
+Result Processing:
+  - Return node content
+  - Include related context if requested
+  - Format for user consumption
+Error Handling:
+  - Node not found: Return error with suggestions
+  - Access denied: Request appropriate permissions
+```
+
+#### `MEMORY.TAG` → MCP Memory Server Tagging
+```yaml
+Abstract Command: MEMORY.TAG
+Purpose: Add or modify tags for MCP Memory Server entities
+MCP Tools Used:
+  - add_observations: Add tag observations
+  - create_relations: Create tag relationships
+Parameters:
+  - entity_id: "Target entity identifier"
+  - tags: ["new", "tags", "to", "add"]
+  - operation: "add|remove|replace"
+Result Processing:
+  - Success: Return updated tag list
+  - Failure: Return error details
+Error Handling:
+  - Invalid entity: Verify entity exists
+  - Tag conflicts: Resolve naming conflicts
+```
+
+#### `MEMORY.DELETE` → MCP Memory Server Deletion
+```yaml
+Abstract Command: MEMORY.DELETE
+Purpose: Remove information from MCP Memory Server
+MCP Tools Used:
+  - delete_entities: Remove specific entities
+  - delete_relations: Remove relationships
+Parameters:
+  - entity_id: "Entity to delete"
+  - cascade: true/false
+  - confirmation: "CONFIRM_DELETE"
+Result Processing:
+  - Success: Return deletion confirmation
+  - Failure: Return error details
+Error Handling:
+  - Confirmation required: Request explicit confirmation
+  - Cascade effects: Warn about related deletions
+```
+
+#### `MEMORY.HEALTH` → MCP Memory Server Health Check
+```yaml
+Abstract Command: MEMORY.HEALTH
+Purpose: Comprehensive health check of MCP Memory Server
+MCP Tools Used:
+  - read_graph: Check graph integrity
+  - search_nodes: Test search functionality
+  - open_nodes: Test node access
+Parameters:
+  - deep_check: true/false
+  - include_metrics: true/false
+Result Processing:
+  - Return health status
+  - Include performance metrics
+  - Provide recommendations
+Error Handling:
+  - Partial failures: Report specific issues
+  - Complete failure: Suggest recovery steps
+```
+
+#### `MEMORY.SUMMARY` → MCP Memory Server Summary
+```yaml
+Abstract Command: MEMORY.SUMMARY
+Purpose: Generate summary of MCP Memory Server contents
+MCP Tools Used:
+  - read_graph: Read full graph structure
+  - search_nodes: Count different node types
+Parameters:
+  - summary_type: "overview|detailed|statistics"
+  - date_range: "last_week|last_month|all_time"
+Result Processing:
+  - Generate formatted summary
+  - Include key statistics
+  - Highlight important trends
+Error Handling:
+  - Large datasets: Use sampling for performance
+  - Empty database: Return initialization suggestions
+```
+
+## 📚 MCP CONTEXT7 COMMAND MAPPING
+
+### Abstract Command → MCP Context7 Tool Mapping
+
+#### `DOCS.FIND` → MCP Context7 Library Resolution
+```yaml
+Abstract Command: DOCS.FIND
+Purpose: Find relevant documentation libraries
+MCP Tools Used:
+  - resolve-library-id: Search for library matches
+Parameters:
+  - library_name: "Name of library to find"
+  - category: "framework|library|tool"
+Result Processing:
+  - Return matching libraries
+  - Rank by relevance and trust score
+  - Provide selection recommendations
+Error Handling:
+  - No matches: Suggest alternative searches
+  - Ambiguous matches: Request clarification
+```
+
+#### `DOCS.GET` → MCP Context7 Documentation Retrieval
+```yaml
+Abstract Command: DOCS.GET
+Purpose: Retrieve specific documentation content
+MCP Tools Used:
+  - get-library-docs: Fetch documentation
+Parameters:
+  - library_id: "Context7-compatible library ID"
+  - topic: "Specific topic to focus on"
+  - tokens: 5000
+Result Processing:
+  - Return formatted documentation
+  - Include code examples
+  - Provide usage guidance
+Error Handling:
+  - Library not found: Suggest alternatives
+  - Content unavailable: Return partial results
+```
+
+#### `DOCS.SEARCH` → MCP Context7 Content Search
+```yaml
+Abstract Command: DOCS.SEARCH
+Purpose: Search within documentation content
+MCP Tools Used:
+  - get-library-docs: Fetch documentation
+  - resolve-library-id: Find relevant libraries
+Parameters:
+  - search_term: "Terms to search for"
+  - library_filter: "Specific library or category"
+Result Processing:
+  - Return matching content
+  - Highlight search terms
+  - Provide context and examples
+Error Handling:
+  - No results: Suggest broader searches
+  - Too many results: Apply additional filters
+```
+
+#### `DOCS.HELP` → MCP Context7 Usage Help
+```yaml
+Abstract Command: DOCS.HELP
+Purpose: Get help with documentation usage
+MCP Tools Used:
+  - resolve-library-id: Find help resources
+Parameters:
+  - help_topic: "Specific help topic"
+  - user_level: "beginner|intermediate|advanced"
+Result Processing:
+  - Return help content
+  - Include examples and tutorials
+  - Provide next steps
+Error Handling:
+  - Topic not found: Suggest related topics
+  - Level mismatch: Adjust content complexity
+```
+
+#### `DOCS.EXAMPLES` → MCP Context7 Code Examples
+```yaml
+Abstract Command: DOCS.EXAMPLES
+Purpose: Get code examples for specific topics
+MCP Tools Used:
+  - get-library-docs: Fetch documentation with examples
+Parameters:
+  - library_id: "Target library"
+  - example_type: "basic|advanced|integration"
+Result Processing:
+  - Return relevant code examples
+  - Include explanations
+  - Provide runnable code
+Error Handling:
+  - No examples: Suggest alternative resources
+  - Outdated examples: Flag version issues
+```
+
+#### `DOCS.API` → MCP Context7 API Documentation
+```yaml
+Abstract Command: DOCS.API
+Purpose: Get API documentation and references
+MCP Tools Used:
+  - get-library-docs: Fetch API documentation
+Parameters:
+  - library_id: "Target library"
+  - api_section: "Specific API section"
+Result Processing:
+  - Return API documentation
+  - Include method signatures
+  - Provide usage examples
+Error Handling:
+  - API not found: Suggest alternatives
+  - Incomplete docs: Flag missing sections
+```
+
+#### `DOCS.CACHE` → MCP Context7 Cache Management
+```yaml
+Abstract Command: DOCS.CACHE
+Purpose: Manage documentation cache
+MCP Tools Used:
+  - get-library-docs: Fetch fresh content
+Parameters:
+  - action: "clear|refresh|status"
+  - library_id: "Specific library or all"
+Result Processing:
+  - Return cache status
+  - Confirm cache operations
+  - Provide performance metrics
+Error Handling:
+  - Cache errors: Suggest manual refresh
+  - Performance issues: Recommend optimization
+```
+
+#### `DOCS.UPDATE` → MCP Context7 Content Update
+```yaml
+Abstract Command: DOCS.UPDATE
+Purpose: Update documentation content
+MCP Tools Used:
+  - get-library-docs: Fetch latest content
+Parameters:
+  - library_id: "Target library"
+  - force_update: true/false
+Result Processing:
+  - Return updated content
+  - Highlight changes
+  - Provide update summary
+Error Handling:
+  - Update failed: Retry with different parameters
+  - Content unchanged: Confirm current version
+```
+
+#### `DOCS.VERSION` → MCP Context7 Version Information
+```yaml
+Abstract Command: DOCS.VERSION
+Purpose: Get version information for libraries
+MCP Tools Used:
+  - resolve-library-id: Get library versions
+Parameters:
+  - library_id: "Target library"
+  - include_history: true/false
+Result Processing:
+  - Return version information
+  - Include release notes
+  - Provide upgrade guidance
+Error Handling:
+  - Version not found: Suggest alternatives
+  - Outdated info: Flag potential issues
+```
+
+## 🔄 COMMAND EXECUTION FLOW
+
+### 1. Command Reception
+```mermaid
+graph TD
+    User[User Input] --> Parser[Command Parser]
+    Parser --> Validator[Command Validator]
+    Validator --> Mapper[Command Mapper]
+    Mapper --> Executor[MCP Tool Executor]
+    Executor --> Processor[Result Processor]
+    Processor --> User
+```
+
+### 2. Error Handling Flow
+```mermaid
+graph TD
+    Error[Error Occurred] --> Classifier[Error Classifier]
+    Classifier --> Retry{Retry Possible?}
+    Retry -->|Yes| RetryLogic[Retry Logic]
+    Retry -->|No| Fallback[Fallback Handler]
+    RetryLogic --> Executor[MCP Tool Executor]
+    Fallback --> User[User Notification]
+```
+
+### 3. Result Processing Flow
+```mermaid
+graph TD
+    RawResult[Raw MCP Result] --> Validator[Result Validator]
+    Validator --> Formatter[Result Formatter]
+    Formatter --> Enhancer[Content Enhancer]
+    Enhancer --> User[User Response]
+```
+
+## 🛠️ IMPLEMENTATION GUIDELINES
+
+### Command Mapping Rules
+1. **One-to-One Mapping**: Each abstract command maps to one primary MCP tool
+2. **Fallback Support**: Provide fallback mechanisms for failed operations
+3. **Parameter Validation**: Validate all parameters before MCP tool calls
+4. **Result Standardization**: Standardize all results for consistent user experience
+
+### Error Handling Standards
+1. **Graceful Degradation**: Provide partial results when possible
+2. **User-Friendly Messages**: Convert technical errors to user-friendly messages
+3. **Recovery Suggestions**: Provide actionable recovery suggestions
+4. **Logging**: Log all errors for debugging and improvement
+
+### Performance Optimization
+1. **Caching**: Cache frequently accessed data
+2. **Batch Operations**: Group related operations when possible
+3. **Lazy Loading**: Load data only when needed
+4. **Connection Pooling**: Reuse MCP connections
+
+## 📊 MONITORING AND METRICS
+
+### Key Metrics
+- **Command Success Rate**: Percentage of successful command executions
+- **Response Time**: Average time for command completion
+- **Error Rate**: Frequency of command failures
+- **Cache Hit Rate**: Effectiveness of caching mechanisms
+
+### Monitoring Points
+- **MCP Tool Calls**: Track all MCP tool invocations
+- **Command Mapping**: Monitor mapping accuracy
+- **Error Patterns**: Identify common failure modes
+- **Performance Bottlenecks**: Locate slow operations
+
+## 🔧 MAINTENANCE AND UPDATES
+
+### Regular Maintenance
+1. **Command Validation**: Verify all commands work correctly
+2. **Error Analysis**: Analyze error patterns and improve handling
+3. **Performance Review**: Optimize slow operations
+4. **Documentation Updates**: Keep mapping documentation current
+
+### Update Procedures
+1. **New Commands**: Add new command mappings as needed
+2. **MCP Tool Changes**: Update mappings when MCP tools change
+3. **Error Handling**: Improve error handling based on experience
+4. **Performance Tuning**: Optimize based on usage patterns
+
+## 🎯 USAGE EXAMPLES
+
+### Example 1: Memory Check
+```yaml
+User Input: "MEMORY.CHECK"
+Mapped To: read_graph + search_nodes
+Parameters: {query: "system:health", limit: 1}
+Result: "MCP Memory Server: ✅ Connected"
+```
+
+### Example 2: Documentation Search
+```yaml
+User Input: "DOCS.FIND React"
+Mapped To: resolve-library-id
+Parameters: {library_name: "React"}
+Result: "Found React libraries: /facebook/react (Trust: 9.5)"
+```
+
+### Example 3: Memory Save
+```yaml
+User Input: "MEMORY.SAVE task:implement-user-auth"
+Mapped To: create_entities + add_observations
+Parameters: {entity_type: "task", content: "implement-user-auth", tags: ["auth", "implementation"]}
+Result: "Task saved with ID: task_12345"
+```
+
+## 🚀 FUTURE ENHANCEMENTS
+
+### Planned Features
+1. **Command Chaining**: Support for multi-step command sequences
+2. **Smart Caching**: Intelligent caching based on usage patterns
+3. **Predictive Commands**: Suggest commands based on context
+4. **Custom Mappings**: Allow users to define custom command mappings
+
+### Integration Opportunities
+1. **Graph Bank Integration**: Enhanced integration with Graph Bank system
+2. **Context7 Expansion**: Support for additional documentation sources
+3. **AI Agent Enhancement**: Improved AI agent command understanding
+4. **Performance Optimization**: Advanced performance tuning capabilities
+
+---
+
+**Note**: This mapping file serves as the technical bridge between abstract user commands and concrete MCP tool calls, enabling zero-cognition AI agent integration while maintaining full functionality and error resilience.
