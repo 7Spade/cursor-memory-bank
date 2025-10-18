@@ -1,277 +1,207 @@
 ---
-description: Detailed INIT mode instructions for comprehensive system initialization and health checks
-globs: "**/init-mode-detailed*/**"
-alwaysApply: false
+alwaysApply: true
 ---
 
-# INIT MODE - 詳細系統初始化指令
+# GRAPH BANK INIT MODE
 
-> **TL;DR:** 提供統一的系統初始化、健康檢查和環境驗證流程，確保所有組件準備就緒後才開始後續模式。
+Your role is to perform comprehensive system initialization, health checks, and environment validation to ensure all components are ready before proceeding to subsequent modes.
+
+> **TL;DR:** Provides unified system initialization, health checks, and environment validation processes to ensure all components are ready before starting subsequent modes.
 
 ```mermaid
 graph TD
-    %% Main Command Detection
-    Start["User Command"] --> CommandDetect{"Command<br>Type?"}
+    Start["🚀 START INIT MODE"] --> ReadDocs["📚 Read Reference Documents<br>.cursor/rules/isolation_rules/main.mdc"]
     
-    CommandDetect -->|"INIT"| INIT["INIT Mode"]
-    CommandDetect -->|"VAN"| VAN["VAN Mode"]
-    CommandDetect -->|"PLAN"| Plan["PLAN Mode"]
-    CommandDetect -->|"CREATIVE"| Creative["CREATIVE Mode"]
-    CommandDetect -->|"IMPLEMENT"| Implement["IMPLEMENT Mode"]
-    CommandDetect -->|"QA"| QA["QA Mode"]
-    
-    %% Immediate Response Node
-    INIT --> InitResp["Respond: OK INIT"]
-    VAN --> VanResp["Respond: OK VAN"]
-    Plan --> PlanResp["Respond: OK PLAN"]
-    Creative --> CreativeResp["Respond: OK CREATIVE"]
-    Implement --> ImplResp["Respond: OK IMPLEMENT"]
-    QA --> QAResp["Respond: OK QA"]
-    
-    %% System Health Check
-    InitResp --> HealthCheck["System Health Check"]
-    HealthCheck --> MCPCheck["MCP Memory Server<br>Status Check"]
-    MCPCheck --> GraphCheck["Graph Bank<br>Structure Check"]
-    GraphCheck --> EnvCheck["Environment<br>Validation"]
-    EnvCheck --> ProjCheck["Project Structure<br>Check"]
+    %% Initialization
+    ReadDocs --> HealthCheck["🔍 System Health Check"]
+    HealthCheck --> MCPCheck["🧠 MCP Graph Server<br>Status Check"]
+    MCPCheck --> GraphCheck["📁 Graph Bank<br>Structure Check"]
+    GraphCheck --> EnvCheck["⚙️ Environment<br>Validation"]
+    EnvCheck --> ProjCheck["📂 Project Structure<br>Check"]
     
     %% Initialization Process
-    ProjCheck --> InitMCP["Initialize MCP<br>Memory Server"]
-    InitMCP --> InitGraph["Initialize Graph Bank<br>Files"]
-    InitGraph --> InitContext["Establish Base<br>Context"]
-    InitContext --> StatusReport["Generate Status<br>Report"]
+    ProjCheck --> InitMCP["🔧 Initialize MCP<br>Graph Server"]
+    InitMCP --> InitGraph["📝 Initialize Graph Bank<br>Files"]
+    InitGraph --> InitContext["🌐 Establish Base<br>Context"]
+    InitContext --> StatusReport["📊 Generate Status<br>Report"]
     
     %% Verification
-    StatusReport --> VerifyInit{"System<br>Ready?"}
-    VerifyInit -->|"Yes"| CompleteInit["INIT Process<br>Complete"]
-    VerifyInit -->|"No"| FixIssues["Fix Identified<br>Issues"]
+    StatusReport --> VerifyInit{"✅ System<br>Ready?"}
+    VerifyInit -->|"Yes"| CompleteInit["🏁 INIT Process<br>Complete"]
+    VerifyInit -->|"No"| FixIssues["🔧 Fix Identified<br>Issues"]
     FixIssues --> HealthCheck
     
     %% Mode Transitions
-    CompleteInit -->|"Ready for VAN"| TransToVan["→ VAN Mode"]
-    CompleteInit -->|"Ready for PLAN"| TransToPlan["→ PLAN Mode"]
-    CompleteInit -->|"Ready for IMPLEMENT"| TransToImpl["→ IMPLEMENT Mode"]
+    CompleteInit -->|"Level 1"| TransToVan["→ VAN Mode"]
+    CompleteInit -->|"Level 2-4"| TransToPlan["→ PLAN Mode"]
+    CompleteInit -->|"Ready"| TransToImpl["→ IMPLEMENT Mode"]
     
-    %% Other modes continue with Graph Bank Check
-    VanResp --> CheckGB_Van["Check Graph Bank<br>& tasks.md Status"]
-    PlanResp --> CheckGB_Plan["Check Graph Bank<br>& tasks.md Status"]
-    CreativeResp --> CheckGB_Creative["Check Graph Bank<br>& tasks.md Status"]
-    ImplResp --> CheckGB_Impl["Check Graph Bank<br>& tasks.md Status"]
-    QAResp --> CheckGB_QA["Check Graph Bank<br>& tasks.md Status"]
-    
-    %% Rule Loading for other modes
-    CheckGB_Van --> LoadVan["Load Rule:<br>isolation_rules/visual-maps/van_mode_split/van-mode-map"]
-    CheckGB_Plan --> LoadPlan["Load Rule:<br>isolation_rules/visual-maps/plan-mode-map"]
-    CheckGB_Creative --> LoadCreative["Load Rule:<br>isolation_rules/visual-maps/creative-mode-map"]
-    CheckGB_Impl --> LoadImpl["Load Rule:<br>isolation_rules/visual-maps/implement-mode-map"]
-    CheckGB_QA --> LoadQA["Load Rule:<br>isolation_rules/visual-maps/qa-mode-map"]
-    
-    %% Rule Execution
-    LoadVan --> ExecVan["Execute Process<br>in Rule"]
-    LoadPlan --> ExecPlan["Execute Process<br>in Rule"]
-    LoadCreative --> ExecCreative["Execute Process<br>in Rule"]
-    LoadImpl --> ExecImpl["Execute Process<br>in Rule"]
-    LoadQA --> ExecQA["Execute Process<br>in Rule"]
-    
-    %% Graph Bank Updates
-    ExecVan --> UpdateGB_Van["Update Graph Bank<br>& tasks.md"]
-    ExecPlan --> UpdateGB_Plan["Update Graph Bank<br>& tasks.md"]
-    ExecCreative --> UpdateGB_Creative["Update Graph Bank<br>& tasks.md"]
-    ExecImpl --> UpdateGB_Impl["Update Graph Bank<br>& tasks.md"]
-    ExecQA --> UpdateGB_QA["Update Graph Bank<br>& tasks.md"]
-    
-    %% Completion
-    UpdateGB_Van --> CompleteVan["VAN Process<br>Complete"]
-    UpdateGB_Plan --> CompletePlan["PLAN Process<br>Complete"]
-    UpdateGB_Creative --> CompleteCreative["CREATIVE Process<br>Complete"]
-    UpdateGB_Impl --> CompleteImpl["IMPLEMENT Process<br>Complete"]
-    UpdateGB_QA --> CompleteQA["QA Process<br>Complete"]
+    %% Validation Options
+    Start -.-> Validation["🔍 VALIDATION OPTIONS:<br>- System health check<br>- Environment validation<br>- Component initialization<br>- Status reporting<br>- Mode transition"]
     
     %% Styling
-    style INIT fill:#4da6ff,stroke:#0066cc,color:white
+    style Start fill:#4da6ff,stroke:#0066cc,color:white
+    style ReadDocs fill:#80bfff,stroke:#4da6ff,color:black
     style HealthCheck fill:#ffa64d,stroke:#cc7a30,color:white
     style MCPCheck fill:#4dbb5f,stroke:#36873f,color:white
     style GraphCheck fill:#d94dbb,stroke:#a3378a,color:white
     style EnvCheck fill:#4dbbbb,stroke:#368787,color:white
     style ProjCheck fill:#d971ff,stroke:#a33bc2,color:white
-    style CompleteInit fill:#71c2ff,stroke:#3b8ac2,color:white
+    style VerifyInit fill:#d94dbb,stroke:#a3378a,color:white
+    style CompleteInit fill:#5fd94d,stroke:#3da336,color:white
+    style TransToVan fill:#ffa64d,stroke:#cc7a30,color:black
+    style TransToPlan fill:#4dbb5f,stroke:#36873f,color:black
+    style TransToImpl fill:#4da6ff,stroke:#0066cc,color:black
 ```
 
-## 🚀 INIT 模式核心功能
+## IMPLEMENTATION STEPS
 
-### 📋 系統健康檢查
+### Step 1: READ MAIN RULE & CONTEXT FILES
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/main.mdc",
+  should_read_entire_file: true
+})
 
-#### 1. MCP Memory Server 狀態檢查
-```markdown
-## MCP Memory Server 驗證
-- [ ] memory.json 文件存在且格式正確
-- [ ] MCP Memory Server 連接狀態正常
-- [ ] 記憶體數據完整性檢查
-- [ ] 語義搜索功能可用性測試
+read_file({
+  target_file: "tasks.md",
+  should_read_entire_file: true
+})
+
+read_file({
+  target_file: "progress.md",
+  should_read_entire_file: true
+})
 ```
 
-#### 2. Graph Bank 結構檢查
-```markdown
-## Graph Bank 文件驗證
-- [ ] graph-bank/ 目錄存在
-- [ ] tasks.md 文件可讀寫
-- [ ] activeContext.md 文件可讀寫
-- [ ] progress.md 文件可讀寫
-- [ ] 其他必要文件完整性檢查
+### Step 2: LOAD INIT MODE MAP
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/visual-maps/init-mode-map.mdc",
+  should_read_entire_file: true
+})
 ```
 
-#### 3. 環境驗證
-```markdown
-## 開發環境檢查
-- [ ] Node.js 版本符合要求
-- [ ] yarn 包管理器可用
-- [ ] Cursor IDE 版本檢查
-- [ ] 文件系統權限驗證
-- [ ] 網路連接狀態檢查
+### Step 3: LOAD SYSTEM HEALTH CHECK REFERENCES
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Core/system-health-check.mdc",
+  should_read_entire_file: true
+})
+
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Core/environment-validation.mdc",
+  should_read_entire_file: true
+})
 ```
 
-#### 4. 專案結構檢查
-```markdown
-## 專案結構驗證
-- [ ] package.json 文件存在
-- [ ] 專案目錄結構完整
-- [ ] 關鍵配置文件存在
-- [ ] 源碼目錄可訪問
+## INITIALIZATION APPROACH
+
+Your task is to perform comprehensive system initialization, health checks, and environment validation. Focus on ensuring all components are ready before proceeding to subsequent modes.
+
+### System Health Check Process
+
+Perform thorough health checks on all system components to ensure they are functioning correctly and ready for development work.
+
+```mermaid
+graph TD
+    SHC["🔍 SYSTEM HEALTH CHECK"] --> MCP["MCP Graph Server Check"]
+    MCP --> Graph["Graph Bank Structure Check"]
+    Graph --> Env["Environment Validation"]
+    Env --> Proj["Project Structure Check"]
+    Proj --> Report["Generate Health Report"]
+    
+    style SHC fill:#4da6ff,stroke:#0066cc,color:white
+    style MCP fill:#4dbb5f,stroke:#36873f,color:white
+    style Graph fill:#d94dbb,stroke:#a3378a,color:white
+    style Env fill:#4dbbbb,stroke:#368787,color:white
+    style Proj fill:#d971ff,stroke:#a33bc2,color:white
+    style Report fill:#ffa64d,stroke:#cc7a30,color:white
 ```
 
-### 🔧 初始化流程
+### MCP Graph Server Initialization
 
-#### 1. MCP Memory Server 初始化
-```markdown
-## MCP Memory Server 設置
-1. 檢查 memory.json 狀態
-2. 載入現有記憶體上下文
-3. 驗證記憶體系統功能
-4. 建立記憶體連接
-5. 測試語義搜索功能
+Initialize and verify the MCP Graph Server connection, ensuring proper graph management and semantic search capabilities.
+
+```mermaid
+graph TD
+    MCP["🧠 MCP GRAPH SERVER"] --> Check["Check Connection"]
+    Check --> Validate["Validate Graph Structure"]
+    Validate --> Test["Test Semantic Search"]
+    Test --> Init["Initialize Graph Context"]
+    Init --> Ready["Graph Server Ready"]
+    
+    style MCP fill:#4dbb5f,stroke:#36873f,color:white
+    style Check fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Validate fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Test fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Init fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Ready fill:#d6f5dd,stroke:#a3e0ae,color:black
 ```
 
-#### 2. Graph Bank 文件初始化
-```markdown
-## Graph Bank 文件設置
-1. 檢查 graph-bank/ 目錄結構
-2. 驗證 tasks.md 文件狀態
-3. 初始化 activeContext.md
-4. 設置 progress.md 追蹤
-5. 建立必要的子目錄
+### Graph Bank Initialization
+
+Initialize and verify the Graph Bank file structure, ensuring all necessary files are present and accessible.
+
+```mermaid
+graph TD
+    GB["📁 GRAPH BANK INIT"] --> Check["Check Directory Structure"]
+    Check --> Files["Verify Core Files"]
+    Files --> Perms["Check File Permissions"]
+    Perms --> Init["Initialize Missing Files"]
+    Init --> Ready["Graph Bank Ready"]
+    
+    style GB fill:#d94dbb,stroke:#a3378a,color:white
+    style Check fill:#f5d9f0,stroke:#e699d9,color:black
+    style Files fill:#f5d9f0,stroke:#e699d9,color:black
+    style Perms fill:#f5d9f0,stroke:#e699d9,color:black
+    style Init fill:#f5d9f0,stroke:#e699d9,color:black
+    style Ready fill:#f5d9f0,stroke:#e699d9,color:black
 ```
 
-#### 3. 基礎上下文建立
-```markdown
-## 系統上下文設置
-1. 載入專案配置信息
-2. 建立用戶偏好設定
-3. 初始化系統狀態
-4. 設置工作環境變數
-5. 建立會話基線
+## INITIALIZATION DOCUMENTATION
+
+Document each initialization step with clear progress indicators. Start by describing the system state, then perform health checks, initialize components, and conclude with a readiness report.
+
+```mermaid
+graph TD
+    ID["🔧 INITIALIZATION DOCUMENTATION"] --> Start["🚀 START INITIALIZATION"]
+    Start --> Health["System Health Assessment<br>What is the current system state?"]
+    Health --> Check["Component Verification<br>Are all components accessible?"]
+    Check --> Init["Component Initialization<br>Initialize missing or broken components"]
+    Init --> Verify["System Verification<br>Does the system meet requirements?"] 
+    Verify --> Report["Readiness Report<br>System ready for development"]
+    Report --> Complete["🏁 INITIALIZATION COMPLETE"]
+    
+    style ID fill:#4da6ff,stroke:#0066cc,color:white
+    style Start fill:#cce6ff,stroke:#80bfff,color:black
+    style Health fill:#cce6ff,stroke:#80bfff,color:black
+    style Check fill:#cce6ff,stroke:#80bfff,color:black
+    style Init fill:#cce6ff,stroke:#80bfff,color:black
+    style Verify fill:#cce6ff,stroke:#80bfff,color:black
+    style Report fill:#cce6ff,stroke:#80bfff,color:black
+    style Complete fill:#cce6ff,stroke:#80bfff,color:black
 ```
 
-### 📊 狀態報告生成
+## VERIFICATION
 
-#### 系統狀態概覽
-```markdown
-## INIT 完成報告
-### ✅ 系統組件狀態
-- MCP Memory Server: [READY/ERROR]
-- Graph Bank: [READY/ERROR]
-- 開發環境: [READY/ERROR]
-- 專案結構: [READY/ERROR]
-
-### 📋 下一步建議
-- Level 1 任務: → VAN → IMPLEMENT
-- Level 2 任務: → VAN → PLAN → IMPLEMENT → REFLECT
-- Level 3-4 任務: → VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
-
-### ⚠️ 注意事項
-- 任何組件狀態為 ERROR 時，請先修復問題
-- 確保所有檢查項目都通過後再進行後續模式
+```mermaid
+graph TD
+    V["✅ VERIFICATION CHECKLIST"] --> H["All health checks completed?"]
+    V --> M["MCP Graph Server initialized?"]
+    V --> G["Graph Bank structure verified?"]
+    V --> E["Environment validation passed?"]
+    V --> P["Project structure confirmed?"]
+    V --> S["Status report generated?"]
+    
+    H & M & G & E & P & S --> Decision{"All Verified?"}
+    Decision -->|"Yes"| Complete["Ready for next mode"]
+    Decision -->|"No"| Fix["Complete missing items"]
+    
+    style V fill:#4dbbbb,stroke:#368787,color:white
+    style Decision fill:#ffa64d,stroke:#cc7a30,color:white
+    style Complete fill:#5fd94d,stroke:#3da336,color:white
+    style Fix fill:#ff5555,stroke:#cc0000,color:white
 ```
 
-## 🔄 與其他模式的整合
-
-### VAN 模式整合
-```markdown
-## VAN 模式準備
-INIT 完成後，VAN 模式可以專注於：
-- 專案結構分析
-- 複雜度確定
-- 技術棧識別
-- 任務級別評估
-
-不再需要重複進行系統初始化檢查
-```
-
-### 其他模式整合
-```markdown
-## 模式間協作
-- PLAN 模式: 專注於任務規劃和分解
-- CREATIVE 模式: 專注於設計決策和架構探索
-- IMPLEMENT 模式: 專注於代碼實施和構建
-- REFLECT 模式: 專注於代碼審查和學習
-- ARCHIVE 模式: 專注於文件歸檔和知識管理
-```
-
-## 📝 使用指南
-
-### 何時使用 INIT 模式
-- 開始新專案時
-- 系統環境發生變化時
-- 長時間未使用系統後重新啟動時
-- 遇到系統錯誤需要重新初始化時
-- 升級系統組件後需要驗證時
-
-### INIT 模式檢查清單
-```markdown
-## INIT 模式執行清單
-- [ ] 執行系統健康檢查
-- [ ] 驗證 MCP Memory Server 狀態
-- [ ] 檢查 Graph Bank 文件結構
-- [ ] 驗證開發環境配置
-- [ ] 檢查專案結構完整性
-- [ ] 初始化系統組件
-- [ ] 建立基礎上下文
-- [ ] 生成狀態報告
-- [ ] 確認系統準備就緒
-- [ ] 提供下一步建議
-```
-
-## 🎯 成功標準
-
-### INIT 模式成功完成標誌
-- 所有系統組件狀態為 READY
-- MCP Memory Server 連接正常
-- Graph Bank 文件結構完整
-- 開發環境配置正確
-- 專案結構完整可用
-- 系統上下文建立完成
-- 狀態報告生成成功
-
-### 錯誤處理
-```markdown
-## 常見問題解決
-- MCP Memory Server 連接失敗: 檢查 memory.json 文件
-- Graph Bank 文件缺失: 重新創建必要文件
-- 環境配置錯誤: 檢查 Node.js 和 yarn 安裝
-- 專案結構問題: 檢查目錄結構和配置文件
-- 權限問題: 檢查文件系統權限設置
-```
-
-## 🔄 持續改進
-
-### 監控和優化
-- 定期檢查系統健康狀態
-- 優化初始化流程效率
-- 改進錯誤檢測和處理
-- 增強狀態報告詳細度
-- 完善與其他模式的整合
-
-### 版本更新
-- 跟隨 MCP Memory Server 更新
-- 適配 Graph Bank 結構變化
-- 支持新的開發環境要求
-- 適配專案結構變化
+Before completing the initialization phase, verify that all health checks have been completed, MCP Graph Server is initialized, Graph Bank structure is verified, environment validation has passed, project structure is confirmed, and status report has been generated. Update tasks.md with the initialization status and prepare for the next appropriate mode.

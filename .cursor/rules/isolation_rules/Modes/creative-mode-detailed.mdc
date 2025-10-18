@@ -2,7 +2,7 @@
 alwaysApply: true
 ---
 
-# MEMORY BANK CREATIVE MODE
+# GRAPH BANK CREATIVE MODE
 
 Your role is to perform detailed design and architecture work for components flagged during the planning phase.
 
@@ -45,10 +45,10 @@ graph TD
     UIGuidelines --> UIVerify["✓ Verify Against<br>Requirements"]
     
     %% Verification & Update
-    ArchVerify & AlgoVerify & UIVerify --> UpdateMemoryBank["📝 Update Memory Bank<br>with Design Decisions"]
+    ArchVerify & AlgoVerify & UIVerify --> UpdateGraphBank["📝 Update Graph Bank<br>with Design Decisions"]
     
     %% Check for More Components
-    UpdateMemoryBank --> MoreComponents{"📋 More<br>Components?"}
+    UpdateGraphBank --> MoreComponents{"📋 More<br>Components?"}
     MoreComponents -->|"Yes"| TypeCheck
     MoreComponents -->|"No"| VerifyAll["✅ Verify All Components<br>Have Completed<br>Creative Phases"]
     
@@ -266,7 +266,7 @@ graph TD
     V --> A["Pros and cons analyzed for each option?"]
     V --> R["Recommendations justified against requirements?"]
     V --> I["Implementation guidelines provided?"]
-    V --> D["Design decisions documented in Memory Bank?"]
+    V --> D["Design decisions documented in Graph Bank?"]
     
     C & O & A & R & I & D --> Decision{"All Verified?"}
     Decision -->|"Yes"| Complete["Ready for IMPLEMENT mode"]
@@ -279,7 +279,7 @@ graph TD
 ```
 
 Before completing the creative phase, verify that all flagged components have been addressed with multiple options explored, pros and cons analyzed, recommendations justified, and implementation guidelines provided. Update tasks.md with the design decisions and prepare for the implementation phase. 
-# MEMORY BANK CREATIVE MODE
+# GRAPH BANK CREATIVE MODE
 
 Your role is to perform detailed design and architecture work for components flagged during the planning phase.
 
@@ -322,10 +322,10 @@ graph TD
     UIGuidelines --> UIVerify["✓ Verify Against<br>Requirements"]
     
     %% Verification & Update
-    ArchVerify & AlgoVerify & UIVerify --> UpdateMemoryBank["📝 Update Memory Bank<br>with Design Decisions"]
+    ArchVerify & AlgoVerify & UIVerify --> UpdateGraphBank["📝 Update Graph Bank<br>with Design Decisions"]
     
     %% Check for More Components
-    UpdateMemoryBank --> MoreComponents{"📋 More<br>Components?"}
+    UpdateGraphBank --> MoreComponents{"📋 More<br>Components?"}
     MoreComponents -->|"Yes"| TypeCheck
     MoreComponents -->|"No"| VerifyAll["✅ Verify All Components<br>Have Completed<br>Creative Phases"]
     
@@ -543,7 +543,7 @@ graph TD
     V --> A["Pros and cons analyzed for each option?"]
     V --> R["Recommendations justified against requirements?"]
     V --> I["Implementation guidelines provided?"]
-    V --> D["Design decisions documented in Memory Bank?"]
+    V --> D["Design decisions documented in Graph Bank?"]
     
     C & O & A & R & I & D --> Decision{"All Verified?"}
     Decision -->|"Yes"| Complete["Ready for IMPLEMENT mode"]

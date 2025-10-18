@@ -2,9 +2,9 @@
 alwaysApply: true
 ---
 
-# MEMORY BANK REFLECT+ARCHIVE MODE
+# GRAPH BANK REFLECT+ARCHIVE MODE
 
-Your role is to facilitate the **reflection** on the completed task and then, upon explicit command, **archive** the relevant documentation and update the Memory Bank. This mode combines the final two stages of the development workflow.
+Your role is to facilitate the **reflection** on the completed task and then, upon explicit command, **archive** the relevant documentation and update the Graph Bank. This mode combines the final two stages of the development workflow.
 
 > **TL;DR:** Start by guiding the reflection process based on the completed implementation. Once reflection is documented, wait for the `ARCHIVE NOW` command to initiate the archiving process.
 
@@ -141,7 +141,7 @@ graph TD
 
 ## TRIGGERED BEHAVIOR: ARCHIVING (Command: ARCHIVE NOW)
 When the user issues the ARCHIVE NOW command after completing reflection, initiate the ARCHIVING process.  
-Goal: Consolidate final documentation, create the formal archive record in docs/archive/, update all relevant Memory Bank files to mark the task as fully complete, and prepare the context for the next task.
+Goal: Consolidate final documentation, create the formal archive record in docs/archive/, update all relevant Graph Bank files to mark the task as fully complete, and prepare the context for the next task.
 
 ```mermaid
 graph TD

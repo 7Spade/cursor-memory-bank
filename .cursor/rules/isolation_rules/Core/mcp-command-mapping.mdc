@@ -21,14 +21,14 @@ alwaysApply: false
 - **Concrete Tools**: From `mcp.json` configuration
 - **AI Agent Interface**: Zero-cognition abstraction layer
 
-## 📋 MCP MEMORY SERVER COMMAND MAPPING
+## 📋 MCP GRAPH SERVER COMMAND MAPPING
 
 ### Abstract Command → MCP Tool Mapping
 
-#### `MEMORY.CHECK` → MCP Memory Server Status Check
+#### `GRAPH.CHECK` → MCP Graph Server Status Check
 ```yaml
-Abstract Command: MEMORY.CHECK
-Purpose: Verify MCP Memory Server status and connectivity
+Abstract Command: GRAPH.CHECK
+Purpose: Verify MCP Graph Server status and connectivity
 MCP Tools Used:
   - read_graph: Check graph database connectivity
   - search_nodes: Verify node search functionality
@@ -36,17 +36,17 @@ Parameters:
   - query: "system:health"
   - limit: 1
 Result Processing:
-  - Success: Return "MCP Memory Server: ✅ Connected"
-  - Failure: Return "MCP Memory Server: ❌ Disconnected"
+  - Success: Return "MCP Graph Server: ✅ Connected"
+  - Failure: Return "MCP Graph Server: ❌ Disconnected"
 Error Handling:
   - Connection timeout: Retry with exponential backoff
   - Invalid response: Fallback to basic connectivity test
 ```
 
-#### `MEMORY.LOAD` → MCP Memory Server Context Loading
+#### `GRAPH.LOAD` → MCP Graph Server Context Loading
 ```yaml
-Abstract Command: MEMORY.LOAD
-Purpose: Load MCP Memory Server context and historical data
+Abstract Command: GRAPH.LOAD
+Purpose: Load MCP Graph Server context and historical data
 MCP Tools Used:
   - read_graph: Load full graph structure
   - search_nodes: Search for relevant nodes
@@ -63,10 +63,10 @@ Error Handling:
   - Partial results: Use available data with warnings
 ```
 
-#### `MEMORY.SAVE` → MCP Memory Server Data Storage
+#### `GRAPH.SAVE` → MCP Graph Server Data Storage
 ```yaml
-Abstract Command: MEMORY.SAVE
-Purpose: Save new information to MCP Memory Server
+Abstract Command: GRAPH.SAVE
+Purpose: Save new information to MCP Graph Server
 MCP Tools Used:
   - create_entities: Create new entities
   - create_relations: Establish relationships
@@ -83,10 +83,10 @@ Error Handling:
   - Invalid content: Validate and sanitize
 ```
 
-#### `MEMORY.FIND` → MCP Memory Server Search
+#### `GRAPH.FIND` → MCP Graph Server Search
 ```yaml
-Abstract Command: MEMORY.FIND
-Purpose: Search for specific information in MCP Memory Server
+Abstract Command: GRAPH.FIND
+Purpose: Search for specific information in MCP Graph Server
 MCP Tools Used:
   - search_nodes: Search for matching nodes
   - read_graph: Read graph structure for context
@@ -102,10 +102,10 @@ Error Handling:
   - Too many results: Apply additional filters
 ```
 
-#### `MEMORY.RECALL` → MCP Memory Server Retrieval
+#### `GRAPH.RECALL` → MCP Graph Server Retrieval
 ```yaml
-Abstract Command: MEMORY.RECALL
-Purpose: Retrieve specific information from MCP Memory Server
+Abstract Command: GRAPH.RECALL
+Purpose: Retrieve specific information from MCP Graph Server
 MCP Tools Used:
   - open_nodes: Access specific node details
   - read_graph: Read related graph context
@@ -121,10 +121,10 @@ Error Handling:
   - Access denied: Request appropriate permissions
 ```
 
-#### `MEMORY.TAG` → MCP Memory Server Tagging
+#### `GRAPH.TAG` → MCP Graph Server Tagging
 ```yaml
-Abstract Command: MEMORY.TAG
-Purpose: Add or modify tags for MCP Memory Server entities
+Abstract Command: GRAPH.TAG
+Purpose: Add or modify tags for MCP Graph Server entities
 MCP Tools Used:
   - add_observations: Add tag observations
   - create_relations: Create tag relationships
@@ -140,10 +140,10 @@ Error Handling:
   - Tag conflicts: Resolve naming conflicts
 ```
 
-#### `MEMORY.DELETE` → MCP Memory Server Deletion
+#### `GRAPH.DELETE` → MCP Graph Server Deletion
 ```yaml
-Abstract Command: MEMORY.DELETE
-Purpose: Remove information from MCP Memory Server
+Abstract Command: GRAPH.DELETE
+Purpose: Remove information from MCP Graph Server
 MCP Tools Used:
   - delete_entities: Remove specific entities
   - delete_relations: Remove relationships
@@ -159,10 +159,10 @@ Error Handling:
   - Cascade effects: Warn about related deletions
 ```
 
-#### `MEMORY.HEALTH` → MCP Memory Server Health Check
+#### `GRAPH.HEALTH` → MCP Graph Server Health Check
 ```yaml
-Abstract Command: MEMORY.HEALTH
-Purpose: Comprehensive health check of MCP Memory Server
+Abstract Command: GRAPH.HEALTH
+Purpose: Comprehensive health check of MCP Graph Server
 MCP Tools Used:
   - read_graph: Check graph integrity
   - search_nodes: Test search functionality
@@ -179,10 +179,10 @@ Error Handling:
   - Complete failure: Suggest recovery steps
 ```
 
-#### `MEMORY.SUMMARY` → MCP Memory Server Summary
+#### `GRAPH.SUMMARY` → MCP Graph Server Summary
 ```yaml
-Abstract Command: MEMORY.SUMMARY
-Purpose: Generate summary of MCP Memory Server contents
+Abstract Command: GRAPH.SUMMARY
+Purpose: Generate summary of MCP Graph Server contents
 MCP Tools Used:
   - read_graph: Read full graph structure
   - search_nodes: Count different node types
@@ -449,12 +449,12 @@ graph TD
 
 ## 🎯 USAGE EXAMPLES
 
-### Example 1: Memory Check
+### Example 1: Graph Check
 ```yaml
-User Input: "MEMORY.CHECK"
+User Input: "GRAPH.CHECK"
 Mapped To: read_graph + search_nodes
 Parameters: {query: "system:health", limit: 1}
-Result: "MCP Memory Server: ✅ Connected"
+Result: "MCP Graph Server: ✅ Connected"
 ```
 
 ### Example 2: Documentation Search
@@ -465,9 +465,9 @@ Parameters: {library_name: "React"}
 Result: "Found React libraries: /facebook/react (Trust: 9.5)"
 ```
 
-### Example 3: Memory Save
+### Example 3: Graph Save
 ```yaml
-User Input: "MEMORY.SAVE task:implement-user-auth"
+User Input: "GRAPH.SAVE task:implement-user-auth"
 Mapped To: create_entities + add_observations
 Parameters: {entity_type: "task", content: "implement-user-auth", tags: ["auth", "implementation"]}
 Result: "Task saved with ID: task_12345"

@@ -194,7 +194,7 @@ VERIFICATION:
 
 3️⃣ DECISION
    Selected: Option B: Trie-based search
-   Rationale: Best performance for prefix searches with manageable memory usage
+   Rationale: Best performance for prefix searches with manageable graph usage
    
 4️⃣ IMPLEMENTATION NOTES
    - Use existing trie library

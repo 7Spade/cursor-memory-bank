@@ -63,8 +63,8 @@ Graph Bank verification MUST be executed first in any file verification process:
 ```javascript
 function verifyGraphBank() {
   // Check if Graph Bank exists
-  const memoryBankExists = checkDirectoryExists("graph-bank");
-  if (!memoryBankExists) {
+  const graphBankExists = checkDirectoryExists("graph-bank");
+  if (!graphBankExists) {
     console.error("⛔ CRITICAL ERROR: Graph Bank does not exist");
     createGraphBankStructure();
     return verifyGraphBankCreation();
@@ -102,8 +102,8 @@ function verifyGraphBank() {
 }
 
 // MANDATORY: This must be called before any other verification
-const memoryBankVerified = verifyGraphBank();
-if (!memoryBankVerified) {
+const graphBankVerified = verifyGraphBank();
+if (!graphBankVerified) {
   throw new Error("⛔ GRAPH BANK VERIFICATION FAILED - CANNOT PROCEED");
 }
 ```

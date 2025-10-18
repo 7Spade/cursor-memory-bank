@@ -1,215 +1,219 @@
 ---
-description: Detailed REPO mode instructions for comprehensive repository analysis and documentation generation
-globs: repo-mode-detailed.mdc
-alwaysApply: false
+alwaysApply: true
 ---
 
-# REPO MODE - 詳細指令
+# MEMORY BANK REPO MODE
 
-> **TL;DR:** 此文件提供詳細的 REPO 模式指令，用於全面的倉庫分析和文檔生成，包含六種不同的輸出模式以滿足各種分析需求。
+Your role is to perform comprehensive repository analysis and documentation generation using Docker-based repomix integration with six different output modes to meet various analysis needs.
 
-## 🔧 REPO MODE 技術架構
-
-### Docker 直接整合
-REPO 模式使用 **Docker** 直接執行 repomix 容器，提供更穩定和高效的分析體驗：
-
-```bash
-# 基本 Docker 命令格式
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix [選項]
-```
-
-### Docker 功能
-- **本地代碼分析**: 直接掛載當前目錄進行分析
-- **遠程倉庫分析**: 支援 GitHub 倉庫 URL 分析
-- **多種輸出格式**: Markdown, JSON, XML, Plain Text
-- **壓縮選項**: Tree-sitter 壓縮減少 token 使用
-- **自定義包含**: 精確控制分析範圍
-- **安全檢查**: 自動檢測可疑文件
-
-## 🚀 REPO MODE 啟動
-
-**重要：** REPO 模式使用 **Docker** 直接執行 repomix 容器進行倉庫分析，確保環境一致性和穩定性。
-
-當您輸入 `repo` 時，系統會自動顯示模式選擇選單：
-
-```
-🔍 REPO MODE - 倉庫分析模式選擇
-=====================================
-
-請選擇分析模式：
-
-1️⃣  [完整模式] - 深度分析，完整理解 (351,116 tokens)
-2️⃣  [壓縮模式] - 快速審查，代碼分析 (307,073 tokens)  
-3️⃣  [源碼模式] - 功能開發，代碼生成 (44,080 tokens)
-4️⃣  [極致節省] - 成本敏感，快速概覽 (41,433 tokens)
-5️⃣  [MCP 整合模式] - 與 MCP 服務器整合分析 (50,000 tokens)
-6️⃣  [智能分析模式] - AI 驅動的深度分析 (200,000 tokens)
-
-💡 提示：輸入對應數字 (1-6) 或模式名稱來選擇
-```
-
-## 📊 六種模式綜合對比
-
-> **注意：** 所有模式都使用 Docker 直接執行，確保環境一致性和穩定性。
-
-| 模式 | Token | 文件數 | 適用場景 | Docker 命令 |
-|------|-------|--------|----------|-------------|
-| **完整模式** | 351,116 | 147 | 新專案架構分析、完整代碼審查 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --style markdown --top-files-len 20 --output complete-analysis.md` |
-| **壓縮模式** | 307,073 | 147 | 快速代碼審查、性能瓶頸分析 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --style markdown --top-files-len 10 --output compressed-analysis.md` |
-| **源碼模式** | 44,080 | 5 | 新功能開發、代碼生成和補全 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "src/**/*.ts,src/**/*.html,src/**/*.scss,*.md,*.json" --style markdown --top-files-len 5 --output source-code.md` |
-| **極致節省** | 41,433 | 4 | 成本敏感分析、快速專案概覽 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --remove-comments --remove-empty-lines --no-file-summary --no-directory-structure --include "src/**/*.ts,src/**/*.html,*.md" --style markdown --output minimal-analysis.md` |
-| **MCP 整合** | 50,000 | 8 | MCP 服務器配置分析、協議兼容性檢查 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "**/*.mcp.*,**/*mcp*,**/*.json,**/*.yaml,**/*.yml" --style markdown --top-files-len 8 --output mcp-integration-analysis.md` |
-| **智能分析** | 200,000 | 50 | AI 代碼分析、智能重構建議 | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --include "src/**/*,*.md,*.json,*.yaml,*.yml" --style markdown --top-files-len 15 --output ai-analysis.md` |
-
-### Docker 命令詳細說明
-| 模式 | Docker 命令 | 說明 |
-|------|-------------|------|
-| **完整模式** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --style markdown --top-files-len 20 --output complete-analysis.md` | 完整分析，包含所有文件 |
-| **壓縮模式** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --style markdown --top-files-len 10 --output compressed-analysis.md` | 壓縮分析，減少 token 使用 |
-| **源碼模式** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "src/**/*.ts,src/**/*.html,src/**/*.scss,*.md,*.json" --style markdown --top-files-len 5 --output source-code.md` | 專注源代碼文件 |
-| **極致節省** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --remove-comments --remove-empty-lines --no-file-summary --no-directory-structure --include "src/**/*.ts,src/**/*.html,*.md" --style markdown --output minimal-analysis.md` | 最小化分析 |
-| **MCP 整合** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "**/*.mcp.*,**/*mcp*,**/*.json,**/*.yaml,**/*.yml" --style markdown --top-files-len 8 --output mcp-integration-analysis.md` | MCP 配置分析 |
-| **智能分析** | `docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --compress --include "src/**/*,*.md,*.json,*.yaml,*.yml" --style markdown --top-files-len 15 --output ai-analysis.md` | AI 優化分析 |
-
-## 📋 模式選擇決策樹
+> **TL;DR:** Provides comprehensive repository analysis and documentation generation with six different output modes using Docker-based repomix integration for various analysis requirements.
 
 ```mermaid
 graph TD
-    Start["開始 REPO 分析"] --> Q1{"需要完整理解?"}
-    Q1 -->|Yes| Q2{"成本敏感?"}
-    Q1 -->|No| Q3{"專注代碼開發?"}
-    Q1 -->|MCP整合| MCP["MCP 整合模式"]
+    Start["🚀 START REPO MODE"] --> ReadDocs["📚 Read Reference Documents<br>.cursor/rules/isolation_rules/main.mdc"]
     
-    Q2 -->|Yes| Minimal["極致節省模式"]
-    Q2 -->|No| Complete["完整模式"]
+    %% Mode Selection
+    ReadDocs --> ModeSelect["🔍 Repository Analysis<br>Mode Selection"]
+    ModeSelect --> Complete["📊 Complete Mode<br>351,116 tokens"]
+    ModeSelect --> Compressed["🗜️ Compressed Mode<br>307,073 tokens"]
+    ModeSelect --> Source["💻 Source Mode<br>44,080 tokens"]
+    ModeSelect --> Minimal["⚡ Minimal Mode<br>41,433 tokens"]
+    ModeSelect --> MCP["🔗 MCP Integration<br>50,000 tokens"]
+    ModeSelect --> AI["🤖 AI Analysis<br>200,000 tokens"]
     
-    Q3 -->|Yes| Q4{"需要 AI 分析?"}
-    Q3 -->|No| Compressed["壓縮模式"]
+    %% Docker Execution
+    Complete --> DockerExec["🐳 Docker Execution<br>repomix container"]
+    Compressed --> DockerExec
+    Source --> DockerExec
+    Minimal --> DockerExec
+    MCP --> DockerExec
+    AI --> DockerExec
     
-    Q4 -->|Yes| AI["智能分析模式"]
-    Q4 -->|No| Source["源碼模式"]
+    %% Analysis Process
+    DockerExec --> Analysis["📈 Repository Analysis"]
+    Analysis --> Output["📄 Generate Output"]
+    Output --> Integration["🔄 Graph Bank Integration"]
+    Integration --> Complete["🏁 REPO Analysis Complete"]
     
-    Complete --> Execute["執行分析"]
-    Compressed --> Execute
-    Source --> Execute
-    Minimal --> Execute
-    MCP --> Execute
-    AI --> Execute
+    %% Mode Transitions
+    Complete -->|"Analysis Complete"| TransToVan["→ VAN Mode"]
+    Complete -->|"Ready for Planning"| TransToPlan["→ PLAN Mode"]
+    Complete -->|"Ready for Implementation"| TransToImpl["→ IMPLEMENT Mode"]
+    
+    %% Validation Options
+    Start -.-> Validation["🔍 VALIDATION OPTIONS:<br>- Repository analysis<br>- Docker environment check<br>- Output generation<br>- Integration verification<br>- Mode transition"]
+    
+    %% Styling
+    style Start fill:#4da6ff,stroke:#0066cc,color:white
+    style ReadDocs fill:#80bfff,stroke:#4da6ff,color:black
+    style ModeSelect fill:#d94dbb,stroke:#a3378a,color:white
+    style Complete fill:#4dbb5f,stroke:#36873f,color:white
+    style Compressed fill:#ffa64d,stroke:#cc7a30,color:white
+    style Source fill:#d971ff,stroke:#a33bc2,color:white
+    style Minimal fill:#4dbbbb,stroke:#368787,color:white
+    style MCP fill:#ff5555,stroke:#cc0000,color:white
+    style AI fill:#ffa64d,stroke:#cc7a30,color:white
+    style DockerExec fill:#4da6ff,stroke:#0066cc,color:white
+    style Analysis fill:#4dbb5f,stroke:#36873f,color:white
+    style Output fill:#d94dbb,stroke:#a3378a,color:white
+    style Integration fill:#d971ff,stroke:#a33bc2,color:white
+    style Complete fill:#5fd94d,stroke:#3da336,color:white
+    style TransToVan fill:#ffa64d,stroke:#cc7a30,color:black
+    style TransToPlan fill:#4dbb5f,stroke:#36873f,color:black
+    style TransToImpl fill:#4da6ff,stroke:#0066cc,color:black
 ```
 
-## 🎮 快速選擇指令
+## IMPLEMENTATION STEPS
 
-```bash
-# 直接執行模式（跳過選單）
-repo complete    # 完整模式
-repo compressed  # 壓縮模式
-repo source      # 源碼模式
-repo minimal     # 極致節省模式
-repo mcp         # MCP 整合模式
-repo ai          # 智能分析模式
+### Step 1: READ MAIN RULE & CONTEXT FILES
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/main.mdc",
+  should_read_entire_file: true
+})
+
+read_file({
+  target_file: "tasks.md",
+  should_read_entire_file: true
+})
+
+read_file({
+  target_file: "progress.md",
+  should_read_entire_file: true
+})
 ```
 
-## 🔧 進階配置選項
-
-### Docker 命令使用方式
-REPO 模式通過 **Docker** 直接執行 repomix 容器提供以下功能：
-
-#### 主要 Docker 參數
-- **`-v ${PWD}:/app`**: 掛載當前目錄到容器
-- **`-it`**: 互動式終端
-- **`--rm`**: 自動清理容器
-- **`--style`**: 輸出格式 (markdown, json, xml, plain)
-- **`--compress`**: 啟用 Tree-sitter 壓縮
-- **`--include`**: 包含的文件模式
-- **`--ignore`**: 忽略的文件模式
-- **`--top-files-len`**: 摘要文件數量
-- **`--output`**: 輸出文件名
-
-#### 遠程倉庫分析
-```bash
-# GitHub 倉庫分析
-docker run -it --rm ghcr.io/yamadashy/repomix --remote "user/repo" --style markdown --output remote-analysis.md
+### Step 2: LOAD REPO MODE MAP
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/visual-maps/repo-mode-map.mdc",
+  should_read_entire_file: true
+})
 ```
 
-### 自定義包含模式（Docker 命令）
-```bash
-# 特定技術棧
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "src/**/*.ts,src/**/*.html,src/**/*.scss" --style markdown --output typescript-only.md
+### Step 3: LOAD REPOSITORY ANALYSIS REFERENCES
+```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Core/docker-integration.mdc",
+  should_read_entire_file: true
+})
 
-# 配置文件
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include "*.json,*.yaml,*.yml,*.config.*" --style markdown --output config-files.md
-
-# Git 歷史
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --include-logs --include-diffs --style markdown --output with-history.md
-
-# 不同格式
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --style json --output project-data.json
-docker run -v ${PWD}:/app -it --rm ghcr.io/yamadashy/repomix --style xml --output project-structure.xml
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Core/repomix-configuration.mdc",
+  should_read_entire_file: true
+})
 ```
 
-## 🚀 最佳實踐
+## REPOSITORY ANALYSIS APPROACH
 
-### 模式選擇原則
-- **完整模式**: 新專案、重大重構、架構分析
-- **壓縮模式**: 代碼審查、性能分析、技術評估
-- **源碼模式**: 功能開發、模組設計、API 開發
-- **極致節省**: 成本敏感、快速概覽、初步分析
-- **MCP 整合**: MCP 服務器配置、協議分析、工具整合
-- **智能分析**: AI 驅動分析、智能重構、架構優化
+Your task is to perform comprehensive repository analysis using Docker-based repomix integration. Focus on generating structured documentation that meets specific analysis requirements through six different output modes.
 
-### 輸出優化技巧
-- 使用 `--top-files-len` 控制摘要長度
-- 利用 `--include` 和 `--ignore` 精確控制內容
-- 根據需要選擇不同的輸出格式
-- 定期更新 repomix 輸出以保持同步
+### Complete Mode Analysis
 
-## 📋 檢查清單
+For comprehensive project understanding, use the complete mode to analyze all files and generate detailed documentation.
 
-```
-✓ REPO MODE 檢查清單
-- Docker 環境正常? [YES/NO]
-- repomix 鏡像可用? [YES/NO]
-- 分析目標明確? [YES/NO]
-- 成本限制考慮? [YES/NO]
-- 專案路徑正確? [YES/NO]
-- 輸出文件生成? [YES/NO]
-- 內容完整性驗證? [YES/NO]
-
-→ 如果全部 YES: REPO 分析完成
-→ 如果有 NO: 檢查環境和配置
+```mermaid
+graph TD
+    CM["📊 COMPLETE MODE"] --> All["Analyze all files"]
+    All --> Structure["Document structure"]
+    Structure --> Dependencies["Map dependencies"]
+    Dependencies --> Architecture["Identify architecture"]
+    Architecture --> Report["Generate comprehensive report"]
+    
+    style CM fill:#4dbb5f,stroke:#36873f,color:white
+    style All fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Structure fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Dependencies fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Architecture fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Report fill:#d6f5dd,stroke:#a3e0ae,color:black
 ```
 
-### Docker 環境檢查
-- **Docker 安裝**: 確認 Docker 已安裝並運行
-- **repomix 鏡像**: 確認 `ghcr.io/yamadashy/repomix` 鏡像可用
-- **權限配置**: 檢查 Docker 掛載權限
-- **輸出格式支援**: 確認所需的輸出格式可用
+### Compressed Mode Analysis
 
-## 🔄 與其他模式整合
+For quick code review and performance analysis, use the compressed mode to reduce token usage while maintaining analysis quality.
 
-| 整合模式 | 用途 | 輸出 |
-|----------|------|------|
-| **REPO → VAN** | 專案結構分析、技術棧識別、複雜度評估 | VAN 模式分析 |
-| **REPO → PLAN** | 基於代碼結構制定計劃、識別依賴關係 | PLAN 模式規劃 |
-| **REPO → CREATIVE** | 分析現有架構、識別改進機會 | CREATIVE 模式設計 |
-| **REPO → IMPLEMENT** | 基於分析結果實施代碼改進 | IMPLEMENT 模式實施 |
+```mermaid
+graph TD
+    COM["🗜️ COMPRESSED MODE"] --> Compress["Apply compression"]
+    Compress --> Focus["Focus on key files"]
+    Focus --> Analyze["Analyze patterns"]
+    Analyze --> Optimize["Identify optimizations"]
+    Optimize --> Summary["Generate summary"]
+    
+    style COM fill:#ffa64d,stroke:#cc7a30,color:white
+    style Compress fill:#ffe6cc,stroke:#ffa64d,color:black
+    style Focus fill:#ffe6cc,stroke:#ffa64d,color:black
+    style Analyze fill:#ffe6cc,stroke:#ffa64d,color:black
+    style Optimize fill:#ffe6cc,stroke:#ffa64d,color:black
+    style Summary fill:#ffe6cc,stroke:#ffa64d,color:black
+```
 
-## 🚨 常見問題解決
+### Source Code Mode Analysis
 
-| 問題 | 解決方案 |
-|------|----------|
-| **Docker 權限錯誤** | 檢查 Docker 服務狀態：`docker --version` |
-| **輸出文件過大** | 使用壓縮模式：`--compress` |
-| **包含不需要的文件** | 使用 `--ignore "*.test.*,*.spec.*"` |
-| **Docker 鏡像下載失敗** | 檢查網路連接：`docker pull ghcr.io/yamadashy/repomix` |
-| **AI 分析結果不準確** | 使用智能分析模式並檢查配置 |
+For feature development and code generation, use the source code mode to focus on implementation files.
 
-## 📚 相關資源
+```mermaid
+graph TD
+    SC["💻 SOURCE MODE"] --> Source["Focus on source files"]
+    Source --> Types["TypeScript files"]
+    Source --> HTML["HTML templates"]
+    Source --> Styles["SCSS styles"]
+    Types & HTML & Styles --> Generate["Generate code insights"]
+    Generate --> Implement["Implementation guidance"]
+    
+    style SC fill:#d971ff,stroke:#a33bc2,color:white
+    style Source fill:#f5d9f0,stroke:#e699d9,color:black
+    style Types fill:#f5d9f0,stroke:#e699d9,color:black
+    style HTML fill:#f5d9f0,stroke:#e699d9,color:black
+    style Styles fill:#f5d9f0,stroke:#e699d9,color:black
+    style Generate fill:#f5d9f0,stroke:#e699d9,color:black
+    style Implement fill:#f5d9f0,stroke:#e699d9,color:black
+```
 
-- [Repomix 官方文檔](https://github.com/yamadashy/repomix)
-- [Docker 使用指南](https://docs.docker.com/)
-- [Graph Bank 整合指南](graph-bank-integration.md)
+## REPOSITORY ANALYSIS DOCUMENTATION
 
----
+Document each analysis mode with clear output specifications. Start by describing the analysis requirements, then execute the appropriate Docker commands, and conclude with integration into the Graph Bank system.
 
-這個 REPO 模式提供了全面的倉庫分析能力，通過六種不同的輸出模式滿足各種分析需求，使用 Docker 直接執行確保環境一致性和穩定性，同時優化令牌使用和處理效率。
+```mermaid
+graph TD
+    RAD["📄 REPOSITORY ANALYSIS DOCUMENTATION"] --> Start["🚀 START ANALYSIS"]
+    Start --> Select["Mode Selection<br>Which analysis mode is needed?"]
+    Select --> Docker["Docker Execution<br>Execute repomix container"]
+    Docker --> Process["Analysis Processing<br>Process repository data"]
+    Process --> Output["Output Generation<br>Generate structured documentation"]
+    Output --> Integrate["Graph Bank Integration<br>Integrate with Graph Bank"]
+    Integrate --> Complete["🏁 ANALYSIS COMPLETE"]
+    
+    style RAD fill:#4da6ff,stroke:#0066cc,color:white
+    style Start fill:#cce6ff,stroke:#80bfff,color:black
+    style Select fill:#cce6ff,stroke:#80bfff,color:black
+    style Docker fill:#cce6ff,stroke:#80bfff,color:black
+    style Process fill:#cce6ff,stroke:#80bfff,color:black
+    style Output fill:#cce6ff,stroke:#80bfff,color:black
+    style Integrate fill:#cce6ff,stroke:#80bfff,color:black
+    style Complete fill:#cce6ff,stroke:#80bfff,color:black
+```
+
+## VERIFICATION
+
+```mermaid
+graph TD
+    V["✅ VERIFICATION CHECKLIST"] --> D["Docker environment ready?"]
+    V --> R["Repomix image available?"]
+    V --> A["Analysis target clear?"]
+    V --> C["Cost constraints considered?"]
+    V --> P["Project path correct?"]
+    V --> O["Output file generated?"]
+    V --> I["Content integrity verified?"]
+    
+    D & R & A & C & P & O & I --> Decision{"All Verified?"}
+    Decision -->|"Yes"| Complete["Repository analysis complete"]
+    Decision -->|"No"| Fix["Complete missing items"]
+    
+    style V fill:#4dbbbb,stroke:#368787,color:white
+    style Decision fill:#ffa64d,stroke:#cc7a30,color:white
+    style Complete fill:#5fd94d,stroke:#3da336,color:white
+    style Fix fill:#ff5555,stroke:#cc0000,color:white
+```
+
+Before completing the repository analysis, verify that the Docker environment is ready, repomix image is available, analysis target is clear, cost constraints are considered, project path is correct, output file is generated, and content integrity is verified. Update tasks.md with the analysis status and prepare for the next appropriate mode.

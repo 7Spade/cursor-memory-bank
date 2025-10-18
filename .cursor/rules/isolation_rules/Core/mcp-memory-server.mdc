@@ -1,40 +1,40 @@
 ---
-description: Zero-cognition MCP Memory Server integration for AI agents
-globs: mcp-memory-server.mdc
+description: Zero-cognition MCP Graph Server integration for AI agents
+globs: mcp-graph-server.mdc
 alwaysApply: false
 ---
 
-# MCP MEMORY SERVER - 零認知整合規則
+# MCP GRAPH SERVER - 零認知整合規則
 
-> **TL;DR:** 此文件提供 AI agent 零認知的 MCP Memory Server 整合，隱藏底層實現細節，提供簡潔的記憶管理接口。
+> **TL;DR:** 此文件提供 AI agent 零認知的 MCP Graph Server 整合，隱藏底層實現細節，提供簡潔的記憶管理接口。
 
 ## 🧠 零認知記憶管理接口
 
-AI agent 無需了解 MCP Memory Server 的技術實現，只需使用以下簡潔指令：
+AI agent 無需了解 MCP Graph Server 的技術實現，只需使用以下簡潔指令：
 
 ### 📋 核心記憶指令
 
 ```markdown
 ## 記憶儲存指令
-MEMORY.SAVE [內容] [標籤1,標籤2] - 儲存記憶並自動標籤
-MEMORY.SAVE.QUICK [內容] - 快速儲存（自動生成標籤）
+GRAPH.SAVE [內容] [標籤1,標籤2] - 儲存記憶並自動標籤
+GRAPH.SAVE.QUICK [內容] - 快速儲存（自動生成標籤）
 
 ## 記憶檢索指令  
-MEMORY.FIND [查詢詞] - 語義搜索記憶
-MEMORY.RECALL [時間範圍] - 基於時間回憶記憶
-MEMORY.TAG [標籤] - 按標籤檢索記憶
+GRAPH.FIND [查詢詞] - 語義搜索記憶
+GRAPH.RECALL [時間範圍] - 基於時間回憶記憶
+GRAPH.TAG [標籤] - 按標籤檢索記憶
 
 ## 記憶管理指令
-MEMORY.DELETE [記憶ID] - 刪除特定記憶
-MEMORY.HEALTH - 檢查記憶系統健康狀態
-MEMORY.SUMMARY - 生成記憶摘要
+GRAPH.DELETE [記憶ID] - 刪除特定記憶
+GRAPH.HEALTH - 檢查記憶系統健康狀態
+GRAPH.SUMMARY - 生成記憶摘要
 ```
 
 ## 🔄 自動化記憶功能
 
 ### 智能標籤生成
 ```markdown
-當使用 MEMORY.SAVE 時，系統會自動：
+當使用 GRAPH.SAVE 時，系統會自動：
 - 分析內容語義
 - 生成相關標籤
 - 建立時間戳記
@@ -43,7 +43,7 @@ MEMORY.SUMMARY - 生成記憶摘要
 
 ### 語義搜索優化
 ```markdown
-當使用 MEMORY.FIND 時，系統會自動：
+當使用 GRAPH.FIND 時，系統會自動：
 - 執行語義相似度搜索
 - 按相關性排序結果
 - 提供上下文關聯
@@ -52,7 +52,7 @@ MEMORY.SUMMARY - 生成記憶摘要
 
 ### 時間基礎回憶
 ```markdown
-當使用 MEMORY.RECALL 時，系統會自動：
+當使用 GRAPH.RECALL 時，系統會自動：
 - 解析時間範圍（今天、昨天、本週、上個月）
 - 按時間順序排列記憶
 - 提供時間上下文
@@ -63,7 +63,7 @@ MEMORY.SUMMARY - 生成記憶摘要
 
 ### 儲存專案決策
 ```markdown
-MEMORY.SAVE "選擇使用 React 18 的 Concurrent Features 來優化用戶體驗" "react,decision,optimization"
+GRAPH.SAVE "選擇使用 React 18 的 Concurrent Features 來優化用戶體驗" "react,decision,optimization"
 
 系統自動處理：
 - 儲存決策內容
@@ -74,7 +74,7 @@ MEMORY.SAVE "選擇使用 React 18 的 Concurrent Features 來優化用戶體驗
 
 ### 檢索相關記憶
 ```markdown
-MEMORY.FIND "React 優化"
+GRAPH.FIND "React 優化"
 
 系統自動返回：
 - 相關的技術決策
@@ -85,7 +85,7 @@ MEMORY.FIND "React 優化"
 
 ### 回憶近期工作
 ```markdown
-MEMORY.RECALL "本週"
+GRAPH.RECALL "本週"
 
 系統自動返回：
 - 本週完成的工作
@@ -98,7 +98,7 @@ MEMORY.RECALL "本週"
 
 ### 記憶健康檢查
 ```markdown
-MEMORY.HEALTH
+GRAPH.HEALTH
 
 系統檢查：
 - 記憶儲存狀態
@@ -109,7 +109,7 @@ MEMORY.HEALTH
 
 ### 記憶摘要生成
 ```markdown
-MEMORY.SUMMARY
+GRAPH.SUMMARY
 
 系統生成：
 - 記憶總數統計
@@ -131,7 +131,7 @@ MEMORY.SUMMARY
 
 ### 優雅降級
 ```markdown
-當 MCP Memory Server 不可用時：
+當 MCP Graph Server 不可用時：
 - 使用本地緩存
 - 提供基本功能
 - 記錄待同步操作
@@ -162,8 +162,8 @@ MEMORY.SUMMARY
 
 ### Agent 啟動檢查
 ```markdown
-✓ MEMORY SERVER CHECKLIST
-- MCP Memory Server 狀態正常? [YES/NO]
+✓ GRAPH SERVER CHECKLIST
+- MCP Graph Server 狀態正常? [YES/NO]
 - 記憶索引完整? [YES/NO]
 - 搜索功能可用? [YES/NO]
 - Graph Bank 同步正常? [YES/NO]
@@ -174,7 +174,7 @@ MEMORY.SUMMARY
 
 ### 記憶操作檢查
 ```markdown
-✓ MEMORY OPERATION CHECKLIST
+✓ GRAPH OPERATION CHECKLIST
 - 記憶內容清晰明確? [YES/NO]
 - 標籤相關且有用? [YES/NO]
 - 搜索查詢具體? [YES/NO]
@@ -216,4 +216,4 @@ MEMORY.SUMMARY
 - 增強自動化功能
 - 提升用戶體驗
 
-這個零認知整合確保 AI agent 能夠無縫使用 MCP Memory Server 的強大功能，而無需了解複雜的技術實現細節。
+這個零認知整合確保 AI agent 能夠無縫使用 MCP Graph Server 的強大功能，而無需了解複雜的技術實現細節。
