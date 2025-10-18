@@ -1,7 +1,98 @@
 # Memory Bank: Tasks
 
 ## Current Task
-優化評分系統，增加動態調整和權重配置功能
+PLAN 模式 - 詳細實施計劃制定完成
+
+### 📋 實施計劃摘要
+- **總 Phase 數**：4個 Phase
+- **總任務數**：19個任務
+- **複雜度等級**：Level 4 - Complex System
+- **預估時間**：9-14 天
+- **當前狀態**：準備開始 Phase 1 構建錯誤修復
+
+### 🚨 Phase 1: 修復構建錯誤（緊急）
+**目標**：修復構建錯誤，確保專案能夠正常構建
+**任務**：
+- [ ] **task-1-1**: 修復 Nl2brPipe 缺失問題
+- [ ] **task-1-2**: 修復 AuthService 類型錯誤
+- [ ] **task-1-3**: 驗證構建成功
+
+**驗收標準**：
+- ✅ 專案能夠成功構建（yarn build 成功）
+- ✅ 沒有 TypeScript 編譯錯誤
+- ✅ 登入和註冊功能正常工作
+- ✅ 所有現有功能不受影響
+
+### 🎨 Phase 2: Phase 4 組織/團隊管理 UI（6個任務）
+**目標**：建立現代化 UI 元件
+**任務**：
+- [ ] **task-4-1**: 建立 organization-detail.component.ts
+- [ ] **task-4-2**: 建立 members-list.component.ts
+- [ ] **task-4-3**: 建立 teams-list.component.ts
+- [ ] **task-4-4**: 建立 team-create.component.ts
+- [ ] **task-4-5**: 建立 organization-settings.component.ts
+- [ ] **task-4-6**: 建立 organization-dashboard.component.ts
+
+**驗收標準**：
+- ✅ 所有 UI 元件使用 Control Flow (@if, @for)
+- ✅ 權限檢查與 Signals 整合
+- ✅ 組織/團隊管理功能完整
+- ✅ UI 響應式且用戶友好
+
+### 🔗 Phase 3: Phase 5 路由與權限整合（5個任務）
+**目標**：建立完整的路由系統
+**任務**：
+- [ ] **task-5-1**: 更新 app.routes.ts 支援完整結構
+- [ ] **task-5-2**: 更新 organization.routes.ts 整合 Permission 守衛
+- [ ] **task-5-3**: 建立完整的路由層級和導航邏輯
+- [ ] **task-5-4**: 整合權限控制到所有路由
+- [ ] **task-5-5**: 更新路由守衛使用 PermissionService
+
+**驗收標準**：
+- ✅ 路由結構符合 GitHub 式設計
+- ✅ 所有路由都有權限保護
+- ✅ 導航邏輯正確
+- ✅ 權限控制整合到所有路由
+
+### 🔒 Phase 4: Phase 6 安全規則與測試（7個任務）
+**目標**：建立安全的後端規則和完整測試
+**任務**：
+- [ ] **task-6-1**: 實作 firebase.rules (accounts 集合規則)
+- [ ] **task-6-2**: 實作 Repository 安全規則
+- [ ] **task-6-3**: 實作組織/團隊/成員權限規則
+- [ ] **task-6-4**: 實作單元測試
+- [ ] **task-6-5**: 實作整合測試
+- [ ] **task-6-6**: 實作 E2E 測試
+- [ ] **task-6-7**: 進行完整功能測試和驗證
+
+**驗收標準**：
+- ✅ Firestore 安全規則正確保護資料
+- ✅ 測試覆蓋率達標
+- ✅ 完整功能測試通過
+- ✅ 安全規則和權限系統驗證通過
+
+### ⚠️ 風險評估與依賴關係
+**高風險項目**：
+1. **類型修復**：AuthService 類型錯誤修復可能影響現有功能
+2. **路由重構**：大量路由變更可能破壞現有導航
+3. **權限系統整合**：權限邏輯變更可能導致安全問題
+
+**依賴關係**：
+- Phase 1 → Phase 2：修復構建錯誤是後續開發的前提
+- Phase 2 → Phase 3：UI 元件完成後才能整合路由
+- Phase 3 → Phase 4：路由整合完成後才能進行測試
+
+**建議實施順序**：
+1. Phase 1（修復構建錯誤）- 風險低，影響小，必須先完成
+2. Phase 2（UI 元件）- 風險中，影響中
+3. Phase 3（路由整合）- 風險高，影響大
+4. Phase 4（安全規則與測試）- 風險高，影響大
+
+### 🎯 下一步行動
+- 立即開始 Phase 1 的構建錯誤修復
+- 優先修復 Nl2brPipe 缺失問題
+- 修復 AuthService 類型錯誤
+- 驗證構建成功後繼續 Phase 2
 
 ### 問題描述
 目前的評分系統過於固定，缺乏靈活性，這可能導致：
