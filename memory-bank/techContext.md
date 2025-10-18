@@ -1,16 +1,14 @@
 # Memory Bank: Technical Context
 
 ## Technology Stack
-- **前端框架**: Angular 17+
-- **狀態管理**: NgRx
-- **UI 元件庫**: Angular Material
-- **圖表庫**: Chart.js / D3.js
-- **地圖 API**: Google Maps API
-- **後端框架**: Node.js + Express / NestJS
-- **資料庫**: PostgreSQL (主要) + Redis (快取)
-- **檔案儲存**: Firebase Storage / AWS S3
-- **認證服務**: Firebase Auth / Auth0
-- **即時通訊**: Socket.io / WebSocket
+- **前端框架**: Angular 20.1.0
+- **狀態管理**: RxJS (內建)
+- **UI 元件庫**: Angular Material 20.1.0
+- **後端服務**: Firebase 11.10.0
+- **認證服務**: Firebase Auth
+- **資料庫**: Firestore
+- **檔案儲存**: Firebase Storage
+- **開發工具**: Angular CLI 20.1.0
 
 ## Development Environment
 - **OS**: Windows 11
