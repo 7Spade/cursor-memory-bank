@@ -129,6 +129,101 @@
         "完成時間：天到週",
         "風險：高，架構影響"
       ]
+    },
+    {
+      "name": "GitHub_Style_Permission_System",
+      "entityType": "architecture",
+      "observations": [
+        "Angular v20 + Signals + Firebase 實現的 GitHub 式權限系統",
+        "使用統一的 Account 模型，通過 type 區分用戶和組織",
+        "使用 login 作為唯一識別碼",
+        "統一的 /accounts 集合路徑",
+        "Repository 擁有者支援（個人/組織）",
+        "完整的協作者系統"
+      ]
+    },
+    {
+      "name": "Angular_v20_Modern_Features",
+      "entityType": "technology",
+      "observations": [
+        "Signals：響應式狀態管理",
+        "Control Flow：@if, @for, @switch 替代傳統結構指令",
+        "Standalone Components：無需 NgModule",
+        "inject() 函數：現代化依賴注入",
+        "Computed Signals：自動計算衍生狀態",
+        "現代化的開發工具鏈"
+      ]
+    },
+    {
+      "name": "Multi_Level_Permission_System",
+      "entityType": "architecture",
+      "observations": [
+        "個人 → 組織 → 團隊 → 資源的層級結構",
+        "5 種組織角色：Owner, Admin, Member, Billing, Outside Collaborator",
+        "2 種團隊角色：Maintainer, Member",
+        "Repository 權限：read, triage, write, maintain, admin",
+        "權限可疊加和覆寫",
+        "支援自定義權限邏輯"
+      ]
+    },
+    {
+      "name": "Value_Objects_Pattern",
+      "entityType": "design_pattern",
+      "observations": [
+        "ProfileVO：封裝檔案資訊",
+        "PermissionVO：封裝權限資訊",
+        "SettingsVO：封裝設定資訊",
+        "CertificateVO、SocialRelationVO、BusinessLicenseVO 等",
+        "提高程式碼可讀性和可維護性",
+        "符合領域驅動設計（DDD）原則"
+      ]
+    },
+    {
+      "name": "Firestore_Database_Design",
+      "entityType": "architecture",
+      "observations": [
+        "統一集合結構：所有 Account 存儲在 accounts 集合中",
+        "子集合模式：組織成員和團隊使用子集合存儲",
+        "權限繼承：通過資料庫結構設計實現權限層級繼承",
+        "支援複雜的權限邏輯",
+        "統一的權限檢查邏輯"
+      ]
+    },
+    {
+      "name": "Service_Layer_Architecture",
+      "entityType": "architecture",
+      "observations": [
+        "AuthService：整合 Firebase Auth 和 Firestore",
+        "OrganizationService：專門處理組織相關業務邏輯",
+        "PermissionService：使用 Signals 管理權限狀態",
+        "使用 inject() 函數進行依賴注入",
+        "清晰的 API 設計，易於使用和測試",
+        "支援多層級權限檢查"
+      ]
+    },
+    {
+      "name": "Security_Design_Patterns",
+      "entityType": "security",
+      "observations": [
+        "多層安全防護：前端路由守衛 + Firestore 安全規則 + 後端權限驗證",
+        "基於角色的存取控制（RBAC）",
+        "支援複雜的權限邏輯",
+        "統一的錯誤處理和重定向",
+        "完整的輸入驗證和錯誤處理",
+        "ValidationUtils 提供統一的驗證邏輯"
+      ]
+    },
+    {
+      "name": "Modern_UI_Design_Patterns",
+      "entityType": "ui_design",
+      "observations": [
+        "使用 Control Flow（@if, @for, @switch）替代傳統結構指令",
+        "Standalone Components 無需 NgModule",
+        "Signals 基礎的響應式 UI",
+        "權限驅動的 UI：根據權限動態顯示/隱藏",
+        "使用 Computed Signals 自動更新 UI 狀態",
+        "權限檢查與 UI 邏輯分離"
+      ]
     }
   ],
   "relations": [
@@ -226,6 +321,61 @@
       "from": "Workflow_Level_3_4",
       "to": "ARCHIVE_Agent",
       "relationType": "uses"
+    },
+    {
+      "from": "GitHub_Style_Permission_System",
+      "to": "Angular_v20_Modern_Features",
+      "relationType": "uses"
+    },
+    {
+      "from": "GitHub_Style_Permission_System",
+      "to": "Multi_Level_Permission_System",
+      "relationType": "implements"
+    },
+    {
+      "from": "GitHub_Style_Permission_System",
+      "to": "Value_Objects_Pattern",
+      "relationType": "uses"
+    },
+    {
+      "from": "GitHub_Style_Permission_System",
+      "to": "Firestore_Database_Design",
+      "relationType": "uses"
+    },
+    {
+      "from": "Service_Layer_Architecture",
+      "to": "Angular_v20_Modern_Features",
+      "relationType": "uses"
+    },
+    {
+      "from": "Service_Layer_Architecture",
+      "to": "Multi_Level_Permission_System",
+      "relationType": "implements"
+    },
+    {
+      "from": "Security_Design_Patterns",
+      "to": "Multi_Level_Permission_System",
+      "relationType": "protects"
+    },
+    {
+      "from": "Modern_UI_Design_Patterns",
+      "to": "Angular_v20_Modern_Features",
+      "relationType": "uses"
+    },
+    {
+      "from": "Modern_UI_Design_Patterns",
+      "to": "Multi_Level_Permission_System",
+      "relationType": "displays"
+    },
+    {
+      "from": "Value_Objects_Pattern",
+      "to": "Service_Layer_Architecture",
+      "relationType": "supports"
+    },
+    {
+      "from": "Firestore_Database_Design",
+      "to": "Security_Design_Patterns",
+      "relationType": "enforces"
     }
   ]
 }
