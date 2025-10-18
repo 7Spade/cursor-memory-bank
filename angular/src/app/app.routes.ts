@@ -36,11 +36,11 @@ export const routes: Routes = [
   },
   
   // Repository 管理路由
-  // {
-  //   path: 'repositories',
-  //   loadChildren: () => import('./features/repository/repository.routes').then(m => m.repositoryRoutes),
-  //   canActivate: [authGuard]
-  // },
+  {
+    path: 'repositories',
+    loadChildren: () => import('./features/repository/routes/repository.routes').then(m => m.repositoryRoutes),
+    canActivate: [authGuard]
+  },
   
   // 角色管理路由
   {
