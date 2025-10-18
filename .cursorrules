@@ -121,7 +121,7 @@
   ```bash
   docker run --rm -v "D:\7Spade\cursor-memory-bank:/workspace" -w /workspace ghcr.io/yamadashy/repomix:latest --output compressed-analysis.md --style markdown --include "angular/src/**" --ignore "**/*.spec.ts,**/*.test.ts,**/*.stories.ts,**/node_modules/**,**/dist/**,**/coverage/**,**/*.d.ts,**/environments/environment.*.ts"
   ```
-- **rp7-f** - 運行完整模式倉庫分析
+- **rp7f** - 運行完整模式倉庫分析
   ```bash
   docker run --rm -v "D:\7Spade\cursor-memory-bank:/workspace" -w /workspace ghcr.io/yamadashy/repomix:latest --output compressed-analysis.md --style markdown --include "angular/src/**"
   ```

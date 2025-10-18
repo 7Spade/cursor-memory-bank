@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
@@ -235,6 +236,7 @@ export class OrganizationListComponent implements OnInit {
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
   private dialog = inject(MatDialog);
+  private router = inject(Router);
 
   // 狀態管理
   private _organizations = signal<OrganizationDetail[]>([]);
@@ -338,47 +340,65 @@ export class OrganizationListComponent implements OnInit {
    * 檢視組織
    */
   onViewOrganization(organization: OrganizationDetail): void {
-    console.log('檢視組織:', organization);
-    // TODO: 導航到組織詳情頁面
+    this.router.navigate(['/organizations', organization.slug])
+      .catch(error => {
+        this.notificationService.showError('導航失敗，請稍後再試');
+        console.error('Navigation error:', error);
+      });
   }
 
   /**
    * 編輯組織
    */
   onEditOrganization(organization: OrganizationDetail): void {
+    // 暫時顯示提示，後續可以實現編輯對話框
+    this.notificationService.showInfo('編輯組織功能即將推出');
     console.log('編輯組織:', organization);
-    // TODO: 打開編輯組織對話框
   }
 
   /**
    * 組織設定
    */
   onOrganizationSettings(organization: OrganizationDetail): void {
-    console.log('組織設定:', organization);
-    // TODO: 導航到組織設定頁面
+    this.router.navigate(['/organizations', organization.slug, 'settings'])
+      .catch(error => {
+        this.notificationService.showError('導航失敗，請稍後再試');
+        console.error('Navigation error:', error);
+      });
   }
 
   /**
    * 組織成員
    */
   onOrganizationMembers(organization: OrganizationDetail): void {
-    console.log('組織成員:', organization);
-    // TODO: 導航到組織成員頁面
+    this.router.navigate(['/organizations', organization.slug, 'members'])
+      .catch(error => {
+        this.notificationService.showError('導航失敗，請稍後再試');
+        console.error('Navigation error:', error);
+      });
   }
 
   /**
    * 組織團隊
    */
   onOrganizationTeams(organization: OrganizationDetail): void {
-    console.log('組織團隊:', organization);
-    // TODO: 導航到組織團隊頁面
+    this.router.navigate(['/organizations', organization.slug, 'teams'])
+      .catch(error => {
+        this.notificationService.showError('導航失敗，請稍後再試');
+        console.error('Navigation error:', error);
+      });
   }
 
   /**
    * 刪除組織
    */
   onDeleteOrganization(organization: OrganizationDetail): void {
-    console.log('刪除組織:', organization);
-    // TODO: 顯示刪除確認對話框
+    const confirmed = confirm(`確定要刪除組織 "${organization.name}" 嗎？此操作無法復原。`);
+    
+    if (confirmed) {
+      // 暫時顯示提示，後續可以實現刪除功能
+      this.notificationService.showInfo('刪除組織功能即將推出');
+      console.log('刪除組織:', organization);
+    }
   }
 }
