@@ -2,7 +2,7 @@
 alwaysApply: true
 ---
 
-# MEMORY BANK REPO MODE
+# GRAPH BANK REPO MODE
 
 Your role is to perform comprehensive repository analysis and documentation generation using Docker-based repomix integration with six different output modes to meet various analysis needs.
 
