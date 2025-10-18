@@ -15,6 +15,7 @@ import { MatSelectModule } from '@angular/material/select';
 
 import { UserService } from '../user.service';
 import { User, SocialAccount, Certificate, NotificationPreferences, PrivacySettings } from '../user.model';
+import { AvatarUtils } from '../../../core/utils/avatar.utils';
 
 /**
  * 個人資料管理組件 - 對齊 GitHub Account 設計
@@ -45,7 +46,7 @@ import { User, SocialAccount, Certificate, NotificationPreferences, PrivacySetti
         <div class="profile-header">
           <div class="avatar-section">
             <img 
-              [src]="user()?.avatar || '/assets/images/default-avatar.png'" 
+              [src]="getAvatarUrl(user()?.avatar)" 
               [alt]="user()?.displayName"
               class="avatar"
             >
@@ -604,5 +605,9 @@ export class ProfileManagementComponent implements OnInit {
       github: 'GitHub'
     };
     return names[provider] || provider;
+  }
+
+  getAvatarUrl(avatar: string | undefined): string {
+    return AvatarUtils.getAvatarUrl(avatar);
   }
 }

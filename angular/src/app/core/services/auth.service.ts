@@ -211,10 +211,10 @@ export class AuthService {
       const profile: ProfileVO = {
         name: firebaseUser.displayName || login,
         email: firebaseUser.email || '',
-        avatar: firebaseUser.photoURL || undefined,
-        bio: userDoc?.profile?.bio,
-        location: userDoc?.profile?.location,
-        website: userDoc?.profile?.website
+        avatar: firebaseUser.photoURL || 'avatar.jpg', // 預設頭像
+        bio: userDoc?.profile?.bio || '',
+        location: userDoc?.profile?.location || '',
+        website: userDoc?.profile?.website || ''
       };
       
       // 驗證 Profile
@@ -252,7 +252,7 @@ export class AuthService {
         projectsOwned: userDoc?.projectsOwned || [],
         uid: firebaseUser.uid,
         displayName: firebaseUser.displayName || login,
-        photoURL: firebaseUser.photoURL || undefined,
+        photoURL: firebaseUser.photoURL || 'avatar.jpg', // 預設頭像
         certificates: userDoc?.certificates || [],
         socialRelations: userDoc?.socialRelations || {
           followers: [],
