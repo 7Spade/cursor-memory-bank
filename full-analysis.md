@@ -2723,6 +2723,7 @@ import { ValidationService } from '../../../core/services/validation.service';
                 name="name"
                 required
                 [disabled]="isSubmitting()"
+                (input)="validateField('name')"
                 (blur)="validateField('name')">
               <mat-icon matSuffix>business</mat-icon>
               @if (errors['name']) {
@@ -2739,6 +2740,7 @@ import { ValidationService } from '../../../core/services/validation.service';
                 name="slug"
                 required
                 [disabled]="isSubmitting()"
+                (input)="validateField('slug')"
                 (blur)="validateField('slug')">
               <mat-icon matSuffix>link</mat-icon>
               <mat-hint>用於 URL 的唯一識別碼</mat-hint>
@@ -2756,6 +2758,7 @@ import { ValidationService } from '../../../core/services/validation.service';
                 name="description"
                 rows="3"
                 [disabled]="isSubmitting()"
+                (input)="validateField('description')"
                 (blur)="validateField('description')">
               </textarea>
               <mat-icon matSuffix>description</mat-icon>
@@ -10165,7 +10168,7 @@ export class OrganizationCardComponent {
 
 ## File: angular/src/app/features/organization/components/organization-create-dialog.component.ts
 ```typescript
-import { Component, inject, signal, computed, Output, EventEmitter } from '@angular/core';
+import { Component, inject, signal, computed, Output, EventEmitter, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -10236,6 +10239,7 @@ import {
                   name="name"
                   placeholder="輸入組織名稱"
                   required
+                  (input)="onInputChange()"
                   (blur)="validateField('name')"
                   [class.error]="formState.errors.name">
                 <mat-hint>組織的顯示名稱</mat-hint>
@@ -10253,6 +10257,7 @@ import {
                   name="login"
                   placeholder="輸入組織標識符"
                   required
+                  (input)="onInputChange()"
                   (blur)="validateField('login')"
                   [class.error]="formState.errors.login">
                 <mat-hint>用於 URL 的唯一標識符</mat-hint>
@@ -10270,6 +10275,7 @@ import {
                   name="description"
                   placeholder="描述組織的用途和目標"
                   rows="3"
+                  (input)="onInputChange()"
                   (blur)="validateField('description')"
                   [class.error]="formState.errors.description">
                 </textarea>
@@ -10311,7 +10317,7 @@ import {
           color="primary" 
           type="button"
           (click)="onSubmit()"
-          [disabled]="!isFormValid() || formState.isSubmitting">
+          [disabled]="!formState.isValid || formState.isSubmitting">
           @if (formState.isSubmitting) {
             <mat-spinner diameter="20"></mat-spinner>
             建立中...
@@ -10420,7 +10426,7 @@ export class OrganizationCreateDialogComponent {
     }
   };
 
-  // 計算屬性 - 使用 computed signal 自動響應表單變化
+  // 計算屬性
   readonly isFormValid = computed(() => {
     return this.formState.values.name.trim().length > 0 &&
            this.formState.values.login.trim().length > 0 &&
@@ -10428,6 +10434,11 @@ export class OrganizationCreateDialogComponent {
            !this.formState.errors.login &&
            !this.formState.errors.description;
   });
+
+  constructor() {
+    // 初始化表單有效性
+    this.updateFormValidity();
+  }
 
   /**
    * 驗證單個字段
@@ -10447,13 +10458,34 @@ export class OrganizationCreateDialogComponent {
         this.formState.errors.description = descResult.errors[0] || undefined;
         break;
     }
+    
+    this.updateFormValidity();
+  }
+
+  /**
+   * 更新表單有效性
+   */
+  private updateFormValidity(): void {
+    // 直接計算表單有效性，不依賴 computed signal
+    this.formState.isValid = this.formState.values.name.trim().length > 0 &&
+                            this.formState.values.login.trim().length > 0 &&
+                            !this.formState.errors.name &&
+                            !this.formState.errors.login &&
+                            !this.formState.errors.description;
+  }
+
+  /**
+   * 處理輸入變化
+   */
+  onInputChange(): void {
+    this.updateFormValidity();
   }
 
   /**
    * 提交表單
    */
   async onSubmit(): Promise<void> {
-    if (!this.isFormValid() || this.formState.isSubmitting) {
+    if (!this.formState.isValid || this.formState.isSubmitting) {
       return;
     }
 
@@ -10462,7 +10494,7 @@ export class OrganizationCreateDialogComponent {
     this.validateField('login');
     this.validateField('description');
 
-    if (!this.isFormValid()) {
+    if (!this.formState.isValid) {
       this.notificationService.showValidationErrors([
         this.formState.errors.name,
         this.formState.errors.login,

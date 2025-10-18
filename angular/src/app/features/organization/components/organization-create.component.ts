@@ -52,6 +52,7 @@ import { ValidationService } from '../../../core/services/validation.service';
                 name="name"
                 required
                 [disabled]="isSubmitting()"
+                (input)="validateField('name')"
                 (blur)="validateField('name')">
               <mat-icon matSuffix>business</mat-icon>
               @if (errors['name']) {
@@ -68,6 +69,7 @@ import { ValidationService } from '../../../core/services/validation.service';
                 name="slug"
                 required
                 [disabled]="isSubmitting()"
+                (input)="validateField('slug')"
                 (blur)="validateField('slug')">
               <mat-icon matSuffix>link</mat-icon>
               <mat-hint>用於 URL 的唯一識別碼</mat-hint>
@@ -85,6 +87,7 @@ import { ValidationService } from '../../../core/services/validation.service';
                 name="description"
                 rows="3"
                 [disabled]="isSubmitting()"
+                (input)="validateField('description')"
                 (blur)="validateField('description')">
               </textarea>
               <mat-icon matSuffix>description</mat-icon>

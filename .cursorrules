@@ -107,6 +107,27 @@
 
 > **詳細操作流程請參考 `AGENTS.md`**
 
+## 快捷指令對照表
+**⚡ 快速操作指令：在對話中輸入以下指令可快速執行對應功能**
+
+### Context7 整合指令
+- **u7** - 觸發 Context7 整合，使用 MCP Context7 服務器獲取最新文檔
+
+### Repomix 倉庫分析指令
+- **1rp** - 運行壓縮模式倉庫分析（精簡版）
+  ```bash
+  docker run --rm -v "D:\7Spade\cursor-memory-bank:/workspace" -w /workspace ghcr.io/yamadashy/repomix:latest --output compressed-analysis.md --style markdown --include "angular/src/**" --ignore "**/*.spec.ts,**/*.test.ts,**/*.stories.ts,**/node_modules/**,**/dist/**,**/coverage/**,**/*.d.ts,**/environments/environment.*.ts"
+  ```
+- **1rp-full** - 運行完整模式倉庫分析
+  ```bash
+  docker run --rm -v "D:\7Spade\cursor-memory-bank:/workspace" -w /workspace ghcr.io/yamadashy/repomix:latest --output compressed-analysis.md --style markdown --include "angular/src/**"
+  ```
+
+### 使用說明
+- 在任何 Agent 模式下都可以使用這些快捷指令
+- 指令會自動執行對應的 MCP 服務器功能
+- 執行結果會整合到當前的 Graph Bank 系統中
+
 ## 品質保證
 - 在任何模式下輸入 "QA" 可執行技術驗證
 - 遵循漸進式文件方法

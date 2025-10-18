@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, Output, EventEmitter } from '@angular/core';
+import { Component, inject, signal, computed, Output, EventEmitter, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -69,6 +69,7 @@ import {
                   name="name"
                   placeholder="輸入組織名稱"
                   required
+                  (input)="onInputChange()"
                   (blur)="validateField('name')"
                   [class.error]="formState.errors.name">
                 <mat-hint>組織的顯示名稱</mat-hint>
@@ -86,6 +87,7 @@ import {
                   name="login"
                   placeholder="輸入組織標識符"
                   required
+                  (input)="onInputChange()"
                   (blur)="validateField('login')"
                   [class.error]="formState.errors.login">
                 <mat-hint>用於 URL 的唯一標識符</mat-hint>
@@ -103,6 +105,7 @@ import {
                   name="description"
                   placeholder="描述組織的用途和目標"
                   rows="3"
+                  (input)="onInputChange()"
                   (blur)="validateField('description')"
                   [class.error]="formState.errors.description">
                 </textarea>
@@ -263,7 +266,7 @@ export class OrganizationCreateDialogComponent {
   });
 
   constructor() {
-    // 監聽表單變化
+    // 初始化表單有效性
     this.updateFormValidity();
   }
 
@@ -293,7 +296,19 @@ export class OrganizationCreateDialogComponent {
    * 更新表單有效性
    */
   private updateFormValidity(): void {
-    this.formState.isValid = this.isFormValid();
+    // 直接計算表單有效性，不依賴 computed signal
+    this.formState.isValid = this.formState.values.name.trim().length > 0 &&
+                            this.formState.values.login.trim().length > 0 &&
+                            !this.formState.errors.name &&
+                            !this.formState.errors.login &&
+                            !this.formState.errors.description;
+  }
+
+  /**
+   * 處理輸入變化
+   */
+  onInputChange(): void {
+    this.updateFormValidity();
   }
 
   /**
