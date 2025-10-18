@@ -1,12 +1,12 @@
 ---
-description: Detailed REFLECT+ARCHIVE mode instructions for comprehensive task reflection and documentation archiving
-globs: "**/reflect-archive-mode-detailed*/**"
-alwaysApply: false
+alwaysApply: true
 ---
 
-# REFLECT+ARCHIVE MODE - 詳細審查+歸檔指令
+# MEMORY BANK REFLECT+ARCHIVE MODE
 
-> **TL;DR:** 提供詳細的任務審查和歸檔流程，包含反思過程、經驗總結和知識歸檔的完整過程。
+Your role is to facilitate the **reflection** on the completed task and then, upon explicit command, **archive** the relevant documentation and update the Memory Bank. This mode combines the final two stages of the development workflow.
+
+> **TL;DR:** Start by guiding the reflection process based on the completed implementation. Once reflection is documented, wait for the `ARCHIVE NOW` command to initiate the archiving process.
 
 ```mermaid
 graph TD
@@ -52,22 +52,27 @@ graph TD
     style Start fill:#d9b3ff,stroke:#b366ff,color:black
     style ReadDocs fill:#e6ccff,stroke:#d9b3ff,color:black
     style VerifyImplement fill:#ffa64d,stroke:#cc7a30,color:white
-    style LoadReflectMap fill:#4da6ff,stroke:#0066cc,color:white
-    style AssessLevelReflect fill:#d94dbb,stroke:#a3378a,color:white
+    style LoadReflectMap fill:#a3dded,stroke:#4db8db,color:black
     style ReflectProcess fill:#4dbb5f,stroke:#36873f,color:white
-    style ReflectComplete fill:#4dbbbb,stroke:#368787,color:white
-    style PromptArchive fill:#d971ff,stroke:#a33bc2,color:white
-    style UserCommand fill:#ffa64d,stroke:#cc7a30,color:white
-    style LoadArchiveMap fill:#ff5555,stroke:#cc0000,color:white
-    style ArchiveProcess fill:#ffa64d,stroke:#cc7a30,color:white
-    style ArchiveComplete fill:#5fd94d,stroke:#3da336,color:white
-    style SuggestNext fill:#4dbb5f,stroke:#36873f,color:white
+    style ReflectComplete fill:#4dbb5f,stroke:#36873f,color:white
+    style PromptArchive fill:#f8d486,stroke:#e8b84d,color:black
+    style UserCommand fill:#f8d486,stroke:#e8b84d,color:black
+    style LoadArchiveMap fill:#a3dded,stroke:#4db8db,color:black
+    style ArchiveProcess fill:#4da6ff,stroke:#0066cc,color:white
+    style ArchiveComplete fill:#4da6ff,stroke:#0066cc,color:white
+    style SuggestNext fill:#5fd94d,stroke:#3da336,color:white
+    style ReturnImplement fill:#ff5555,stroke:#cc0000,color:white
+    style ErrorReflect fill:#ff5555,stroke:#cc0000,color:white
 ```
 
 ## IMPLEMENTATION STEPS
-
-### Step 1: READ REFERENCE DOCUMENTS
+### Step 1: READ MAIN RULE & CONTEXT FILES
 ```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/main.mdc",
+  should_read_entire_file: true
+})
+
 read_file({
   target_file: "tasks.md",
   should_read_entire_file: true
@@ -77,251 +82,133 @@ read_file({
   target_file: "progress.md",
   should_read_entire_file: true
 })
-
-read_file({
-  target_file: ".cursor/rules/isolation_rules/main.mdc",
-  should_read_entire_file: true
-})
 ```
 
-### Step 2: LOAD REFLECT MODE MAP
+### Step 2: LOAD REFLECT+ARCHIVE MODE MAPS
+Load the visual maps for both reflection and archiving, as this mode handles both.
 ```
 read_file({
   target_file: ".cursor/rules/isolation_rules/visual-maps/reflect-mode-map.mdc",
   should_read_entire_file: true
 })
-```
 
-### Step 3: LOAD LEVEL-SPECIFIC REFLECTION RULES
-Based on complexity level determined from tasks.md, load one of:
-
-#### For Level 1-2:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level2/reflection-basic.mdc",
-  should_read_entire_file: true
-})
-```
-
-#### For Level 3:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level3/reflection-intermediate.mdc",
-  should_read_entire_file: true
-})
-```
-
-#### For Level 4:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level4/reflection-comprehensive.mdc",
-  should_read_entire_file: true
-})
-```
-
-### Step 4: LOAD ARCHIVE MODE MAP (When ARCHIVE NOW is triggered)
-```
 read_file({
   target_file: ".cursor/rules/isolation_rules/visual-maps/archive-mode-map.mdc",
   should_read_entire_file: true
 })
 ```
 
-### Step 5: LOAD LEVEL-SPECIFIC ARCHIVE RULES
-Based on complexity level, load one of:
-
-#### For Level 1-2:
+### Step 3: LOAD COMPLEXITY-SPECIFIC RULES (Based on tasks.md)
+Load the appropriate level-specific rules for both reflection and archiving.  
+Example for Level 2:
 ```
+read_file({
+  target_file: ".cursor/rules/isolation_rules/Level2/reflection-basic.mdc",
+  should_read_entire_file: true
+})
 read_file({
   target_file: ".cursor/rules/isolation_rules/Level2/archive-basic.mdc",
   should_read_entire_file: true
 })
 ```
+(Adjust paths for Level 1, 3, or 4 as needed)
 
-#### For Level 3:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level3/archive-intermediate.mdc",
-  should_read_entire_file: true
-})
-```
-
-#### For Level 4:
-```
-read_file({
-  target_file: ".cursor/rules/isolation_rules/Level4/archive-comprehensive.mdc",
-  should_read_entire_file: true
-})
-```
-
-## REFLECTION PROCESS
-
-Your task is to facilitate comprehensive reflection on the completed task and then archive the relevant documentation. Start by guiding the reflection process based on the completed implementation.
-
-### Reflection Approach
-
-Focus on analyzing what worked well, what challenges were encountered, and what lessons were learned. Compare the actual implementation against the original plan and creative decisions.
+## DEFAULT BEHAVIOR: REFLECTION
+When this mode is activated, it defaults to the REFLECTION process. Your primary task is to guide the user through reviewing the completed implementation.  
+Goal: Facilitate a structured review, capture key insights in reflection.md, and update tasks.md to reflect completion of the reflection phase.
 
 ```mermaid
 graph TD
-    Reflect["🤔 REFLECTION PROCESS"] --> Review["Review implementation"]
-    Review --> Compare["Compare to plan"]
-    Compare --> Success["Document successes"]
-    Success --> Challenges["Document challenges"]
-    Challenges --> Lessons["Document lessons learned"]
-    Lessons --> Improvements["Document improvements"]
-    Improvements --> Create["Create reflection.md"]
-    
-    style Reflect fill:#4dbb5f,stroke:#36873f,color:white
+    ReflectStart["🤔 START REFLECTION"] --> Review["🔍 Review Implementation<br>& Compare to Plan"]
+    Review --> Success["👍 Document Successes"]
+    Success --> Challenges["👎 Document Challenges"]
+    Challenges --> Lessons["💡 Document Lessons Learned"]
+    Lessons --> Improvements["📈 Document Process/<br>Technical Improvements"]
+    Improvements --> UpdateTasks["📝 Update tasks.md<br>with Reflection Status"]
+    UpdateTasks --> CreateDoc["📄 Create reflection.md"]
+    CreateDoc --> Prompt["💬 Prompt for 'ARCHIVE NOW'"]
+
+    style ReflectStart fill:#4dbb5f,stroke:#36873f,color:white
     style Review fill:#d6f5dd,stroke:#a3e0ae,color:black
-    style Compare fill:#d6f5dd,stroke:#a3e0ae,color:black
     style Success fill:#d6f5dd,stroke:#a3e0ae,color:black
     style Challenges fill:#d6f5dd,stroke:#a3e0ae,color:black
     style Lessons fill:#d6f5dd,stroke:#a3e0ae,color:black
     style Improvements fill:#d6f5dd,stroke:#a3e0ae,color:black
-    style Create fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style UpdateTasks fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style CreateDoc fill:#d6f5dd,stroke:#a3e0ae,color:black
+    style Prompt fill:#f8d486,stroke:#e8b84d,color:black
 ```
 
-### Reflection Documentation Template
-
-```
-# REFLECTION: [Task Name]
-
-## Implementation Review
-- [Summary of what was implemented]
-- [Key components and features delivered]
-- [Technical approach taken]
-
-## Successes
-- [What worked well]
-- [Positive outcomes]
-- [Unexpected benefits]
-
-## Challenges
-- [Issues encountered]
-- [Difficulties overcome]
-- [Areas that were problematic]
-
-## Lessons Learned
-- [Key insights gained]
-- [Technical learnings]
-- [Process improvements identified]
-
-## Process Improvements
-- [What could be done better next time]
-- [Process optimizations]
-- [Tool or methodology improvements]
-
-## Technical Improvements
-- [Code quality improvements]
-- [Architecture refinements]
-- [Performance optimizations]
-
-## Next Steps
-- [Follow-up actions needed]
-- [Future enhancements]
-- [Knowledge transfer items]
-```
-
-## ARCHIVING PROCESS
-
-When the user types "ARCHIVE NOW", execute the archiving process to create comprehensive documentation and update the Memory Bank.
-
-### Archiving Approach
-
-Create a comprehensive archive document that captures all aspects of the completed task, including the original plan, implementation details, reflection insights, and lessons learned.
+## TRIGGERED BEHAVIOR: ARCHIVING (Command: ARCHIVE NOW)
+When the user issues the ARCHIVE NOW command after completing reflection, initiate the ARCHIVING process.  
+Goal: Consolidate final documentation, create the formal archive record in docs/archive/, update all relevant Memory Bank files to mark the task as fully complete, and prepare the context for the next task.
 
 ```mermaid
 graph TD
-    Archive["📦 ARCHIVING PROCESS"] --> Create["Create archive document"]
-    Create --> Update["Update tasks.md"]
-    Update --> Progress["Update progress.md"]
-    Progress --> Context["Update activeContext.md"]
-    Context --> Complete["Mark task complete"]
-    
-    style Archive fill:#ffa64d,stroke:#cc7a30,color:white
-    style Create fill:#ffe6cc,stroke:#ffa64d,color:black
-    style Update fill:#ffe6cc,stroke:#ffa64d,color:black
-    style Progress fill:#ffe6cc,stroke:#ffa64d,color:black
-    style Context fill:#ffe6cc,stroke:#ffa64d,color:black
-    style Complete fill:#ffe6cc,stroke:#ffa64d,color:black
+    ArchiveStart["📦 START ARCHIVING<br>(Triggered by 'ARCHIVE NOW')"] --> Verify["✅ Verify reflection.md<br>is Complete"]
+    Verify --> CreateDoc["📄 Create Archive Document<br>in docs/archive/"]
+    CreateDoc --> UpdateTasks["📝 Update tasks.md<br>Mark Task COMPLETE"]
+    UpdateTasks --> UpdateProgress["📈 Update progress.md<br>with Archive Link"]
+    UpdateTasks --> UpdateActive["🔄 Update activeContext.md<br>Reset for Next Task"]
+    UpdateActive --> Complete["🏁 ARCHIVING COMPLETE"]
+
+    style ArchiveStart fill:#4da6ff,stroke:#0066cc,color:white
+    style Verify fill:#cce6ff,stroke:#80bfff,color:black
+    style CreateDoc fill:#cce6ff,stroke:#80bfff,color:black
+    style UpdateTasks fill:#cce6ff,stroke:#80bfff,color:black
+    style UpdateProgress fill:#cce6ff,stroke:#80bfff,color:black
+    style UpdateActive fill:#cce6ff,stroke:#80bfff,color:black
+    style Complete fill:#cce6ff,stroke:#80bfff,color:black
 ```
 
-### Archive Documentation Template
+## VERIFICATION CHECKLISTS
+### Reflection Verification Checklist
+✓ REFLECTION VERIFICATION
+- Implementation thoroughly reviewed? [YES/NO]
+- Successes documented? [YES/NO]
+- Challenges documented? [YES/NO]
+- Lessons Learned documented? [YES/NO]
+- Process/Technical Improvements identified? [YES/NO]
+- reflection.md created? [YES/NO]
+- tasks.md updated with reflection status? [YES/NO]
 
+→ If all YES: Reflection complete. Prompt user: "Type 'ARCHIVE NOW' to proceed with archiving."  
+→ If any NO: Guide user to complete missing reflection elements.
+
+### Archiving Verification Checklist
+✓ ARCHIVE VERIFICATION
+- Reflection document reviewed? [YES/NO]
+- Archive document created with all sections? [YES/NO]
+- Archive document placed in correct location (docs/archive/)? [YES/NO]
+- tasks.md marked as COMPLETED? [YES/NO]
+- progress.md updated with archive reference? [YES/NO]
+- activeContext.md updated for next task? [YES/NO]
+- Creative phase documents archived (Level 3-4)? [YES/NO/NA]  
+
+→ If all YES: Archiving complete. Suggest VAN Mode for the next task.  
+→ If any NO: Guide user to complete missing archive elements.  
+
+### MODE TRANSITION
+Entry: This mode is typically entered after the IMPLEMENT mode is completed.  
+Internal: The ARCHIVE NOW command transitions the mode's focus from reflection to archiving.  
+Exit: After successful archiving, the system should suggest returning to VAN mode to start a new task or initialize the next phase.  
+
+### VALIDATION OPTIONS
+- Review completed implementation against the plan.
+- Generate reflection.md based on the review.
+- Upon command ARCHIVE NOW, generate the archive document.
+- Show updates to tasks.md, progress.md, and activeContext.md.
+- Demonstrate the final state suggesting VAN mode.
+
+### VERIFICATION COMMITMENT
 ```
-# ARCHIVE: [Task Name] - [Date]
-
-## Task Overview
-- [Task description and objectives]
-- [Complexity level and approach]
-- [Timeline and milestones]
-
-## Implementation Summary
-- [What was built]
-- [Key features and components]
-- [Technical decisions made]
-
-## Reflection Summary
-- [Key successes and challenges]
-- [Lessons learned]
-- [Process improvements]
-
-## Knowledge Base Updates
-- [Documentation created]
-- [Code repositories updated]
-- [Knowledge transfer completed]
-
-## Future Considerations
-- [Follow-up tasks]
-- [Potential enhancements]
-- [Related projects]
-
-## Archive Metadata
-- [Task ID]
-- [Completion date]
-- [Team members involved]
-- [Related documentation links]
+┌─────────────────────────────────────────────────────┐
+│ I WILL guide the REFLECTION process first.          │
+│ I WILL wait for the 'ARCHIVE NOW' command before    │
+│ starting the ARCHIVING process.                     │
+│ I WILL run all verification checkpoints for both    │
+│ reflection and archiving.                           │
+│ I WILL maintain tasks.md as the single source of    │
+│ truth for final task completion status.             │
+└─────────────────────────────────────────────────────┘
 ```
-
-## VERIFICATION
-
-### Reflection Verification
-```mermaid
-graph TD
-    VR["✅ REFLECTION VERIFICATION"] --> R["Implementation reviewed?"]
-    VR --> S["Successes documented?"]
-    VR --> C["Challenges documented?"]
-    VR --> L["Lessons learned captured?"]
-    VR --> I["Improvements identified?"]
-    
-    R & S & C & L & I --> Decision{"All Verified?"}
-    Decision -->|"Yes"| Complete["Ready for archiving"]
-    Decision -->|"No"| Fix["Complete missing items"]
-    
-    style VR fill:#4dbbbb,stroke:#368787,color:white
-    style Decision fill:#ffa64d,stroke:#cc7a30,color:white
-    style Complete fill:#5fd94d,stroke:#3da336,color:white
-    style Fix fill:#ff5555,stroke:#cc0000,color:white
-```
-
-### Archive Verification
-```mermaid
-graph TD
-    AR["✅ ARCHIVE VERIFICATION"] --> D["Archive document created?"]
-    AR --> T["Tasks.md updated?"]
-    AR --> P["Progress.md updated?"]
-    AR --> A["ActiveContext.md reset?"]
-    AR --> K["Knowledge base updated?"]
-    
-    D & T & P & A & K --> Decision{"All Verified?"}
-    Decision -->|"Yes"| Complete["Task fully completed"]
-    Decision -->|"No"| Fix["Complete missing items"]
-    
-    style AR fill:#4dbbbb,stroke:#368787,color:white
-    style Decision fill:#ffa64d,stroke:#cc7a30,color:white
-    style Complete fill:#5fd94d,stroke:#3da336,color:white
-    style Fix fill:#ff5555,stroke:#cc0000,color:white
-```
-
-Before completing the reflection phase, verify that the implementation has been thoroughly reviewed, successes and challenges documented, lessons learned captured, and improvements identified. After archiving, verify that all documentation has been created and updated, and the task is marked as complete.
