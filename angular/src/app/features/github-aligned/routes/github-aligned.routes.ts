@@ -16,6 +16,16 @@ export const githubAlignedRoutes: Routes = [
     title: '團隊管理'
   },
   {
+    path: 'security',
+    loadComponent: () => import('../components/security/security-manager.component').then(m => m.SecurityManagerComponent),
+    title: '安全管理器'
+  },
+  {
+    path: 'roles',
+    loadComponent: () => import('../components/roles/organization-roles.component').then(m => m.OrganizationRolesComponent),
+    title: '組織角色系統'
+  },
+  {
     path: '',
     redirectTo: 'organizations',
     pathMatch: 'full'
