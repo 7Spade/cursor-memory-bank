@@ -2,7 +2,74 @@
 
 使用 Angular v20 現代化特性（Signals、Control Flow、Standalone Components）實現的 GitHub 式多層級權限系統架構。
 
-## 一、資料結構設計 (Firestore)
+## 📋 開發順序指南
+
+本文件按照實際開發順序組織，開發者可以依序實現：
+
+1. **環境配置** → 2. **資料模型** → 3. **資料庫設計** → 4. **核心服務** → 5. **業務服務** → 6. **權限系統** → 7. **路由配置** → 8. **路由守衛** → 9. **UI 元件** → 10. **安全規則** → 11. **使用範例** → 12. **測試策略**
+
+---
+
+## 一、現代化應用程式配置 (Standalone API)
+
+### 1.1 應用程式啟動配置
+
+```typescript
+// main.ts
+import { bootstrapApplication } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
+import { getAuth, provideAuth } from '@angular/fire/auth';
+import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { getAnalytics, provideAnalytics } from '@angular/fire/analytics';
+import { AppComponent } from './app/app.component';
+import { routes } from './app/routes/routes';
+import { environment } from './environments/environment';
+
+bootstrapApplication(AppComponent, {
+  providers: [
+    // Angular 核心提供者
+    provideRouter(routes),
+    provideHttpClient(),
+    provideAnimations(),
+    
+    // Firebase 提供者
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideAuth(() => getAuth()),
+    provideFirestore(() => getFirestore()),
+    provideAnalytics(() => getAnalytics()),
+    
+    // 自定義服務提供者
+    // ... 其他服務
+  ],
+}).catch(err => console.error(err));
+```
+
+### 1.2 環境配置
+
+```typescript
+// environments/environment.ts
+export const environment = {
+  production: false,
+  firebase: {
+    apiKey: "your-api-key",
+    authDomain: "your-project.firebaseapp.com",
+    projectId: "your-project-id",
+    storageBucket: "your-project.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "your-app-id",
+    measurementId: "your-measurement-id"
+  }
+};
+```
+
+---
+
+## 二、資料結構設計 (TypeScript 介面)
+
+### 2.1 核心資料模型
 
 ```typescript
 // src/app/core/models/auth.model.ts
@@ -76,74 +143,6 @@ export interface Organization extends Account {
   businessLicense?: BusinessLicenseVO;   // 商業許可證
   // 移除 members 和 teams 的 Map 定義，這些應該通過子集合查詢獲取
   // 移除重複的 settings 欄位，使用繼承的 SettingsVO
-}
-
-// 額外的 Value Objects
-export interface CertificateVO {
-  id: string;
-  name: string;
-  issuer: string;
-  issuedAt: Date;
-  expiresAt?: Date;
-}
-
-export interface SocialRelationVO {
-  followers: string[];
-  following: string[];
-  connections: string[];
-}
-
-export interface BusinessLicenseVO {
-  licenseNumber: string;
-  companyName: string;
-  issuedBy: string;
-  issuedAt: Date;
-  expiresAt: Date;
-}
-
-export interface MemberVO {
-  userId: string;
-  role: OrgRole;
-  joinedAt: Date;
-  invitedBy?: string;
-}
-
-export interface TeamVO {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  permissions: TeamPermissions;
-  assignedProjects: string[];
-}
-
-export interface Team {
-  id: string;
-  organizationId: string;
-  name: string;
-  slug: string;
-  description?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  permissions: TeamPermissions;
-}
-
-export interface OrganizationMember {
-  id: string;
-  organizationId: string;
-  userId: string;
-  role: OrgRole;
-  joinedAt: Date;
-  invitedBy?: string;
-}
-
-export interface TeamMember {
-  id: string;
-  teamId: string;
-  userId: string;
-  role: TeamRole;
-  joinedAt: Date;
-  addedBy?: string;
 }
 
 // Repository 介面 - GitHub 的核心概念
@@ -257,6 +256,74 @@ export interface SettingsVO {
   };
 }
 
+// 額外的 Value Objects
+export interface CertificateVO {
+  id: string;
+  name: string;
+  issuer: string;
+  issuedAt: Date;
+  expiresAt?: Date;
+}
+
+export interface SocialRelationVO {
+  followers: string[];
+  following: string[];
+  connections: string[];
+}
+
+export interface BusinessLicenseVO {
+  licenseNumber: string;
+  companyName: string;
+  issuedBy: string;
+  issuedAt: Date;
+  expiresAt: Date;
+}
+
+export interface MemberVO {
+  userId: string;
+  role: OrgRole;
+  joinedAt: Date;
+  invitedBy?: string;
+}
+
+export interface TeamVO {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  permissions: TeamPermissions;
+  assignedProjects: string[];
+}
+
+export interface Team {
+  id: string;
+  organizationId: string;
+  name: string;
+  slug: string;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  permissions: TeamPermissions;
+}
+
+export interface OrganizationMember {
+  id: string;
+  organizationId: string;
+  userId: string;
+  role: OrgRole;
+  joinedAt: Date;
+  invitedBy?: string;
+}
+
+export interface TeamMember {
+  id: string;
+  teamId: string;
+  userId: string;
+  role: TeamRole;
+  joinedAt: Date;
+  addedBy?: string;
+}
+
 // 驗證工具函數
 export class ValidationUtils {
   static validateEmail(email: string): boolean {
@@ -294,7 +361,11 @@ export class ValidationUtils {
 }
 ```
 
-## 二、Firestore 集合結構
+---
+
+## 三、Firestore 集合結構設計
+
+### 3.1 資料庫架構
 
 ```
 /accounts/{accountId}
@@ -382,7 +453,11 @@ export class ValidationUtils {
     - grantedAt: Date
 ```
 
-## 三、現代化 Auth Service 實現 (Signals + inject)
+---
+
+## 四、現代化 Auth Service 實現 (Signals + inject)
+
+### 4.1 認證服務核心
 
 ```typescript
 // src/app/core/services/auth.service.ts
@@ -589,7 +664,11 @@ export class AuthService {
 }
 ```
 
-## 四、Organization Service
+---
+
+## 五、Organization Service (組織管理服務)
+
+### 5.1 組織業務邏輯
 
 ```typescript
 // src/app/core/services/organization.service.ts
@@ -861,7 +940,11 @@ export class OrganizationService {
 }
 ```
 
-## 五、現代化權限管理系統 (Signals + Computed)
+---
+
+## 六、現代化權限管理系統 (Signals + Computed)
+
+### 6.1 權限服務核心
 
 ```typescript
 // src/app/core/services/permission.service.ts
@@ -1051,57 +1134,18 @@ export class PermissionService {
 }
 ```
 
-## 六、ACL Guard - 路由守衛
+---
 
-```typescript
-// src/app/core/guards/acl.guard.ts
+## 七、路由配置 (應用程式路由)
 
-import { inject } from '@angular/core';
-import { Router, CanActivateFn, ActivatedRouteSnapshot } from '@angular/router';
-import { map } from 'rxjs';
-import { ACLService } from '../services/acl.service';
-import { NzMessageService } from 'ng-zorro-antd/message';
-
-export const aclGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
-  const aclService = inject(ACLService);
-  const router = inject(Router);
-  const message = inject(NzMessageService);
-
-  const requiredAbility = route.data['ability'] as { action: string; resource: string };
-  const orgId = route.paramMap.get('orgId');
-
-  if (!orgId) {
-    message.error('無效的組織 ID');
-    router.navigate(['/organizations']);
-    return false;
-  }
-
-  return aclService.initializeACL(orgId).pipe(
-    map(() => {
-      const hasPermission = aclService.can(
-        requiredAbility.action,
-        requiredAbility.resource
-      );
-
-      if (!hasPermission) {
-        message.error('您沒有權限執行此操作');
-        router.navigate([`/organizations/${orgId}`]);
-      }
-
-      return hasPermission;
-    })
-  );
-};
-```
-
-## 七、路由配置範例
+### 7.1 路由設定
 
 ```typescript
 // src/app/routes/routes.ts
 
 import { Routes } from '@angular/router';
-import { aclGuard } from '@core/guards/acl.guard';
-import { authGuard } from '@delon/auth';
+import { permissionGuard } from '@core/guards/permission.guard';
+import { authGuard } from '@core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -1114,14 +1158,14 @@ export const routes: Routes = [
       },
       {
         path: 'settings',
-        canActivate: [aclGuard],
-        data: { ability: { action: 'write', resource: 'organization' } },
+        canActivate: [permissionGuard],
+        data: { permission: { action: 'write', resource: 'organization' } },
         loadComponent: () => import('./organization-settings/organization-settings.component')
       },
       {
         path: 'members',
-        canActivate: [aclGuard],
-        data: { ability: { action: 'read', resource: 'member' } },
+        canActivate: [permissionGuard],
+        data: { permission: { action: 'read', resource: 'member' } },
         loadComponent: () => import('./members-list/members-list.component')
       },
       {
@@ -1129,14 +1173,14 @@ export const routes: Routes = [
         children: [
           {
             path: '',
-            canActivate: [aclGuard],
-            data: { ability: { action: 'read', resource: 'team' } },
+            canActivate: [permissionGuard],
+            data: { permission: { action: 'read', resource: 'team' } },
             loadComponent: () => import('./teams-list/teams-list.component')
           },
           {
             path: 'new',
-            canActivate: [aclGuard],
-            data: { ability: { action: 'admin', resource: 'team' } },
+            canActivate: [permissionGuard],
+            data: { permission: { action: 'admin', resource: 'team' } },
             loadComponent: () => import('./team-create/team-create.component')
           }
         ]
@@ -1146,7 +1190,78 @@ export const routes: Routes = [
 ];
 ```
 
-## 八、現代化 UI 元件範例 - 成員管理 (Control Flow + Signals)
+---
+
+## 八、路由守衛 (權限保護)
+
+### 8.1 認證守衛
+
+```typescript
+// src/app/core/guards/auth.guard.ts
+
+import { inject } from '@angular/core';
+import { Router, CanActivateFn } from '@angular/router';
+import { AuthService } from '../services/auth.service';
+
+export const authGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isAuthenticated()) {
+    router.navigate(['/login']);
+    return false;
+  }
+
+  return true;
+};
+```
+
+### 8.2 權限守衛
+
+```typescript
+// src/app/core/guards/permission.guard.ts
+
+import { inject } from '@angular/core';
+import { Router, CanActivateFn, ActivatedRouteSnapshot } from '@angular/router';
+import { PermissionService } from '../services/permission.service';
+import { NzMessageService } from 'ng-zorro-antd/message';
+
+export const permissionGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
+  const permissionService = inject(PermissionService);
+  const router = inject(Router);
+  const message = inject(NzMessageService);
+
+  const requiredPermission = route.data['permission'] as { action: string; resource: string };
+  const orgId = route.paramMap.get('orgId');
+
+  if (!orgId) {
+    message.error('無效的組織 ID');
+    router.navigate(['/organizations']);
+    return false;
+  }
+
+  // 設置當前組織並檢查權限
+  permissionService.setCurrentOrganization(orgId).then(() => {
+    const hasPermission = permissionService.can(
+      requiredPermission.action,
+      requiredPermission.resource
+    );
+
+    if (!hasPermission) {
+      message.error('您沒有權限執行此操作');
+      router.navigate([`/organizations/${orgId}`]);
+    }
+  });
+
+  return true;
+};
+```
+
+---
+
+## 九、現代化 UI 元件範例 (Control Flow + Signals)
+
+### 9.1 成員管理元件
 
 ```typescript
 // src/app/routes/members-list/members-list.component.ts
@@ -1330,7 +1445,11 @@ export class MembersListComponent implements OnInit {
 }
 ```
 
-## 九、Firestore 安全規則
+---
+
+## 十、Firestore 安全規則
+
+### 10.1 資料庫安全配置
 
 ```javascript
 rules_version = '2';
@@ -1392,6 +1511,38 @@ service cloud.firestore {
       }
     }
     
+    // Repository 集合
+    match /repositories/{repositoryId} {
+      allow read: if request.auth != null && (
+        !resource.data.private ||
+        resource.data.ownerId == request.auth.uid ||
+        isRepositoryCollaborator(repositoryId)
+      );
+      
+      allow write: if request.auth != null && (
+        resource.data.ownerId == request.auth.uid ||
+        isRepositoryCollaborator(repositoryId)
+      );
+      
+      // Repository 協作者
+      match /collaborators/{userId} {
+        allow read: if request.auth != null && (
+          resource.data.repositoryId == repositoryId &&
+          (isRepositoryOwner(repositoryId) || request.auth.uid == userId)
+        );
+        allow write: if request.auth != null && isRepositoryOwner(repositoryId);
+      }
+      
+      // Repository 團隊訪問
+      match /teamAccess/{teamId} {
+        allow read: if request.auth != null && (
+          resource.data.repositoryId == repositoryId &&
+          isRepositoryOwner(repositoryId)
+        );
+        allow write: if request.auth != null && isRepositoryOwner(repositoryId);
+      }
+    }
+    
     // 輔助函數
     function isOrganizationMember(accountId) {
       return exists(/databases/$(database)/documents/accounts/$(accountId)/members/$(request.auth.uid));
@@ -1411,51 +1562,26 @@ service cloud.firestore {
       let teamMember = get(/databases/$(database)/documents/accounts/$(accountId)/teams/$(teamId)/members/$(request.auth.uid));
       return teamMember.data.role == 'maintainer';
     }
+    
+    function isRepositoryOwner(repositoryId) {
+      return get(/databases/$(database)/documents/repositories/$(repositoryId)).data.ownerId == request.auth.uid;
+    }
+    
+    function isRepositoryCollaborator(repositoryId) {
+      return exists(/databases/$(database)/documents/repositories/$(repositoryId)/collaborators/$(request.auth.uid));
+    }
   }
 }
 ```
 
-## 十、現代化應用程式配置 (Standalone API)
+---
 
-```typescript
-// main.ts
-import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
-import { provideHttpClient } from '@angular/common/http';
-import { provideAnimations } from '@angular/platform-browser/animations';
-import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getAuth, provideAuth } from '@angular/fire/auth';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
-import { getAnalytics, provideAnalytics } from '@angular/fire/analytics';
-import { AppComponent } from './app/app.component';
-import { routes } from './app/routes/routes';
-import { environment } from './environments/environment';
+## 十一、使用範例與最佳實踐
 
-bootstrapApplication(AppComponent, {
-  providers: [
-    // Angular 核心提供者
-    provideRouter(routes),
-    provideHttpClient(),
-    provideAnimations(),
-    
-    // Firebase 提供者
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore()),
-    provideAnalytics(() => getAnalytics()),
-    
-    // 自定義服務提供者
-    // ... 其他服務
-  ],
-}).catch(err => console.error(err));
-```
-
-## 十一、使用範例 - 現代化權限檢查
-
-### 1. 在模板中使用 Control Flow + Signals
+### 11.1 在模板中使用 Control Flow + Signals
 
 ```html
-<!-- 使用 @if 替代 *aclIf -->
+<!-- 使用 @if 替代 *ngIf -->
 @if (permissionService.canManageTeams()) {
   <button 
     nz-button 
@@ -1480,18 +1606,18 @@ bootstrapApplication(AppComponent, {
 }
 ```
 
-### 2. 在程式碼中檢查權限
+### 11.2 在程式碼中檢查權限
 
 ```typescript
 import { Component, inject, OnInit } from '@angular/core';
-import { ACLService } from '@core/services/acl.service';
+import { PermissionService } from '@core/services/permission.service';
 
 @Component({
   selector: 'app-organization-settings',
   template: `...`
 })
 export class OrganizationSettingsComponent implements OnInit {
-  private aclService = inject(ACLService);
+  private permissionService = inject(PermissionService);
   
   canEditSettings = false;
   canManageMembers = false;
@@ -1499,9 +1625,9 @@ export class OrganizationSettingsComponent implements OnInit {
 
   ngOnInit() {
     // 檢查各種權限
-    this.canEditSettings = this.aclService.can('write', 'organization');
-    this.canManageMembers = this.aclService.can('admin', 'member');
-    this.isOwner = this.aclService.can('delete', 'organization');
+    this.canEditSettings = this.permissionService.can('write', 'organization');
+    this.canManageMembers = this.permissionService.can('admin', 'member');
+    this.isOwner = this.permissionService.can('delete', 'organization');
   }
 
   async deleteOrganization() {
@@ -1522,7 +1648,7 @@ export class OrganizationSettingsComponent implements OnInit {
 }
 ```
 
-### 3. 組織管理完整範例
+### 11.3 組織管理完整範例
 
 ```typescript
 // src/app/routes/organization-dashboard/organization-dashboard.component.ts
@@ -1534,10 +1660,9 @@ import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzButtonModule } from 'ng-zorro-antd/button';
 import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzGridModule } from 'ng-zorro-antd/grid';
-import { ACLModule } from '@delon/acl';
 import { Observable, combineLatest, map } from 'rxjs';
 import { OrganizationService } from '@core/services/organization.service';
-import { ACLService } from '@core/services/acl.service';
+import { PermissionService } from '@core/services/permission.service';
 import { AuthService } from '@core/services/auth.service';
 import { Organization, Team, OrganizationMember } from '@core/models/auth.model';
 
@@ -1549,8 +1674,7 @@ import { Organization, Team, OrganizationMember } from '@core/models/auth.model'
     NzCardModule,
     NzButtonModule,
     NzStatisticModule,
-    NzGridModule,
-    ACLModule
+    NzGridModule
   ],
   template: `
     @if (dashboardData$ | async; as data) {
@@ -1560,20 +1684,22 @@ import { Organization, Team, OrganizationMember } from '@core/models/auth.model'
           <nz-card [nzTitle]="data.org.name">
             <p>{{ data.org.description || '暫無描述' }}</p>
             <div class="actions">
-              <button 
-                nz-button 
-                nzType="primary"
-                *aclIf="{ action: 'write', resource: 'organization' }"
-                (click)="editOrganization()">
-                編輯組織
-              </button>
-              <button 
-                nz-button 
-                nzDanger
-                *aclIf="{ action: 'delete', resource: 'organization' }"
-                (click)="deleteOrganization()">
-                刪除組織
-              </button>
+              @if (permissionService.canManageOrganization()) {
+                <button 
+                  nz-button 
+                  nzType="primary"
+                  (click)="editOrganization()">
+                  編輯組織
+                </button>
+              }
+              @if (permissionService.can('delete', 'organization')) {
+                <button 
+                  nz-button 
+                  nzDanger
+                  (click)="deleteOrganization()">
+                  刪除組織
+                </button>
+              }
             </div>
           </nz-card>
         </div>
@@ -1585,13 +1711,14 @@ import { Organization, Team, OrganizationMember } from '@core/models/auth.model'
               [nzValue]="data.memberCount" 
               nzTitle="成員數量">
             </nz-statistic>
-            <button 
-              nz-button 
-              nzBlock
-              *aclIf="{ action: 'write', resource: 'member' }"
-              (click)="goToMembers()">
-              管理成員
-            </button>
+            @if (permissionService.canManageMembers()) {
+              <button 
+                nz-button 
+                nzBlock
+                (click)="goToMembers()">
+                管理成員
+              </button>
+            }
           </nz-card>
         </div>
 
@@ -1601,13 +1728,14 @@ import { Organization, Team, OrganizationMember } from '@core/models/auth.model'
               [nzValue]="data.teamCount" 
               nzTitle="團隊數量">
             </nz-statistic>
-            <button 
-              nz-button 
-              nzBlock
-              *aclIf="{ action: 'read', resource: 'team' }"
-              (click)="goToTeams()">
-              查看團隊
-            </button>
+            @if (permissionService.can('read', 'team')) {
+              <button 
+                nz-button 
+                nzBlock
+                (click)="goToTeams()">
+                查看團隊
+              </button>
+            }
           </nz-card>
         </div>
 
@@ -1617,13 +1745,14 @@ import { Organization, Team, OrganizationMember } from '@core/models/auth.model'
               [nzValue]="data.userTeamCount" 
               nzTitle="我的團隊">
             </nz-statistic>
-            <button 
-              nz-button 
-              nzBlock
-              *aclIf="{ action: 'admin', resource: 'team' }"
-              (click)="createTeam()">
-              建立團隊
-            </button>
+            @if (permissionService.canManageTeams()) {
+              <button 
+                nz-button 
+                nzBlock
+                (click)="createTeam()">
+                建立團隊
+              </button>
+            }
           </nz-card>
         </div>
 
@@ -1677,7 +1806,7 @@ export class OrganizationDashboardComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private orgService = inject(OrganizationService);
-  private aclService = inject(ACLService);
+  private permissionService = inject(PermissionService);
   private authService = inject(AuthService);
 
   orgId!: string;
@@ -1696,7 +1825,7 @@ export class OrganizationDashboardComponent implements OnInit {
       this.orgService.getOrganization(this.orgId),
       this.orgService.getOrganizationMembers(this.orgId),
       this.orgService.getOrganizationTeams(this.orgId),
-      this.authService.currentUser$
+      this.authService.currentAccount
     ]).pipe(
       map(([org, members, teams, user]) => {
         if (!org || !user) {
@@ -1745,88 +1874,11 @@ export class OrganizationDashboardComponent implements OnInit {
 }
 ```
 
-## 十一、進階功能 - 權限繼承與覆寫
-
-```typescript
-// src/app/core/services/permission.service.ts
-
-import { Injectable, inject } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
-import { OrganizationService } from './organization.service';
-import { OrgRole, TeamRole, TeamPermissions } from '../models/auth.model';
-
-@Injectable({ providedIn: 'root' })
-export class PermissionService {
-  private orgService = inject(OrganizationService);
-
-  /**
-   * 計算用戶在特定資源上的有效權限
-   * 考慮組織角色和團隊角色的繼承關係
-   */
-  async getEffectivePermissions(
-    orgId: string,
-    userId: string,
-    resourceType: 'repository' | 'issues' | 'pullRequests'
-  ): Promise<any> {
-    // 1. 獲取組織角色
-    const orgRole = await this.orgService.getUserOrgRole(orgId, userId);
-    
-    // 2. 獲取用戶所屬團隊
-    const teams = await firstValueFrom(this.orgService.getUserTeams(orgId, userId));
-    
-    // 3. 組織角色的基礎權限
-    const basePermissions = this.getOrgRolePermissions(orgRole);
-    
-    // 4. 團隊權限疊加
-    const teamPermissions = teams?.map(team => team.permissions[resourceType]) || [];
-    
-    // 5. 合併權限（取最高權限）
-    return this.mergePermissions(basePermissions[resourceType], teamPermissions);
-  }
-
-  private getOrgRolePermissions(role: OrgRole | null): any {
-    switch (role) {
-      case OrgRole.OWNER:
-      case OrgRole.ADMIN:
-        return {
-          repository: { read: true, write: true, admin: true },
-          issues: { read: true, write: true, delete: true },
-          pullRequests: { read: true, write: true, merge: true }
-        };
-      
-      case OrgRole.MEMBER:
-        return {
-          repository: { read: true, write: false, admin: false },
-          issues: { read: true, write: true, delete: false },
-          pullRequests: { read: true, write: true, merge: false }
-        };
-      
-      default:
-        return {
-          repository: { read: false, write: false, admin: false },
-          issues: { read: false, write: false, delete: false },
-          pullRequests: { read: false, write: false, merge: false }
-        };
-    }
-  }
-
-  private mergePermissions(base: any, teamPerms: any[]): any {
-    const merged = { ...base };
-    
-    teamPerms.forEach(perm => {
-      Object.keys(perm).forEach(key => {
-        merged[key] = merged[key] || perm[key];
-      });
-    });
-    
-    return merged;
-  }
-}
-```
+---
 
 ## 十二、測試策略
 
-### 單元測試範例
+### 12.1 單元測試範例
 
 ```typescript
 // src/app/core/models/auth.model.spec.ts
@@ -1909,7 +1961,7 @@ describe('ValidationUtils', () => {
 });
 ```
 
-### 整合測試範例
+### 12.2 整合測試範例
 
 ```typescript
 // src/app/core/services/auth.service.spec.ts
@@ -1973,7 +2025,7 @@ describe('AuthService', () => {
 });
 ```
 
-### E2E 測試範例
+### 12.3 E2E 測試範例
 
 ```typescript
 // e2e/src/auth.e2e-spec.ts
@@ -2005,54 +2057,70 @@ describe('Authentication Flow', () => {
 });
 ```
 
+---
+
 ## 十三、主要特點總結
 
-### 1. GitHub 式設計
+### 13.1 GitHub 式設計
 - ✅ 使用 `Account` 統一模型，通過 `type` 區分用戶和組織
 - ✅ 使用 `login` 作為唯一識別碼
 - ✅ 統一的 `/accounts` 集合路徑
+- ✅ Repository 擁有者支援（個人/組織）
+- ✅ 完整的協作者系統
 
-### 2. 領域驅動設計 (DDD) 優點整合
-- ✅ 使用 Value Objects (ProfileVO, PermissionVO, SettingsVO) 封裝領域邏輯
-- ✅ 完整的驗證工具類 (ValidationUtils) 確保資料完整性
-- ✅ 更好的錯誤處理和異常管理
-- ✅ 領域邏輯與基礎設施分離
+### 13.2 Angular v20 現代化特性
+- ✅ **Signals**：響應式狀態管理
+- ✅ **Control Flow**：@if, @for, @switch
+- ✅ **Standalone Components**：無需 NgModule
+- ✅ **inject() 函數**：現代化依賴注入
+- ✅ **Computed Signals**：自動計算衍生狀態
 
-### 3. 多層級權限系統
+### 13.3 多層級權限系統
 - ✅ 個人 → 組織 → 團隊 → 資源
 - ✅ 5 種組織角色：Owner, Admin, Member, Billing, Outside Collaborator
 - ✅ 2 種團隊角色：Maintainer, Member
+- ✅ Repository 權限：read, triage, write, maintain, admin
 
-### 4. 角色繼承
+### 13.4 角色繼承與權限管理
 - ✅ 組織角色決定基本權限
 - ✅ 團隊角色提供細粒度控制
 - ✅ 權限可疊加和覆寫
+- ✅ Signals 基礎的即時權限檢查
 
-### 5. 動態權限控制
-- ✅ 使用 @delon/acl 動態計算權限
-- ✅ 支援模板指令 `*aclIf`
-- ✅ 支援程式碼檢查 `aclService.can()`
-
-### 6. 安全性
+### 13.5 安全性
 - ✅ Firestore 安全規則層級檢查
 - ✅ 前端路由守衛保護
 - ✅ 後端權限雙重驗證
 - ✅ 完整的輸入驗證和錯誤處理
 
-### 7. 擴展性
+### 13.6 擴展性
 - ✅ 易於添加新的資源類型
 - ✅ 易於添加新的權限規則
 - ✅ 支援自定義權限邏輯
 - ✅ 模組化的 Value Objects 設計
 
-### 8. 測試覆蓋
-- ✅ 完整的單元測試範例
-- ✅ 整合測試策略
-- ✅ E2E 測試範例
-- ✅ 驗證邏輯測試覆蓋
-
-### 9. 開發體驗
+### 13.7 開發體驗
 - ✅ TypeScript 類型安全
 - ✅ 完整的錯誤訊息和日誌
 - ✅ 清晰的 API 設計
 - ✅ 詳細的文檔和範例
+- ✅ 現代化的開發工具鏈
+
+---
+
+## 🚀 快速開始
+
+1. **環境配置**：按照第一章配置 Firebase 和 Angular
+2. **資料模型**：實現第二章的 TypeScript 介面
+3. **資料庫設計**：按照第三章設計 Firestore 結構
+4. **核心服務**：實現第四章的 Auth Service
+5. **業務服務**：實現第五章的 Organization Service
+6. **權限系統**：實現第六章的 Permission Service
+7. **路由配置**：按照第七章配置應用程式路由
+8. **路由守衛**：實現第八章的權限保護
+9. **UI 元件**：按照第九章實現用戶介面
+10. **安全規則**：按照第十章配置 Firestore 安全規則
+11. **使用範例**：參考第十一章的實際應用案例
+12. **測試策略**：按照第十二章進行測試
+
+這個架構完全符合 GitHub 的設計模式，並充分利用了 Angular v20 的最新特性，為開發者提供了更好的開發體驗和更高的應用性能。
