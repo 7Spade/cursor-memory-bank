@@ -1,51 +1,48 @@
 # Memory Bank: Tasks
 
 ## Current Task
-PLAN 模式 - 詳細實施計劃制定完成
+PLAN 模式 - 基於 VAN Agent 分析重新規劃任務
 
-### 📋 實施計劃摘要
-- **總 Phase 數**：4個 Phase
-- **總任務數**：19個任務
+### 📋 更新後的實施計劃摘要
+- **總 Phase 數**：3個 Phase (Phase 4-6)
+- **總任務數**：18個任務
 - **複雜度等級**：Level 4 - Complex System
-- **預估時間**：9-14 天
-- **當前狀態**：準備開始 Phase 1 構建錯誤修復
+- **預估時間**：9-12 天
+- **當前狀態**：Phase 1-3 已完成，準備開始 Phase 4 UI 開發
 
-### 🚨 Phase 1: 修復構建錯誤（緊急）
-**目標**：修復構建錯誤，確保專案能夠正常構建
+### ✅ 已完成階段
+- **Phase 1**: 基礎清理與現代化 ✅ (8個任務) 全部完成
+- **Phase 2**: 核心服務現代化 ✅ (6個任務) 全部完成  
+- **Phase 3**: Repository 管理系統 ✅ (7個任務) 全部完成
+
+### 🎨 Phase 4: 組織和團隊管理 UI（6個任務）- 優先級最高
+**目標**：實現用戶可以直接使用的組織和團隊管理功能
+**基於 VAN Agent 分析**：解決用戶無法完成的操作
+
 **任務**：
-- [ ] **task-1-1**: 修復 Nl2brPipe 缺失問題
-- [ ] **task-1-2**: 修復 AuthService 類型錯誤
-- [ ] **task-1-3**: 驗證構建成功
+- [ ] **task-4-1**: 建立 organization-create.component.ts (組織建立表單)
+- [ ] **task-4-2**: 建立 team-create.component.ts (團隊建立表單)
+- [ ] **task-4-3**: 建立 members-management.component.ts (成員管理界面)
+- [ ] **task-4-4**: 建立 team-members.component.ts (團隊成員管理)
+- [ ] **task-4-5**: 建立 organization-dashboard.component.ts (組織儀表板)
+- [ ] **task-4-6**: 建立 organization-settings.component.ts (組織設定)
 
 **驗收標準**：
-- ✅ 專案能夠成功構建（yarn build 成功）
-- ✅ 沒有 TypeScript 編譯錯誤
-- ✅ 登入和註冊功能正常工作
-- ✅ 所有現有功能不受影響
-
-### 🎨 Phase 2: Phase 4 組織/團隊管理 UI（6個任務）
-**目標**：建立現代化 UI 元件
-**任務**：
-- [ ] **task-4-1**: 建立 organization-detail.component.ts
-- [ ] **task-4-2**: 建立 members-list.component.ts
-- [ ] **task-4-3**: 建立 teams-list.component.ts
-- [ ] **task-4-4**: 建立 team-create.component.ts
-- [ ] **task-4-5**: 建立 organization-settings.component.ts
-- [ ] **task-4-6**: 建立 organization-dashboard.component.ts
-
-**驗收標準**：
+- ✅ 用戶可以建立組織
+- ✅ 組織擁有者可以建立團隊
+- ✅ 用戶可以管理組織成員
+- ✅ 用戶可以將成員分組到團隊
 - ✅ 所有 UI 元件使用 Control Flow (@if, @for)
 - ✅ 權限檢查與 Signals 整合
-- ✅ 組織/團隊管理功能完整
 - ✅ UI 響應式且用戶友好
 
-### 🔗 Phase 3: Phase 5 路由與權限整合（5個任務）
-**目標**：建立完整的路由系統
+### 🔗 Phase 5: 路由與權限整合（5個任務）
+**目標**：建立完整的路由系統和權限控制
 **任務**：
-- [ ] **task-5-1**: 更新 app.routes.ts 支援完整結構
-- [ ] **task-5-2**: 更新 organization.routes.ts 整合 Permission 守衛
-- [ ] **task-5-3**: 建立完整的路由層級和導航邏輯
-- [ ] **task-5-4**: 整合權限控制到所有路由
+- [ ] **task-5-1**: 更新 app.routes.ts 支援組織和團隊路由
+- [ ] **task-5-2**: 建立 organization.routes.ts 完整路由配置
+- [ ] **task-5-3**: 整合權限控制到所有新路由
+- [ ] **task-5-4**: 建立導航組件和麵包屑
 - [ ] **task-5-5**: 更新路由守衛使用 PermissionService
 
 **驗收標準**：
@@ -54,12 +51,12 @@ PLAN 模式 - 詳細實施計劃制定完成
 - ✅ 導航邏輯正確
 - ✅ 權限控制整合到所有路由
 
-### 🔒 Phase 4: Phase 6 安全規則與測試（7個任務）
+### 🔒 Phase 6: 安全規則與測試（7個任務）
 **目標**：建立安全的後端規則和完整測試
 **任務**：
-- [ ] **task-6-1**: 實作 firebase.rules (accounts 集合規則)
-- [ ] **task-6-2**: 實作 Repository 安全規則
-- [ ] **task-6-3**: 實作組織/團隊/成員權限規則
+- [ ] **task-6-1**: 實作 Firestore 安全規則 (accounts 集合)
+- [ ] **task-6-2**: 實作組織/團隊/成員權限規則
+- [ ] **task-6-3**: 實作 Repository 安全規則
 - [ ] **task-6-4**: 實作單元測試
 - [ ] **task-6-5**: 實作整合測試
 - [ ] **task-6-6**: 實作 E2E 測試
@@ -73,26 +70,35 @@ PLAN 模式 - 詳細實施計劃制定完成
 
 ### ⚠️ 風險評估與依賴關係
 **高風險項目**：
-1. **類型修復**：AuthService 類型錯誤修復可能影響現有功能
+1. **UI 組件開發**：新組件可能與現有架構衝突
 2. **路由重構**：大量路由變更可能破壞現有導航
 3. **權限系統整合**：權限邏輯變更可能導致安全問題
 
 **依賴關係**：
-- Phase 1 → Phase 2：修復構建錯誤是後續開發的前提
-- Phase 2 → Phase 3：UI 元件完成後才能整合路由
-- Phase 3 → Phase 4：路由整合完成後才能進行測試
+- Phase 4 → Phase 5：UI 組件完成後才能整合路由
+- Phase 5 → Phase 6：路由整合完成後才能進行測試
+
+**任務優先級分析**：
+**高優先級（用戶直接體驗）：**
+1. organization-create.component.ts - 用戶需要能夠建立組織
+2. team-create.component.ts - 組織擁有者需要能夠建立團隊
+3. members-management.component.ts - 需要管理組織成員
+
+**中優先級（功能完整性）：**
+4. team-members.component.ts - 團隊成員分組功能
+5. organization-dashboard.component.ts - 組織概覽
+6. organization-settings.component.ts - 組織設定
 
 **建議實施順序**：
-1. Phase 1（修復構建錯誤）- 風險低，影響小，必須先完成
-2. Phase 2（UI 元件）- 風險中，影響中
-3. Phase 3（路由整合）- 風險高，影響大
-4. Phase 4（安全規則與測試）- 風險高，影響大
+1. Phase 4（UI 組件）- 風險中，影響大，優先級最高
+2. Phase 5（路由整合）- 風險高，影響大
+3. Phase 6（安全規則與測試）- 風險高，影響大
 
 ### 🎯 下一步行動
-- 立即開始 Phase 1 的構建錯誤修復
-- 優先修復 Nl2brPipe 缺失問題
-- 修復 AuthService 類型錯誤
-- 驗證構建成功後繼續 Phase 2
+- 立即開始 Phase 4 的 organization-create.component.ts 開發
+- 優先實現用戶可以直接使用的功能
+- 建立任務追蹤和進度監控
+- 每個組件完成後立即整合到路由系統
 
 ### 問題描述
 目前的評分系統過於固定，缺乏靈活性，這可能導致：

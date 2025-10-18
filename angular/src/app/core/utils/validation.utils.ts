@@ -275,6 +275,45 @@ export class ValidationUtils {
   }
 
   /**
+   * 驗證團隊 slug
+   * @param slug 團隊 slug
+   * @returns 驗證結果和錯誤訊息
+   */
+  static validateTeamSlug(slug: string): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if (!slug || slug.trim().length === 0) {
+      errors.push('團隊 slug 不能為空');
+      return { isValid: false, errors };
+    }
+    
+    const trimmedSlug = slug.trim();
+    
+    if (trimmedSlug.length < 2) {
+      errors.push('團隊 slug 至少需要 2 個字符');
+    }
+    
+    if (trimmedSlug.length > 30) {
+      errors.push('團隊 slug 不能超過 30 個字符');
+    }
+    
+    // 檢查格式
+    if (!/^[a-z0-9\-_]+$/.test(trimmedSlug)) {
+      errors.push('團隊 slug 只能包含小寫字母、數字、連字符和下劃線');
+    }
+    
+    // 檢查是否以連字符開頭或結尾
+    if (/^[-_]|[-_]$/.test(trimmedSlug)) {
+      errors.push('團隊 slug 不能以連字符或下劃線開頭或結尾');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
    * 驗證 Repository 名稱
    * @param name Repository 名稱
    * @returns 驗證結果和錯誤訊息

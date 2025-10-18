@@ -40,7 +40,7 @@ export const routes: Routes = [
   {
     path: 'organizations',
     loadChildren: () => import('./features/organization/routes/organization.routes').then(m => m.organizationRoutes),
-    canActivate: [authGuard, permissionGuard('read', 'organization')]
+    canActivate: [authGuard]
   },
   
   // Repository 管理路由
