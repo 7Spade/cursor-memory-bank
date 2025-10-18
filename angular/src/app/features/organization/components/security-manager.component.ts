@@ -11,7 +11,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { SecurityManager, SecurityPermission } from '../models/github-aligned-organization.model';
+import { SecurityManager, SecurityPermission } from '../models/organization.model';
 import { PermissionCalculationService } from '../services/permission-calculation.service';
 
 /**

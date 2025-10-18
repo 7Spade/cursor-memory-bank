@@ -1,11 +1,11 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { 
-  GitHubAlignedOrganization, 
+  OrganizationDetail, 
   Team, 
   SecurityManager, 
   OrganizationRole, 
   PermissionResult 
-} from '../models/github-aligned-organization.model';
+} from '../models/organization.model';
 
 /**
  * 權限計算服務
@@ -20,8 +20,8 @@ export class PermissionCalculationService {
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5分鐘快取
 
   // 使用 signals 進行響應式狀態管理
-  private _organizations = signal<GitHubAlignedOrganization[]>([]);
-  private _currentOrganization = signal<GitHubAlignedOrganization | null>(null);
+  private _organizations = signal<OrganizationDetail[]>([]);
+  private _currentOrganization = signal<OrganizationDetail | null>(null);
   private _teams = signal<Team[]>([]);
   private _securityManagers = signal<SecurityManager[]>([]);
   private _organizationRoles = signal<OrganizationRole[]>([]);
@@ -428,14 +428,14 @@ export class PermissionCalculationService {
   /**
    * 設定組織列表
    */
-  setOrganizations(orgs: GitHubAlignedOrganization[]): void {
+  setOrganizations(orgs: OrganizationDetail[]): void {
     this._organizations.set(orgs);
   }
 
   /**
    * 設定當前組織
    */
-  setCurrentOrganization(org: GitHubAlignedOrganization | null): void {
+  setCurrentOrganization(org: OrganizationDetail | null): void {
     this._currentOrganization.set(org);
     if (org) {
       this._teams.set(org.teams);

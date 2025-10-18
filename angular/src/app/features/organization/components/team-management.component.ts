@@ -7,7 +7,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
-import { Team } from '../models/github-aligned-organization.model';
+import { Team } from '../models/organization.model';
 
 /**
  * 團隊節點介面

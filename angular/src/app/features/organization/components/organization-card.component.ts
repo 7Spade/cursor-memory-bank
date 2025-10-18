@@ -6,7 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
-import { GitHubAlignedOrganization } from '../models/github-aligned-organization.model';
+import { OrganizationDetail } from '../models/organization.model';
 
 /**
  * 組織卡片組件
@@ -257,15 +257,15 @@ import { GitHubAlignedOrganization } from '../models/github-aligned-organization
   `]
 })
 export class OrganizationCardComponent {
-  @Input() organization = signal<GitHubAlignedOrganization | null>(null);
+  @Input() organization = signal<OrganizationDetail | null>(null);
   @Input() isSelected = signal(false);
   
-  @Output() view = new EventEmitter<GitHubAlignedOrganization>();
-  @Output() edit = new EventEmitter<GitHubAlignedOrganization>();
-  @Output() settings = new EventEmitter<GitHubAlignedOrganization>();
-  @Output() members = new EventEmitter<GitHubAlignedOrganization>();
-  @Output() teams = new EventEmitter<GitHubAlignedOrganization>();
-  @Output() delete = new EventEmitter<GitHubAlignedOrganization>();
+  @Output() view = new EventEmitter<OrganizationDetail>();
+  @Output() edit = new EventEmitter<OrganizationDetail>();
+  @Output() settings = new EventEmitter<OrganizationDetail>();
+  @Output() members = new EventEmitter<OrganizationDetail>();
+  @Output() teams = new EventEmitter<OrganizationDetail>();
+  @Output() delete = new EventEmitter<OrganizationDetail>();
 
   // 計算屬性
   readonly memberCount = computed(() => 

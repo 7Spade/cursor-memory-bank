@@ -1,8 +1,8 @@
 /**
- * GitHub 對齊的組織模型
- * 對齊 GitHub REST API 模式的組織管理
+ * 組織詳細模型
+ * 包含完整的組織信息，包括成員、團隊等詳細數據
  */
-export interface GitHubAlignedOrganization {
+export interface OrganizationDetail {
   id: string;
   slug: string; // GitHub 風格的 URL-friendly 名稱
   name: string;

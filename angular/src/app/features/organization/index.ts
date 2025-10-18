@@ -5,5 +5,5 @@ export * from './components/security-manager.component';
 export * from './components/organization-roles.component';
 export * from './services/github-aligned-api.service';
 export * from './services/permission-calculation.service';
-export * from './models/github-aligned-organization.model';
+export * from './models/organization.model';
 export * from './routes/organization.routes';

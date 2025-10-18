@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { 
-  GitHubAlignedOrganization, 
+  OrganizationDetail, 
   CreateOrganizationRequest, 
   UpdateOrganizationRequest,
   Team,
@@ -14,7 +14,7 @@ import {
   UpdateMemberRoleRequest,
   SecurityManager,
   OrganizationRole
-} from '../models/github-aligned-organization.model';
+} from '../models/organization.model';
 
 /**
  * GitHub 對齊的 API 服務
@@ -32,22 +32,22 @@ export class GitHubAlignedApiService {
   /**
    * 獲取組織資訊 (對齊 GitHub: GET /orgs/{org})
    */
-  getOrganization(orgSlug: string): Observable<GitHubAlignedOrganization> {
-    return this.http.get<GitHubAlignedOrganization>(`${this.baseUrl}/orgs/${orgSlug}`);
+  getOrganization(orgSlug: string): Observable<OrganizationDetail> {
+    return this.http.get<OrganizationDetail>(`${this.baseUrl}/orgs/${orgSlug}`);
   }
 
   /**
    * 創建組織 (對齊 GitHub: POST /orgs)
    */
-  createOrganization(org: CreateOrganizationRequest): Observable<GitHubAlignedOrganization> {
-    return this.http.post<GitHubAlignedOrganization>(`${this.baseUrl}/orgs`, org);
+  createOrganization(org: CreateOrganizationRequest): Observable<OrganizationDetail> {
+    return this.http.post<OrganizationDetail>(`${this.baseUrl}/orgs`, org);
   }
 
   /**
    * 更新組織 (對齊 GitHub: PUT /orgs/{org})
    */
-  updateOrganization(orgSlug: string, updates: UpdateOrganizationRequest): Observable<GitHubAlignedOrganization> {
-    return this.http.put<GitHubAlignedOrganization>(`${this.baseUrl}/orgs/${orgSlug}`, updates);
+  updateOrganization(orgSlug: string, updates: UpdateOrganizationRequest): Observable<OrganizationDetail> {
+    return this.http.put<OrganizationDetail>(`${this.baseUrl}/orgs/${orgSlug}`, updates);
   }
 
   /**
