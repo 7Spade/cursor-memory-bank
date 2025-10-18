@@ -14,9 +14,8 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { AuthService } from './auth.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
-import { doc, getDoc, setDoc, Firestore } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-login',
@@ -53,20 +52,19 @@ import { doc, getDoc, setDoc, Firestore } from '@angular/fire/firestore';
             <input matInput type="password" [(ngModel)]="password" name="password" required />
           </mat-form-field>
 
-          <button mat-stroked-button color="primary" class="action-btn" type="submit" [disabled]="loading">
-            <ng-container *ngIf="!loading; else spinner">
+          <button mat-stroked-button color="primary" class="action-btn" type="submit" [disabled]="isLoading()">
+            @if (!isLoading()) {
               Login
-            </ng-container>
-            <ng-template #spinner>
+            } @else {
               <mat-spinner diameter="24"></mat-spinner>
-            </ng-template>
+            }
           </button>
 
           <div class="divider">
             <span>或</span>
           </div>
 
-          <button mat-stroked-button color="warn" class="google-btn" (click)="onGoogleLogin()" [disabled]="loading">
+          <button mat-stroked-button color="warn" class="google-btn" (click)="onGoogleLogin()" [disabled]="isLoading()">
             <mat-icon>login</mat-icon>
             <span>使用 Google 登入</span>
           </button>
@@ -193,89 +191,35 @@ import { doc, getDoc, setDoc, Firestore } from '@angular/fire/firestore';
 export class LoginComponent {
   email = '';
   password = '';
-  loading = false;
 
   private authService = inject(AuthService);
   private router = inject(Router);
-  private injector = inject(EnvironmentInjector);
 
-  onLogin() {
-    this.loading = true;
+  // 使用 Signals 獲取狀態
+  readonly isLoading = this.authService.isLoading;
+  readonly error = this.authService.error;
 
-    this.authService.login(this.email, this.password)
-      .then(res => {
-        runInInjectionContext(this.injector, async () => {
-          const firestore = inject(Firestore);
-          const uid = res.user.uid;
-          const userDoc = await getDoc(doc(firestore, 'users', uid));
+  async onLogin() {
+    if (!this.email || !this.password) {
+      this.authService.setError('請輸入電子郵件和密碼');
+      return;
+    }
 
-          if (!userDoc.exists()) {
-            console.error('❌ User document does not exist');
-            this.router.navigate(['/unauthorized']);
-            this.loading = false;
-            return;
-          }
-
-          const role = userDoc.data()?.['role'];
-          switch (role) {
-            case 'admin': this.router.navigate(['/admin']); break;
-            case 'editor': this.router.navigate(['/editor']); break;
-            case 'viewer': this.router.navigate(['/viewer']); break;
-            default: this.router.navigate(['/unauthorized']);
-          }
-
-          // this.loading = false;
-        });
-      })
-      .catch(err => {
-        console.error('❌ Login failed:', err);
-        this.loading = false;
-      });
+    try {
+      // 這裡應該實現 email/password 登入
+      // 目前只支援 Google 登入
+      this.authService.setError('目前只支援 Google 登入，請使用 Google 登入按鈕');
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   }
 
-  onGoogleLogin() {
-    this.loading = true;
-
-    this.authService.signInWithGoogle()
-      .then(res => {
-        runInInjectionContext(this.injector, async () => {
-          const firestore = inject(Firestore);
-          const uid = res.user.uid;
-          
-          // 檢查用戶文檔是否存在
-          const userDoc = await getDoc(doc(firestore, 'users', uid));
-
-          if (!userDoc.exists()) {
-            // 如果用戶文檔不存在，創建一個新的
-            await setDoc(doc(firestore, 'users', uid), {
-              uid,
-              email: res.user.email,
-              displayName: res.user.displayName,
-              photoURL: res.user.photoURL,
-              role: 'viewer',
-              createdAt: new Date(),
-              updatedAt: new Date()
-            });
-            console.log('✅ Google 登入成功，已創建用戶文檔');
-          } else {
-            console.log('✅ Google 登入成功，用戶文檔已存在');
-          }
-
-          // 根據角色導航
-          const role = userDoc.data()?.['role'] || 'viewer';
-          switch (role) {
-            case 'admin': this.router.navigate(['/admin']); break;
-            case 'editor': this.router.navigate(['/editor']); break;
-            case 'viewer': this.router.navigate(['/viewer']); break;
-            default: this.router.navigate(['/viewer']);
-          }
-
-          this.loading = false;
-        });
-      })
-      .catch(err => {
-        console.error('❌ Google 登入失敗:', err);
-        this.loading = false;
-      });
+  async onGoogleLogin() {
+    try {
+      await this.authService.signInWithGoogle();
+      this.router.navigate(['/dashboard']);
+    } catch (error) {
+      console.error('Google login error:', error);
+    }
   }
 }

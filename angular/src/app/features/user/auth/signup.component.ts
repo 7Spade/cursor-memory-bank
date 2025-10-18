@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -9,8 +9,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
-import { AuthService } from './auth.service';
-import { Firestore, doc, setDoc } from '@angular/fire/firestore';
+import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
 
 @Component({
@@ -49,13 +48,12 @@ import { Router } from '@angular/router';
             <input matInput type="password" [(ngModel)]="password" name="password" required />
           </mat-form-field>
 
-          <button mat-stroked-button color="primary" class="action-btn" type="submit" [disabled]="loading">
-            <ng-container *ngIf="!loading; else spinner">
+          <button mat-stroked-button color="primary" class="action-btn" type="submit" [disabled]="isLoading()">
+            @if (!isLoading()) {
               Sign Up
-            </ng-container>
-            <ng-template #spinner>
+            } @else {
               <mat-spinner diameter="24"></mat-spinner>
-            </ng-template>
+            }
           </button>
         </form>
       </mat-card>
@@ -131,33 +129,26 @@ import { Router } from '@angular/router';
 export class SignupComponent {
   email = '';
   password = '';
-  loading = false;
 
-  constructor(
-    private authService: AuthService,
-    private firestore: Firestore,
-    private router: Router
-  ) {}
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  // 使用 Signals 獲取狀態
+  readonly isLoading = this.authService.isLoading;
+  readonly error = this.authService.error;
 
   async onSignup() {
-    this.loading = true;
+    if (!this.email || !this.password) {
+      this.authService.setError('請輸入電子郵件和密碼');
+      return;
+    }
 
     try {
-      const userCred = await this.authService.signup(this.email, this.password);
-      const uid = userCred.user.uid;
-
-      await setDoc(doc(this.firestore, 'users', uid), {
-        uid,
-        email: this.email,
-        role: 'viewer'
-      });
-
-      console.log('✅ Signed up and Firestore doc created');
-      this.router.navigate(['/viewer']);
-    } catch (err) {
-      console.error('❌ Signup failed:', err);
-    } finally {
-      // this.loading = false;
+      // 這裡應該實現 email/password 註冊
+      // 目前只支援 Google 登入
+      this.authService.setError('目前只支援 Google 登入，請使用登入頁面');
+    } catch (error) {
+      console.error('Signup error:', error);
     }
   }
 }

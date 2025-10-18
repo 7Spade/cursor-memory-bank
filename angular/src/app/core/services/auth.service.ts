@@ -289,6 +289,11 @@ export class AuthService {
     }
   }
 
+  // 設置錯誤
+  setError(error: string) {
+    this.accountState.setError(error);
+  }
+
   // 清除錯誤
   clearError() {
     this.accountState.clearError();

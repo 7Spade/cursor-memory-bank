@@ -3,7 +3,7 @@ import { LoginComponent } from './features/user/auth/login.component';
 import { SignupComponent } from './features/user/auth/signup.component';
 
 import { authGuard } from './features/user/auth/auth.guard';
-import { roleGuard } from './features/user/auth/role.guard';
+import { roleGuard, permissionGuard } from './features/user/auth/role.guard';
 
 export const routes: Routes = [
   // 認證路由
@@ -34,6 +34,13 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   
+  // Repository 管理路由
+  // {
+  //   path: 'repositories',
+  //   loadChildren: () => import('./features/repository/repository.routes').then(m => m.repositoryRoutes),
+  //   canActivate: [authGuard]
+  // },
+  
   // 角色管理路由
   {
     path: 'admin',
@@ -50,6 +57,13 @@ export const routes: Routes = [
     loadComponent: () => import('./dashboard/viewer.component').then(m => m.ViewerComponent),
     canActivate: [authGuard, roleGuard('viewer')]
   },
+  
+  // 儀表板路由
+  // {
+  //   path: 'dashboard',
+  //   loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
+  //   canActivate: [authGuard]
+  // },
   
   // 預設路由
   {
