@@ -27,7 +27,7 @@ export class AuthService {
       const userDoc = doc(this.firestore, `accounts/${firebaseUser.uid}`);
       return docData(userDoc, { idField: 'id' }).pipe(
         map(data => {
-          if (data && data['type'] === 'user') {
+          if (data && (data as any)['type'] === 'user') {
             return data as User;
           }
           return null;
