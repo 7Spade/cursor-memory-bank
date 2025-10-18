@@ -14,6 +14,7 @@ import {
   updateDoc,
   deleteDoc,
   getDoc,
+  getDocs,
   DocumentData
 } from '@angular/fire/firestore';
 import { Observable, map, switchMap, combineLatest, of, catchError, throwError } from 'rxjs';
@@ -149,6 +150,44 @@ export class OrganizationService {
       catchError((error: any) => {
         console.error('獲取組織失敗:', error);
         return throwError(() => new Error('無法載入組織資訊，請稍後再試'));
+      })
+    );
+  }
+
+  /**
+   * 獲取用戶的所有組織
+   */
+  getUserOrganizations(userId: string): Observable<Organization[]> {
+    const accountsCol = collection(this.firestore, 'accounts');
+    return collectionData(accountsCol, { idField: 'id' }).pipe(
+      switchMap(async (accounts) => {
+        // 過濾出組織類型的帳戶
+        const organizations = accounts.filter(account => 
+          account['type'] === 'organization'
+        ) as Organization[];
+        
+        // 檢查用戶是否為這些組織的成員
+        const userOrganizations: Organization[] = [];
+        
+        for (const org of organizations) {
+          try {
+            const membersCol = collection(this.firestore, `accounts/${org.id}/members`);
+            const membersSnapshot = await getDocs(membersCol);
+            const isMember = membersSnapshot.docs.some(doc => doc.id === userId);
+            
+            if (isMember) {
+              userOrganizations.push(org);
+            }
+          } catch (error) {
+            console.warn(`檢查組織 ${org.id} 成員資格失敗:`, error);
+          }
+        }
+        
+        return userOrganizations;
+      }),
+      catchError((error: any) => {
+        console.error('獲取用戶組織失敗:', error);
+        return throwError(() => new Error('無法載入組織列表，請稍後再試'));
       })
     );
   }

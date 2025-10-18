@@ -6,6 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatGridListModule } from '@angular/material/grid-list';
+import { firstValueFrom } from 'rxjs';
 
 import { OrganizationService } from '../../../core/services/organization.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -257,11 +258,41 @@ export class OrganizationListComponent implements OnInit {
       this._isLoading.set(true);
       this._error.set(null);
 
-      // 這裡應該調用實際的服務方法來獲取組織列表
-      // 由於現有的 OrganizationService 沒有 getOrganizations 方法，
-      // 我們暫時使用空數組
-      const organizations: OrganizationDetail[] = [];
-      this._organizations.set(organizations);
+      // 獲取當前用戶
+      const currentUser = this.authService.getCurrentUser();
+      if (!currentUser) {
+        this._error.set('請先登入');
+        return;
+      }
+
+      // 調用服務方法獲取用戶的組織列表
+      const organizations = await firstValueFrom(
+        this.organizationService.getUserOrganizations(currentUser.uid)
+      );
+      
+      // 將 Organization 轉換為 OrganizationDetail
+      const organizationDetails: OrganizationDetail[] = organizations.map(org => ({
+        id: org.id,
+        slug: org.login, // 使用 login 作為 slug
+        name: org.profile.name,
+        description: org.description || '',
+        type: 'construction' as const, // 暫時設為 construction，可以後續優化
+        profile: {
+          website: org.profile.website,
+          location: org.profile.location,
+          email: org.profile.email,
+          phone: undefined, // ProfileVO 沒有 phone 字段
+          avatar: org.profile.avatar
+        },
+        members: [], // 暫時設為空數組，可以後續優化
+        teams: [],   // 暫時設為空數組，可以後續優化
+        securityManagers: [], // 暫時設為空數組，可以後續優化
+        organizationRoles: [], // 暫時設為空數組，可以後續優化
+        createdAt: org.createdAt,
+        updatedAt: org.updatedAt
+      }));
+      
+      this._organizations.set(organizationDetails);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '載入組織列表失敗';
