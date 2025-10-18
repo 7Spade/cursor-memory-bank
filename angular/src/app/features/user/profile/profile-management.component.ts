@@ -13,8 +13,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 
-import { UserService } from '../user.service';
-import { User, SocialAccount, Certificate, NotificationPreferences, PrivacySettings } from '../user.model';
+import { UserService } from '../services/user.service';
+import { User, SocialAccount, Certificate, NotificationPreferences, PrivacySettings } from '../models/user.model';
 import { AvatarUtils } from '../../../core/utils/avatar.utils';
 
 /**

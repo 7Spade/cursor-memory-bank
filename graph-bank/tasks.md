@@ -1,50 +1,84 @@
 # Memory Bank: Tasks
 
 ## Current Task
-BUILD 模式 - 檔案重命名與函數規範優化完成
+PLAN 模式 - 檔案路徑結構化調整計劃完成
 
-### 📋 BUILD 模式檔案重命名與函數規範優化
+### 📋 PLAN 模式：檔案路徑結構化調整計劃
 
-成功完成檔案重命名和函數規範優化：
+基於 VAN 分析結果，專注於檔案路徑調整來實現結構化，暫時不考慮路徑別名配置：
 
-#### ✅ 檔案重命名完成
-1. **github-aligned-api.service.ts** → **organization-api.service.ts** ✅
-2. **permission-calculation.service.ts** → **permission.service.ts** ✅
+#### ✅ 規劃完成狀況
+1. **階段 1 規劃**：移動 core/components 到 features/organization/components ✅
+2. **階段 2 規劃**：重組 core/models 檔案到正確位置 ✅
+3. **階段 3 規劃**：建立 shared 模組結構 ✅
+4. **階段 4 規劃**：重組 features/user 模組結構 ✅
+5. **階段 5 規劃**：補全 features/repository 模組結構 ✅
+6. **階段 6 規劃**：更新所有相對路徑引用 ✅
 
-#### ✅ 類別名稱更新完成
-1. **GitHubAlignedApiService** → **OrganizationApiService** ✅
-2. **PermissionCalculationService** → **PermissionService** ✅
+#### 🎯 總體目標
+- 建立統一的檔案組織結構
+- 消除檔案位置混亂
+- 提升代碼可維護性
+- 保持現有相對路徑導入方式
 
-#### ✅ 函數命名優化完成
-**PermissionService 函數重命名：**
-- `calculatePermission()` → `calculateUserPermission()` ✅
-- `checkDirectPermission()` → `checkUserDirectPermission()` ✅
-- `checkTeamInheritedPermission()` → `checkUserTeamPermission()` ✅
-- `checkOrganizationRolePermission()` → `checkUserRolePermission()` ✅
-- `checkSecurityManagerPermission()` → `checkUserSecurityPermission()` ✅
+#### 📊 階段規劃詳情
 
-#### ✅ 引用更新完成
-1. **index.ts 導出文件更新** ✅
-2. **organization-roles.component.ts 引用更新** ✅
-3. **security-manager.component.ts 引用更新** ✅
-4. **所有服務注入更新** ✅
+##### **階段 1：移動 core/components 到 features/organization/components** 📁
+- **目標**：將組織相關的對話框組件移動到正確的功能模組
+- **檔案移動**：organization-create-dialog.component.ts, team-create-dialog.component.ts
+- **時程**：30 分鐘
 
-#### ✅ 編譯測試通過
-- **構建成功**：無編譯錯誤 ✅
-- **警告處理**：僅有預算警告和 Material Icons 警告（非關鍵） ✅
-- **功能完整**：所有重命名後功能正常 ✅
+##### **階段 2：重組 core/models 檔案到正確位置** 📋
+- **目標**：將混合在 core/models 中的檔案分類到正確位置
+- **檔案重組**：dialog-event → shared/types, organization-create → features/organization/models
+- **時程**：45 分鐘
 
-#### ✅ 優化成果
-- **檔案命名統一**：符合 Angular 命名規範
-- **類別名稱簡潔**：移除冗餘前綴
-- **函數命名明確**：增加 `User` 前綴提高可讀性
-- **導入語句整潔**：所有引用正確更新
-- **代碼可維護性提升**：命名更加直觀和一致
+##### **階段 3：建立 shared 模組結構** 🏗️
+- **目標**：建立統一的共享資源管理結構
+- **目錄結構**：shared/types/, shared/components/, shared/utils/
+- **時程**：30 分鐘
+
+##### **階段 4：重組 features/user 模組結構** 👤
+- **目標**：統一 user 模組的檔案組織結構
+- **結構調整**：建立標準目錄結構，移動檔案到正確位置
+- **時程**：1 小時
+
+##### **階段 5：補全 features/repository 模組結構** 📚
+- **目標**：補全 repository 模組的缺失目錄
+- **補全內容**：services/, guards/, utils/ 目錄和佔位符檔案
+- **時程**：30 分鐘
+
+##### **階段 6：更新所有相對路徑引用** 🔄
+- **目標**：確保所有檔案移動後的導入語句正確
+- **更新範圍**：所有組件、服務、路由配置的導入語句
+- **時程**：1 小時
+
+#### 📋 實施檢查點
+- **6個階段檢查點**：每階段完成後測試驗證
+- **風險控制**：分階段實施，每階段完成後測試
+- **品質保證**：詳細的檢查點確保實施品質
+
+#### ⚠️ 風險評估與緩解策略
+- **低風險**：建立新目錄結構、建立佔位符檔案
+- **中風險**：檔案移動、大量導入語句更新
+- **緩解策略**：分階段實施、使用 IDE 重構功能、建立備份點
+
+#### ✅ 預期效果
+- **提升可維護性**：清晰的檔案組織結構
+- **減少重構成本**：統一的模組結構
+- **改善開發體驗**：直觀的檔案位置
+- **增強可讀性**：一致的檔案組織方式
+- **便於團隊協作**：標準化的專案結構
+
+#### 📅 實施時程
+- **總計**：4-5 小時完成
+- **分階段**：每階段獨立完成，可暫停和恢復
+- **風險控制**：每階段完成後測試驗證
 
 ### 🎯 下一步建議
-- **準備 REFLECT 模式**：回顧重命名過程和效果
-- **考慮進一步優化**：如需要可繼續其他檔案組織優化
-- **文檔更新**：更新相關文檔以反映新的命名規範
+- **準備 BUILD 模式**：開始實施階段 1 的檔案移動
+- **分階段實施**：按優先級逐步重構
+- **風險控制**：每階段完成後測試驗證
 
 #### ✅ 更新的文件
 1. **app.routes.ts** - 添加 organizations/:orgId 路由

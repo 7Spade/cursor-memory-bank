@@ -88,8 +88,8 @@ angular/
             organization-detail.routes.ts
             organization.routes.ts
           services/
-            github-aligned-api.service.ts
-            permission-calculation.service.ts
+            organization-api.service.ts
+            permission.service.ts
           index.ts
         repository/
           components/
@@ -6170,6 +6170,692 @@ export const organizationDetailRoutes: Routes = [
 ];
 ```
 
+## File: angular/src/app/features/organization/services/organization-api.service.ts
+```typescript
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { 
+  OrganizationDetail, 
+  CreateOrganizationRequest, 
+  UpdateOrganizationRequest,
+  Team,
+  TeamMember,
+  CreateTeamRequest,
+  UpdateTeamRequest,
+  OrganizationMember,
+  InviteMemberRequest,
+  UpdateMemberRoleRequest,
+  SecurityManager,
+  OrganizationRole
+} from '../models/organization.model';
+
+/**
+ * 組織 API 服務
+ * 實作對齊 GitHub REST API 模式的組織管理 API
+ */
+@Injectable({
+  providedIn: 'root'
+})
+export class OrganizationApiService {
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = '/api';
+
+  // ==================== 組織管理 API ====================
+  
+  /**
+   * 獲取組織資訊 (對齊 GitHub: GET /orgs/{org})
+   */
+  getOrganization(orgSlug: string): Observable<OrganizationDetail> {
+    return this.http.get<OrganizationDetail>(`${this.baseUrl}/orgs/${orgSlug}`);
+  }
+
+  /**
+   * 創建組織 (對齊 GitHub: POST /orgs)
+   */
+  createOrganization(org: CreateOrganizationRequest): Observable<OrganizationDetail> {
+    return this.http.post<OrganizationDetail>(`${this.baseUrl}/orgs`, org);
+  }
+
+  /**
+   * 更新組織 (對齊 GitHub: PUT /orgs/{org})
+   */
+  updateOrganization(orgSlug: string, updates: UpdateOrganizationRequest): Observable<OrganizationDetail> {
+    return this.http.put<OrganizationDetail>(`${this.baseUrl}/orgs/${orgSlug}`, updates);
+  }
+
+  /**
+   * 刪除組織 (對齊 GitHub: DELETE /orgs/{org})
+   */
+  deleteOrganization(orgSlug: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}`);
+  }
+
+  // ==================== 組織成員管理 API ====================
+
+  /**
+   * 獲取組織成員列表 (對齊 GitHub: GET /orgs/{org}/members)
+   */
+  getOrganizationMembers(orgSlug: string): Observable<OrganizationMember[]> {
+    return this.http.get<OrganizationMember[]>(`${this.baseUrl}/orgs/${orgSlug}/members`);
+  }
+
+  /**
+   * 邀請成員加入組織 (對齊 GitHub: POST /orgs/{org}/members)
+   */
+  inviteMember(orgSlug: string, invite: InviteMemberRequest): Observable<OrganizationMember> {
+    return this.http.post<OrganizationMember>(`${this.baseUrl}/orgs/${orgSlug}/members`, invite);
+  }
+
+  /**
+   * 更新成員角色 (對齊 GitHub: PUT /orgs/{org}/members/{username})
+   */
+  updateMemberRole(orgSlug: string, userId: string, update: UpdateMemberRoleRequest): Observable<OrganizationMember> {
+    return this.http.put<OrganizationMember>(`${this.baseUrl}/orgs/${orgSlug}/members/${userId}`, update);
+  }
+
+  /**
+   * 移除組織成員 (對齊 GitHub: DELETE /orgs/{org}/members/{username})
+   */
+  removeMember(orgSlug: string, userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}/members/${userId}`);
+  }
+
+  // ==================== 團隊管理 API ====================
+
+  /**
+   * 獲取組織團隊列表 (對齊 GitHub: GET /orgs/{org}/teams)
+   */
+  getTeams(orgSlug: string): Observable<Team[]> {
+    return this.http.get<Team[]>(`${this.baseUrl}/orgs/${orgSlug}/teams`);
+  }
+
+  /**
+   * 創建團隊 (對齊 GitHub: POST /orgs/{org}/teams)
+   */
+  createTeam(orgSlug: string, team: CreateTeamRequest): Observable<Team> {
+    return this.http.post<Team>(`${this.baseUrl}/orgs/${orgSlug}/teams`, team);
+  }
+
+  /**
+   * 獲取團隊詳情 (對齊 GitHub: GET /orgs/{org}/teams/{team_slug})
+   */
+  getTeam(orgSlug: string, teamSlug: string): Observable<Team> {
+    return this.http.get<Team>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}`);
+  }
+
+  /**
+   * 更新團隊 (對齊 GitHub: PUT /orgs/{org}/teams/{team_slug})
+   */
+  updateTeam(orgSlug: string, teamSlug: string, updates: UpdateTeamRequest): Observable<Team> {
+    return this.http.put<Team>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}`, updates);
+  }
+
+  /**
+   * 刪除團隊 (對齊 GitHub: DELETE /orgs/{org}/teams/{team_slug})
+   */
+  deleteTeam(orgSlug: string, teamSlug: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}`);
+  }
+
+  // ==================== 團隊成員管理 API ====================
+
+  /**
+   * 獲取團隊成員列表 (對齊 GitHub: GET /orgs/{org}/teams/{team_slug}/members)
+   */
+  getTeamMembers(orgSlug: string, teamSlug: string): Observable<TeamMember[]> {
+    return this.http.get<TeamMember[]>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}/members`);
+  }
+
+  /**
+   * 添加團隊成員 (對齊 GitHub: PUT /orgs/{org}/teams/{team_slug}/members/{username})
+   */
+  addTeamMember(orgSlug: string, teamSlug: string, userId: string): Observable<TeamMember> {
+    return this.http.put<TeamMember>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}/members/${userId}`, {});
+  }
+
+  /**
+   * 移除團隊成員 (對齊 GitHub: DELETE /orgs/{org}/teams/{team_slug}/members/{username})
+   */
+  removeTeamMember(orgSlug: string, teamSlug: string, userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}/members/${userId}`);
+  }
+
+  // ==================== 安全管理器 API ====================
+
+  /**
+   * 獲取安全管理器列表
+   */
+  getSecurityManagers(orgSlug: string): Observable<SecurityManager[]> {
+    return this.http.get<SecurityManager[]>(`${this.baseUrl}/orgs/${orgSlug}/security-managers`);
+  }
+
+  /**
+   * 創建安全管理器
+   */
+  createSecurityManager(orgSlug: string, manager: Partial<SecurityManager>): Observable<SecurityManager> {
+    return this.http.post<SecurityManager>(`${this.baseUrl}/orgs/${orgSlug}/security-managers`, manager);
+  }
+
+  /**
+   * 更新安全管理器
+   */
+  updateSecurityManager(orgSlug: string, managerId: string, updates: Partial<SecurityManager>): Observable<SecurityManager> {
+    return this.http.put<SecurityManager>(`${this.baseUrl}/orgs/${orgSlug}/security-managers/${managerId}`, updates);
+  }
+
+  /**
+   * 刪除安全管理器
+   */
+  deleteSecurityManager(orgSlug: string, managerId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}/security-managers/${managerId}`);
+  }
+
+  // ==================== 組織角色 API ====================
+
+  /**
+   * 獲取組織角色列表
+   */
+  getOrganizationRoles(orgSlug: string): Observable<OrganizationRole[]> {
+    return this.http.get<OrganizationRole[]>(`${this.baseUrl}/orgs/${orgSlug}/roles`);
+  }
+
+  /**
+   * 創建組織角色
+   */
+  createOrganizationRole(orgSlug: string, role: Partial<OrganizationRole>): Observable<OrganizationRole> {
+    return this.http.post<OrganizationRole>(`${this.baseUrl}/orgs/${orgSlug}/roles`, role);
+  }
+
+  /**
+   * 更新組織角色
+   */
+  updateOrganizationRole(orgSlug: string, roleId: string, updates: Partial<OrganizationRole>): Observable<OrganizationRole> {
+    return this.http.put<OrganizationRole>(`${this.baseUrl}/orgs/${orgSlug}/roles/${roleId}`, updates);
+  }
+
+  /**
+   * 刪除組織角色
+   */
+  deleteOrganizationRole(orgSlug: string, roleId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}/roles/${roleId}`);
+  }
+}
+```
+
+## File: angular/src/app/features/organization/services/permission.service.ts
+```typescript
+import { Injectable, signal, computed } from '@angular/core';
+import { 
+  OrganizationDetail, 
+  Team, 
+  SecurityManager, 
+  OrganizationRole, 
+  PermissionResult 
+} from '../models/organization.model';
+
+/**
+ * 權限服務
+ * 實作混合權限系統：結合遞迴計算和選擇性快取
+ */
+@Injectable({
+  providedIn: 'root'
+})
+export class PermissionService {
+  private permissionCache = new Map<string, PermissionResult>();
+  private cacheExpiry = new Map<string, number>();
+  private readonly CACHE_TTL = 5 * 60 * 1000; // 5分鐘快取
+
+  // 使用 signals 進行響應式狀態管理
+  private _organizations = signal<OrganizationDetail[]>([]);
+  private _currentOrganization = signal<OrganizationDetail | null>(null);
+  private _teams = signal<Team[]>([]);
+  private _securityManagers = signal<SecurityManager[]>([]);
+  private _organizationRoles = signal<OrganizationRole[]>([]);
+
+  // 公開的只讀 signals
+  readonly organizations = this._organizations.asReadonly();
+  readonly currentOrganization = this._currentOrganization.asReadonly();
+  readonly teams = this._teams.asReadonly();
+  readonly securityManagers = this._securityManagers.asReadonly();
+  readonly organizationRoles = this._organizationRoles.asReadonly();
+
+  // 計算屬性
+  readonly teamHierarchy = computed(() => this.buildTeamHierarchy(this.teams()));
+
+  /**
+   * 主要權限檢查方法
+   */
+  async checkPermission(
+    userId: string, 
+    resourceId: string, 
+    action: string
+  ): Promise<boolean> {
+    const cacheKey = `${userId}:${resourceId}:${action}`;
+    
+    // 檢查快取
+    if (this.isCacheValid(cacheKey)) {
+      return this.permissionCache.get(cacheKey)!.granted;
+    }
+    
+    // 計算權限
+    const result = await this.calculateUserPermission(userId, resourceId, action);
+    
+    // 更新快取
+    this.updateCache(cacheKey, result);
+    
+    return result.granted;
+  }
+
+  /**
+   * 遞迴權限計算
+   */
+  private async calculateUserPermission(
+    userId: string, 
+    resourceId: string, 
+    action: string
+  ): Promise<PermissionResult> {
+    // 1. 檢查直接權限
+    const directPermission = await this.checkUserDirectPermission(userId, resourceId, action);
+    if (directPermission.granted) {
+      return directPermission;
+    }
+    
+    // 2. 檢查團隊繼承權限
+    const teamPermission = await this.checkUserTeamPermission(userId, resourceId, action);
+    if (teamPermission.granted) {
+      return teamPermission;
+    }
+    
+    // 3. 檢查組織角色權限
+    const rolePermission = await this.checkUserRolePermission(userId, resourceId, action);
+    if (rolePermission.granted) {
+      return rolePermission;
+    }
+    
+    // 4. 檢查安全管理器權限
+    const securityPermission = await this.checkUserSecurityPermission(userId, resourceId, action);
+    
+    return securityPermission;
+  }
+
+  /**
+   * 檢查直接權限
+   */
+  private async checkUserDirectPermission(
+    userId: string, 
+    resourceId: string, 
+    action: string
+  ): Promise<PermissionResult> {
+    const org = this._currentOrganization();
+    if (!org) {
+      return { granted: false, reason: 'No organization context' };
+    }
+
+    // 檢查是否為組織擁有者
+    if (org.members.some(member => member.userId === userId && member.role.level === 10)) {
+      return { granted: true, level: 'admin', reason: 'Organization owner' };
+    }
+
+    // 檢查直接成員權限
+    const member = org.members.find(m => m.userId === userId);
+    if (member && member.status === 'active') {
+      const hasPermission = member.role.permissions.some(
+        p => p.resource === resourceId && p.action === action
+      );
+      if (hasPermission) {
+        return { 
+          granted: true, 
+          level: this.mapRoleLevelToPermission(member.role.level),
+          reason: 'Direct member permission' 
+        };
+      }
+    }
+
+    return { granted: false, reason: 'No direct permission' };
+  }
+
+  /**
+   * 檢查團隊繼承權限
+   */
+  private async checkUserTeamPermission(
+    userId: string, 
+    resourceId: string, 
+    action: string
+  ): Promise<PermissionResult> {
+    const teams = this._teams();
+    const userTeams = teams.filter(team => 
+      team.members.some(member => member.userId === userId)
+    );
+
+    for (const team of userTeams) {
+      const teamPermission = await this.calculateTeamPermissions(userId, team.id, action);
+      if (teamPermission.granted) {
+        return teamPermission;
+      }
+    }
+
+    return { granted: false, reason: 'No team permission found' };
+  }
+
+  /**
+   * 計算團隊權限
+   */
+  private async calculateTeamPermissions(
+    userId: string, 
+    teamId: string, 
+    action: string
+  ): Promise<PermissionResult> {
+    const team = this._teams().find(t => t.id === teamId);
+    if (!team) {
+      return { granted: false, reason: 'Team not found' };
+    }
+
+    // 檢查直接團隊成員權限
+    const teamMember = team.members.find(member => member.userId === userId);
+    if (teamMember) {
+      const permissionLevel = this.mapTeamRoleToPermission(teamMember.role);
+      return this.applyTeamPermissionLevel(
+        { granted: true, level: permissionLevel, reason: 'Team member' },
+        team.permission
+      );
+    }
+
+    // 檢查父團隊繼承權限
+    if (team.parentTeamId) {
+      const parentPermission = await this.calculateTeamPermissions(userId, team.parentTeamId, action);
+      if (parentPermission.granted) {
+        // 父團隊權限會降級一級
+        return this.downgradePermissionLevel(parentPermission);
+      }
+    }
+
+    return { granted: false, reason: 'No team permission found' };
+  }
+
+  /**
+   * 檢查組織角色權限
+   */
+  private async checkUserRolePermission(
+    userId: string, 
+    resourceId: string, 
+    action: string
+  ): Promise<PermissionResult> {
+    const org = this._currentOrganization();
+    if (!org) {
+      return { granted: false, reason: 'No organization context' };
+    }
+
+    const member = org.members.find(m => m.userId === userId);
+    if (!member || member.status !== 'active') {
+      return { granted: false, reason: 'Not an active member' };
+    }
+
+    const role = this._organizationRoles().find(r => r.id === member.role.id);
+    if (!role) {
+      return { granted: false, reason: 'Role not found' };
+    }
+
+    const hasPermission = role.permissions.some(
+      p => p.resource === resourceId && p.action === action
+    );
+
+    if (hasPermission) {
+      return {
+        granted: true,
+        level: this.mapRoleLevelToPermission(role.level),
+        reason: 'Organization role permission'
+      };
+    }
+
+    return { granted: false, reason: 'No role permission' };
+  }
+
+  /**
+   * 檢查安全管理器權限
+   */
+  private async checkUserSecurityPermission(
+    userId: string, 
+    resourceId: string, 
+    action: string
+  ): Promise<PermissionResult> {
+    const securityManagers = this._securityManagers();
+    const userSecurityRole = securityManagers.find(
+      sm => sm.type === 'user' && sm.entityId === userId
+    );
+
+    if (!userSecurityRole) {
+      return { granted: false, reason: 'Not a security manager' };
+    }
+
+    // 檢查安全管理器權限範圍
+    const scopePermission = await this.checkSecurityScope(userSecurityRole, resourceId);
+    if (!scopePermission) {
+      return { granted: false, reason: 'Outside security scope' };
+    }
+
+    // 檢查特定安全管理權限
+    const specificPermission = await this.checkSpecificSecurityPermission(
+      userSecurityRole, 
+      action
+    );
+
+    return specificPermission;
+  }
+
+  /**
+   * 檢查安全管理器權限範圍
+   */
+  private async checkSecurityScope(
+    securityRole: SecurityManager, 
+    resourceId: string
+  ): Promise<boolean> {
+    switch (securityRole.type) {
+      case 'user':
+        return await this.checkUserSecurityScope(securityRole.entityId, resourceId);
+      case 'team':
+        return await this.checkTeamSecurityScope(securityRole.entityId, resourceId);
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * 檢查用戶安全管理範圍
+   */
+  private async checkUserSecurityScope(userId: string, resourceId: string): Promise<boolean> {
+    // 實作用戶安全管理範圍檢查邏輯
+    return true; // 簡化實作
+  }
+
+  /**
+   * 檢查團隊安全管理範圍
+   */
+  private async checkTeamSecurityScope(teamId: string, resourceId: string): Promise<boolean> {
+    // 實作團隊安全管理範圍檢查邏輯
+    return true; // 簡化實作
+  }
+
+  /**
+   * 檢查特定安全管理權限
+   */
+  private async checkSpecificSecurityPermission(
+    securityRole: SecurityManager, 
+    action: string
+  ): Promise<PermissionResult> {
+    const hasPermission = securityRole.permissions.some(
+      p => p.action === action
+    );
+
+    if (hasPermission) {
+      return {
+        granted: true,
+        level: 'admin',
+        reason: 'Security manager permission'
+      };
+    }
+
+    return { granted: false, reason: 'No security manager permission' };
+  }
+
+  /**
+   * 權限等級降級邏輯
+   */
+  private downgradePermissionLevel(permission: PermissionResult): PermissionResult {
+    const levelMap: Record<string, 'read' | 'write' | 'admin' | 'none'> = { 
+      'admin': 'write', 
+      'write': 'read', 
+      'read': 'none' 
+    };
+    const newLevel = levelMap[permission.level || 'read'] || 'none';
+    
+    return {
+      ...permission,
+      level: newLevel,
+      granted: newLevel !== 'none'
+    };
+  }
+
+  /**
+   * 應用團隊權限等級
+   */
+  private applyTeamPermissionLevel(
+    permission: PermissionResult, 
+    teamPermission: 'read' | 'write' | 'admin'
+  ): PermissionResult {
+    const teamLevelMap: Record<string, 'read' | 'write' | 'admin'> = { 
+      'read': 'read', 
+      'write': 'write', 
+      'admin': 'admin' 
+    };
+    const finalLevel = teamLevelMap[teamPermission];
+    
+    return {
+      ...permission,
+      level: finalLevel,
+      granted: true
+    };
+  }
+
+  /**
+   * 映射角色等級到權限等級
+   */
+  private mapRoleLevelToPermission(level: number): 'read' | 'write' | 'admin' {
+    if (level >= 8) return 'admin';
+    if (level >= 5) return 'write';
+    return 'read';
+  }
+
+  /**
+   * 映射團隊角色到權限等級
+   */
+  private mapTeamRoleToPermission(role: 'member' | 'maintainer' | 'admin'): 'read' | 'write' | 'admin' {
+    switch (role) {
+      case 'admin': return 'admin';
+      case 'maintainer': return 'write';
+      case 'member': return 'read';
+      default: return 'read';
+    }
+  }
+
+  /**
+   * 建立團隊層級結構
+   */
+  private buildTeamHierarchy(teams: Team[]): Team[] {
+    const teamMap = new Map<string, Team & { children: Team[] }>();
+    const rootTeams: (Team & { children: Team[] })[] = [];
+
+    // 初始化所有團隊
+    teams.forEach(team => {
+      teamMap.set(team.id, { ...team, children: [] });
+    });
+
+    // 建立層級關係
+    teams.forEach(team => {
+      const teamWithChildren = teamMap.get(team.id)!;
+      if (team.parentTeamId) {
+        const parent = teamMap.get(team.parentTeamId);
+        if (parent) {
+          parent.children.push(teamWithChildren);
+        }
+      } else {
+        rootTeams.push(teamWithChildren);
+      }
+    });
+
+    return rootTeams;
+  }
+
+  /**
+   * 檢查快取是否有效
+   */
+  private isCacheValid(cacheKey: string): boolean {
+    const expiry = this.cacheExpiry.get(cacheKey);
+    return expiry ? Date.now() < expiry : false;
+  }
+
+  /**
+   * 更新快取
+   */
+  private updateCache(cacheKey: string, result: PermissionResult): void {
+    this.permissionCache.set(cacheKey, result);
+    this.cacheExpiry.set(cacheKey, Date.now() + this.CACHE_TTL);
+  }
+
+  /**
+   * 清除快取
+   */
+  clearCache(): void {
+    this.permissionCache.clear();
+    this.cacheExpiry.clear();
+  }
+
+  // ==================== 狀態管理方法 ====================
+
+  /**
+   * 設定組織列表
+   */
+  setOrganizations(orgs: OrganizationDetail[]): void {
+    this._organizations.set(orgs);
+  }
+
+  /**
+   * 設定當前組織
+   */
+  setCurrentOrganization(org: OrganizationDetail | null): void {
+    this._currentOrganization.set(org);
+    if (org) {
+      this._teams.set(org.teams);
+      this._securityManagers.set(org.securityManagers);
+      this._organizationRoles.set(org.organizationRoles);
+    }
+  }
+
+  /**
+   * 新增團隊
+   */
+  addTeam(team: Team): void {
+    this._teams.update(teams => [...teams, team]);
+  }
+
+  /**
+   * 更新團隊
+   */
+  updateTeam(teamId: string, updates: Partial<Team>): void {
+    this._teams.update(teams => 
+      teams.map(team => team.id === teamId ? { ...team, ...updates } : team)
+    );
+  }
+
+  /**
+   * 移除團隊
+   */
+  removeTeam(teamId: string): void {
+    this._teams.update(teams => teams.filter(team => team.id !== teamId));
+  }
+}
+```
+
 ## File: angular/src/app/features/repository/components/collaborator-management.component.ts
 ```typescript
 // src/app/features/repository/components/collaborator-management.component.ts
@@ -10116,1109 +10802,6 @@ export class OrganizationListComponent implements OnInit {
 }
 ```
 
-## File: angular/src/app/features/organization/components/organization-roles.component.ts
-```typescript
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatBadgeModule } from '@angular/material/badge';
-
-import { OrganizationRole, Permission } from '../models/organization.model';
-import { PermissionCalculationService } from '../services/permission-calculation.service';
-
-/**
- * 組織角色系統組件
- * 管理組織的角色和權限設定
- */
-@Component({
-  selector: 'app-organization-roles',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatChipsModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatTooltipModule,
-    MatMenuModule,
-    MatProgressSpinnerModule,
-    MatBadgeModule
-  ],
-  template: `
-    <div class="organization-roles-container">
-      <!-- 標題區域 -->
-      <div class="header-section">
-        <div class="title-section">
-          <h2 class="page-title">
-            <mat-icon>admin_panel_settings</mat-icon>
-            組織角色系統
-          </h2>
-          <p class="page-description">
-            管理組織的角色和權限設定，建立完整的權限體系
-          </p>
-        </div>
-        <div class="action-section">
-          <button 
-            mat-raised-button 
-            color="primary"
-            (click)="openCreateRoleDialog()"
-            [disabled]="isLoading()">
-            <mat-icon>add</mat-icon>
-            新增角色
-          </button>
-        </div>
-      </div>
-
-      <!-- 統計卡片 -->
-      <div class="stats-section">
-        <mat-card class="stat-card">
-          <mat-card-content>
-            <div class="stat-content">
-              <mat-icon class="stat-icon">admin_panel_settings</mat-icon>
-              <div class="stat-details">
-                <div class="stat-number">{{ organizationRoles().length }}</div>
-                <div class="stat-label">總角色數</div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card">
-          <mat-card-content>
-            <div class="stat-content">
-              <mat-icon class="stat-icon">build</mat-icon>
-              <div class="stat-details">
-                <div class="stat-number">{{ systemRoles().length }}</div>
-                <div class="stat-label">系統角色</div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card">
-          <mat-card-content>
-            <div class="stat-content">
-              <mat-icon class="stat-icon">person_add</mat-icon>
-              <div class="stat-details">
-                <div class="stat-number">{{ customRoles().length }}</div>
-                <div class="stat-label">自訂角色</div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card">
-          <mat-card-content>
-            <div class="stat-content">
-              <mat-icon class="stat-icon">security</mat-icon>
-              <div class="stat-details">
-                <div class="stat-number">{{ totalPermissions() }}</div>
-                <div class="stat-label">總權限數</div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-
-      <!-- 角色列表 -->
-      <mat-card class="main-card">
-        <mat-card-header>
-          <mat-card-title>角色列表</mat-card-title>
-          <mat-card-subtitle>管理組織的角色和權限設定</mat-card-subtitle>
-        </mat-card-header>
-        
-        <mat-card-content>
-          <div class="table-container" *ngIf="!isLoading(); else loadingTemplate">
-            <table mat-table [dataSource]="organizationRoles()" class="roles-table">
-              <!-- 角色名稱欄位 -->
-              <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef>角色名稱</th>
-                <td mat-cell *matCellDef="let role">
-                  <div class="role-name">
-                    <mat-icon class="role-icon">{{ getRoleIcon(role.level) }}</mat-icon>
-                    <div class="role-details">
-                      <div class="role-title">{{ role.name }}</div>
-                      <div class="role-description">{{ role.description }}</div>
-                    </div>
-                    <mat-chip *ngIf="role.isSystemRole" color="accent" class="system-chip">
-                      系統角色
-                    </mat-chip>
-                  </div>
-                </td>
-              </ng-container>
-
-              <!-- 等級欄位 -->
-              <ng-container matColumnDef="level">
-                <th mat-header-cell *matHeaderCellDef>等級</th>
-                <td mat-cell *matCellDef="let role">
-                  <mat-chip-set>
-                    <mat-chip [color]="getLevelColor(role.level)">
-                      <mat-icon>star</mat-icon>
-                      Level {{ role.level }}
-                    </mat-chip>
-                  </mat-chip-set>
-                </td>
-              </ng-container>
-
-              <!-- 權限數量欄位 -->
-              <ng-container matColumnDef="permissions">
-                <th mat-header-cell *matHeaderCellDef>權限數量</th>
-                <td mat-cell *matCellDef="let role">
-                  <mat-chip-set>
-                    <mat-chip color="primary">
-                      <mat-icon>security</mat-icon>
-                      {{ role.permissions.length }} 個權限
-                    </mat-chip>
-                  </mat-chip-set>
-                </td>
-              </ng-container>
-
-              <!-- 權限範圍欄位 -->
-              <ng-container matColumnDef="scopes">
-                <th mat-header-cell *matHeaderCellDef>權限範圍</th>
-                <td mat-cell *matCellDef="let role">
-                  <div class="scopes-container">
-                    <mat-chip 
-                      *ngFor="let scope of getUniqueScopes(role.permissions)" 
-                      [color]="getScopeColor(scope)"
-                      class="scope-chip">
-                      {{ getScopeLabel(scope) }}
-                    </mat-chip>
-                  </div>
-                </td>
-              </ng-container>
-
-              <!-- 建立時間欄位 -->
-              <ng-container matColumnDef="createdAt">
-                <th mat-header-cell *matHeaderCellDef>建立時間</th>
-                <td mat-cell *matCellDef="let role">
-                  {{ formatDate(role.createdAt) }}
-                </td>
-              </ng-container>
-
-              <!-- 操作欄位 -->
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>操作</th>
-                <td mat-cell *matCellDef="let role">
-                  <button 
-                    mat-icon-button 
-                    [matMenuTriggerFor]="actionMenu"
-                    [matTooltip]="'更多操作'">
-                    <mat-icon>more_vert</mat-icon>
-                  </button>
-                  
-                  <mat-menu #actionMenu="matMenu">
-                    <button mat-menu-item (click)="viewRoleDetails(role)">
-                      <mat-icon>visibility</mat-icon>
-                      查看詳情
-                    </button>
-                    <button mat-menu-item (click)="editRole(role)" [disabled]="role.isSystemRole">
-                      <mat-icon>edit</mat-icon>
-                      編輯角色
-                    </button>
-                    <button mat-menu-item (click)="duplicateRole(role)">
-                      <mat-icon>content_copy</mat-icon>
-                      複製角色
-                    </button>
-                    <button mat-menu-item (click)="deleteRole(role)" [disabled]="role.isSystemRole" class="danger-action">
-                      <mat-icon>delete</mat-icon>
-                      刪除角色
-                    </button>
-                  </mat-menu>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-            </table>
-          </div>
-
-          <ng-template #loadingTemplate>
-            <div class="loading-container">
-              <mat-spinner diameter="40"></mat-spinner>
-              <p>載入角色資料中...</p>
-            </div>
-          </ng-template>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .organization-roles-container {
-      padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .header-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 32px;
-    }
-
-    .title-section {
-      flex: 1;
-    }
-
-    .page-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 0 0 8px 0;
-      font-size: 28px;
-      font-weight: 500;
-      color: #1976d2;
-    }
-
-    .page-description {
-      margin: 0;
-      color: #666;
-      font-size: 16px;
-    }
-
-    .action-section {
-      display: flex;
-      gap: 12px;
-    }
-
-    .stats-section {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-
-    .stat-card {
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .stat-content {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .stat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-      color: #1976d2;
-    }
-
-    .stat-details {
-      flex: 1;
-    }
-
-    .stat-number {
-      font-size: 24px;
-      font-weight: 600;
-      color: #333;
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-size: 14px;
-      color: #666;
-      margin-top: 4px;
-    }
-
-    .main-card {
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .table-container {
-      overflow-x: auto;
-    }
-
-    .roles-table {
-      width: 100%;
-    }
-
-    .role-name {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .role-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-      color: #1976d2;
-    }
-
-    .role-details {
-      flex: 1;
-    }
-
-    .role-title {
-      font-weight: 500;
-      font-size: 16px;
-      color: #333;
-    }
-
-    .role-description {
-      font-size: 14px;
-      color: #666;
-      margin-top: 2px;
-    }
-
-    .system-chip {
-      font-size: 12px;
-    }
-
-    .scopes-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-
-    .scope-chip {
-      font-size: 12px;
-    }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px;
-      gap: 16px;
-    }
-
-    .danger-action {
-      color: #f44336;
-    }
-
-    .danger-action mat-icon {
-      color: #f44336;
-    }
-
-    @media (max-width: 768px) {
-      .organization-roles-container {
-        padding: 16px;
-      }
-
-      .header-section {
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .stats-section {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .role-name {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-      }
-    }
-  `]
-})
-export class OrganizationRolesComponent implements OnInit {
-  private permissionService = inject(PermissionCalculationService);
-  private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
-
-  // 響應式狀態
-  private _isLoading = signal(false);
-  private _organizationRoles = signal<OrganizationRole[]>([]);
-
-  // 公開的只讀 signals
-  readonly isLoading = this._isLoading.asReadonly();
-  readonly organizationRoles = this._organizationRoles.asReadonly();
-
-  // 計算屬性
-  readonly systemRoles = computed(() => 
-    this.organizationRoles().filter(role => role.isSystemRole)
-  );
-
-  readonly customRoles = computed(() => 
-    this.organizationRoles().filter(role => !role.isSystemRole)
-  );
-
-  readonly totalPermissions = computed(() => 
-    this.organizationRoles().reduce((total, role) => total + role.permissions.length, 0)
-  );
-
-  // 表格配置
-  displayedColumns: string[] = [
-    'name', 
-    'level', 
-    'permissions', 
-    'scopes', 
-    'createdAt', 
-    'actions'
-  ];
-
-  ngOnInit(): void {
-    this.loadOrganizationRoles();
-  }
-
-  /**
-   * 載入組織角色資料
-   */
-  private async loadOrganizationRoles(): Promise<void> {
-    this._isLoading.set(true);
-    try {
-      // 從權限服務獲取組織角色資料
-      const roles = this.permissionService.organizationRoles();
-      this._organizationRoles.set(roles);
-    } catch (error) {
-      console.error('載入組織角色失敗:', error);
-      this.snackBar.open('載入組織角色資料失敗', '關閉', { duration: 3000 });
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  /**
-   * 獲取角色圖標
-   */
-  getRoleIcon(level: number): string {
-    if (level >= 8) return 'admin_panel_settings';
-    if (level >= 5) return 'security';
-    if (level >= 3) return 'verified_user';
-    return 'person';
-  }
-
-  /**
-   * 獲取等級顏色
-   */
-  getLevelColor(level: number): 'primary' | 'accent' | 'warn' {
-    if (level >= 8) return 'warn';
-    if (level >= 5) return 'accent';
-    return 'primary';
-  }
-
-  /**
-   * 獲取唯一權限範圍
-   */
-  getUniqueScopes(permissions: Permission[]): string[] {
-    const scopes = permissions.map(p => p.scope);
-    return [...new Set(scopes)];
-  }
-
-  /**
-   * 獲取範圍顏色
-   */
-  getScopeColor(scope: string): 'primary' | 'accent' | 'warn' {
-    switch (scope) {
-      case 'organization': return 'warn';
-      case 'team': return 'accent';
-      case 'project': return 'primary';
-      case 'user': return 'primary';
-      default: return 'primary';
-    }
-  }
-
-  /**
-   * 獲取範圍標籤
-   */
-  getScopeLabel(scope: string): string {
-    switch (scope) {
-      case 'organization': return '組織';
-      case 'team': return '團隊';
-      case 'project': return '專案';
-      case 'user': return '用戶';
-      default: return scope;
-    }
-  }
-
-  /**
-   * 格式化日期
-   */
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('zh-TW', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  /**
-   * 開啟新增角色對話框
-   */
-  openCreateRoleDialog(): void {
-    // TODO: 實作新增角色對話框
-    this.snackBar.open('新增角色功能開發中', '關閉', { duration: 3000 });
-  }
-
-  /**
-   * 查看角色詳情
-   */
-  viewRoleDetails(role: OrganizationRole): void {
-    // TODO: 實作查看角色詳情對話框
-    this.snackBar.open(`查看角色 ${role.name} 的詳情`, '關閉', { duration: 3000 });
-  }
-
-  /**
-   * 編輯角色
-   */
-  editRole(role: OrganizationRole): void {
-    // TODO: 實作編輯角色對話框
-    this.snackBar.open(`編輯角色 ${role.name}`, '關閉', { duration: 3000 });
-  }
-
-  /**
-   * 複製角色
-   */
-  duplicateRole(role: OrganizationRole): void {
-    // TODO: 實作複製角色功能
-    this.snackBar.open(`複製角色 ${role.name}`, '關閉', { duration: 3000 });
-  }
-
-  /**
-   * 刪除角色
-   */
-  deleteRole(role: OrganizationRole): void {
-    // TODO: 實作刪除角色確認對話框
-    this.snackBar.open(`刪除角色 ${role.name}`, '關閉', { duration: 3000 });
-  }
-}
-```
-
-## File: angular/src/app/features/organization/components/security-manager.component.ts
-```typescript
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-
-import { SecurityManager, SecurityPermission } from '../models/organization.model';
-import { PermissionCalculationService } from '../services/permission-calculation.service';
-
-/**
- * 安全管理器組件
- * 管理組織的安全權限和安全管理員
- */
-@Component({
-  selector: 'app-security-manager',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatTableModule,
-    MatChipsModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatTooltipModule,
-    MatMenuModule,
-    MatProgressSpinnerModule
-  ],
-  template: `
-    <div class="security-manager-container">
-      <!-- 標題區域 -->
-      <div class="header-section">
-        <div class="title-section">
-          <h2 class="page-title">
-            <mat-icon>security</mat-icon>
-            安全管理器
-          </h2>
-          <p class="page-description">
-            管理組織的安全權限和安全管理員設定
-          </p>
-        </div>
-        <div class="action-section">
-          <button 
-            mat-raised-button 
-            color="primary"
-            (click)="openAddSecurityManagerDialog()"
-            [disabled]="isLoading()">
-            <mat-icon>add</mat-icon>
-            新增安全管理員
-          </button>
-        </div>
-      </div>
-
-      <!-- 統計卡片 -->
-      <div class="stats-section">
-        <mat-card class="stat-card">
-          <mat-card-content>
-            <div class="stat-content">
-              <mat-icon class="stat-icon">admin_panel_settings</mat-icon>
-              <div class="stat-details">
-                <div class="stat-number">{{ securityManagers().length }}</div>
-                <div class="stat-label">安全管理員</div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card">
-          <mat-card-content>
-            <div class="stat-content">
-              <mat-icon class="stat-icon">verified_user</mat-icon>
-              <div class="stat-details">
-                <div class="stat-number">{{ totalPermissions() }}</div>
-                <div class="stat-label">總權限數</div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card">
-          <mat-card-content>
-            <div class="stat-content">
-              <mat-icon class="stat-icon">group</mat-icon>
-              <div class="stat-details">
-                <div class="stat-number">{{ userSecurityManagers().length }}</div>
-                <div class="stat-label">用戶管理員</div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-
-        <mat-card class="stat-card">
-          <mat-card-content>
-            <div class="stat-content">
-              <mat-icon class="stat-icon">groups</mat-icon>
-              <div class="stat-details">
-                <div class="stat-number">{{ teamSecurityManagers().length }}</div>
-                <div class="stat-label">團隊管理員</div>
-              </div>
-            </div>
-          </mat-card-content>
-        </mat-card>
-      </div>
-
-      <!-- 安全管理員列表 -->
-      <mat-card class="main-card">
-        <mat-card-header>
-          <mat-card-title>安全管理員列表</mat-card-title>
-          <mat-card-subtitle>管理組織的安全權限設定</mat-card-subtitle>
-        </mat-card-header>
-        
-        <mat-card-content>
-          <div class="table-container" *ngIf="!isLoading(); else loadingTemplate">
-            <table mat-table [dataSource]="securityManagers()" class="security-table">
-              <!-- 類型欄位 -->
-              <ng-container matColumnDef="type">
-                <th mat-header-cell *matHeaderCellDef>類型</th>
-                <td mat-cell *matCellDef="let manager">
-                  <mat-chip-set>
-                    <mat-chip [color]="getTypeColor(manager.type)">
-                      <mat-icon>{{ getTypeIcon(manager.type) }}</mat-icon>
-                      {{ getTypeLabel(manager.type) }}
-                    </mat-chip>
-                  </mat-chip-set>
-                </td>
-              </ng-container>
-
-              <!-- 實體欄位 -->
-              <ng-container matColumnDef="entity">
-                <th mat-header-cell *matHeaderCellDef>實體</th>
-                <td mat-cell *matCellDef="let manager">
-                  <div class="entity-info">
-                    <mat-icon class="entity-icon">{{ getTypeIcon(manager.type) }}</mat-icon>
-                    <span class="entity-name">{{ getEntityName(manager) }}</span>
-                  </div>
-                </td>
-              </ng-container>
-
-              <!-- 權限數量欄位 -->
-              <ng-container matColumnDef="permissions">
-                <th mat-header-cell *matHeaderCellDef>權限數量</th>
-                <td mat-cell *matCellDef="let manager">
-                  <mat-chip-set>
-                    <mat-chip color="accent">
-                      {{ manager.permissions.length }} 個權限
-                    </mat-chip>
-                  </mat-chip-set>
-                </td>
-              </ng-container>
-
-              <!-- 指派時間欄位 -->
-              <ng-container matColumnDef="assignedAt">
-                <th mat-header-cell *matHeaderCellDef>指派時間</th>
-                <td mat-cell *matCellDef="let manager">
-                  {{ formatDate(manager.assignedAt) }}
-                </td>
-              </ng-container>
-
-              <!-- 指派者欄位 -->
-              <ng-container matColumnDef="assignedBy">
-                <th mat-header-cell *matHeaderCellDef>指派者</th>
-                <td mat-cell *matCellDef="let manager">
-                  <div class="assigned-by">
-                    <mat-icon class="user-icon">person</mat-icon>
-                    {{ manager.assignedBy }}
-                  </div>
-                </td>
-              </ng-container>
-
-              <!-- 操作欄位 -->
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>操作</th>
-                <td mat-cell *matCellDef="let manager">
-                  <button 
-                    mat-icon-button 
-                    [matMenuTriggerFor]="actionMenu"
-                    [matTooltip]="'更多操作'">
-                    <mat-icon>more_vert</mat-icon>
-                  </button>
-                  
-                  <mat-menu #actionMenu="matMenu">
-                    <button mat-menu-item (click)="viewPermissions(manager)">
-                      <mat-icon>visibility</mat-icon>
-                      查看權限
-                    </button>
-                    <button mat-menu-item (click)="editSecurityManager(manager)">
-                      <mat-icon>edit</mat-icon>
-                      編輯
-                    </button>
-                    <button mat-menu-item (click)="removeSecurityManager(manager)" class="danger-action">
-                      <mat-icon>delete</mat-icon>
-                      移除
-                    </button>
-                  </mat-menu>
-                </td>
-              </ng-container>
-
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-            </table>
-          </div>
-
-          <ng-template #loadingTemplate>
-            <div class="loading-container">
-              <mat-spinner diameter="40"></mat-spinner>
-              <p>載入安全管理員資料中...</p>
-            </div>
-          </ng-template>
-        </mat-card-content>
-      </mat-card>
-    </div>
-  `,
-  styles: [`
-    .security-manager-container {
-      padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .header-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 32px;
-    }
-
-    .title-section {
-      flex: 1;
-    }
-
-    .page-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin: 0 0 8px 0;
-      font-size: 28px;
-      font-weight: 500;
-      color: #1976d2;
-    }
-
-    .page-description {
-      margin: 0;
-      color: #666;
-      font-size: 16px;
-    }
-
-    .action-section {
-      display: flex;
-      gap: 12px;
-    }
-
-    .stats-section {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
-    }
-
-    .stat-card {
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .stat-content {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .stat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-      color: #1976d2;
-    }
-
-    .stat-details {
-      flex: 1;
-    }
-
-    .stat-number {
-      font-size: 24px;
-      font-weight: 600;
-      color: #333;
-      line-height: 1;
-    }
-
-    .stat-label {
-      font-size: 14px;
-      color: #666;
-      margin-top: 4px;
-    }
-
-    .main-card {
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .table-container {
-      overflow-x: auto;
-    }
-
-    .security-table {
-      width: 100%;
-    }
-
-    .entity-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .entity-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-    }
-
-    .entity-name {
-      font-weight: 500;
-    }
-
-    .assigned-by {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .user-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px;
-      gap: 16px;
-    }
-
-    .danger-action {
-      color: #f44336;
-    }
-
-    .danger-action mat-icon {
-      color: #f44336;
-    }
-
-    @media (max-width: 768px) {
-      .security-manager-container {
-        padding: 16px;
-      }
-
-      .header-section {
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .stats-section {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-  `]
-})
-export class SecurityManagerComponent implements OnInit {
-  private permissionService = inject(PermissionCalculationService);
-  private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
-
-  // 響應式狀態
-  private _isLoading = signal(false);
-  private _securityManagers = signal<SecurityManager[]>([]);
-
-  // 公開的只讀 signals
-  readonly isLoading = this._isLoading.asReadonly();
-  readonly securityManagers = this._securityManagers.asReadonly();
-
-  // 計算屬性
-  readonly userSecurityManagers = computed(() => 
-    this.securityManagers().filter(sm => sm.type === 'user')
-  );
-
-  readonly teamSecurityManagers = computed(() => 
-    this.securityManagers().filter(sm => sm.type === 'team')
-  );
-
-  readonly totalPermissions = computed(() => 
-    this.securityManagers().reduce((total, sm) => total + sm.permissions.length, 0)
-  );
-
-  // 表格配置
-  displayedColumns: string[] = [
-    'type', 
-    'entity', 
-    'permissions', 
-    'assignedAt', 
-    'assignedBy', 
-    'actions'
-  ];
-
-  ngOnInit(): void {
-    this.loadSecurityManagers();
-  }
-
-  /**
-   * 載入安全管理員資料
-   */
-  private async loadSecurityManagers(): Promise<void> {
-    this._isLoading.set(true);
-    try {
-      // 從權限服務獲取安全管理員資料
-      const managers = this.permissionService.securityManagers();
-      this._securityManagers.set(managers);
-    } catch (error) {
-      console.error('載入安全管理員失敗:', error);
-      this.snackBar.open('載入安全管理員資料失敗', '關閉', { duration: 3000 });
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  /**
-   * 獲取類型顏色
-   */
-  getTypeColor(type: 'user' | 'team'): 'primary' | 'accent' | 'warn' {
-    switch (type) {
-      case 'user': return 'primary';
-      case 'team': return 'accent';
-      default: return 'warn';
-    }
-  }
-
-  /**
-   * 獲取類型圖標
-   */
-  getTypeIcon(type: 'user' | 'team'): string {
-    switch (type) {
-      case 'user': return 'person';
-      case 'team': return 'groups';
-      default: return 'help';
-    }
-  }
-
-  /**
-   * 獲取類型標籤
-   */
-  getTypeLabel(type: 'user' | 'team'): string {
-    switch (type) {
-      case 'user': return '用戶';
-      case 'team': return '團隊';
-      default: return '未知';
-    }
-  }
-
-  /**
-   * 獲取實體名稱
-   */
-  getEntityName(manager: SecurityManager): string {
-    // 這裡應該根據 entityId 查找實際的用戶名或團隊名
-    // 簡化實作，直接返回 ID
-    return manager.entityId;
-  }
-
-  /**
-   * 格式化日期
-   */
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('zh-TW', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  /**
-   * 開啟新增安全管理員對話框
-   */
-  openAddSecurityManagerDialog(): void {
-    // TODO: 實作新增安全管理員對話框
-    this.snackBar.open('新增安全管理員功能開發中', '關閉', { duration: 3000 });
-  }
-
-  /**
-   * 查看權限
-   */
-  viewPermissions(manager: SecurityManager): void {
-    // TODO: 實作查看權限對話框
-    this.snackBar.open(`查看 ${manager.entityId} 的權限`, '關閉', { duration: 3000 });
-  }
-
-  /**
-   * 編輯安全管理員
-   */
-  editSecurityManager(manager: SecurityManager): void {
-    // TODO: 實作編輯安全管理員對話框
-    this.snackBar.open(`編輯 ${manager.entityId} 的安全管理員設定`, '關閉', { duration: 3000 });
-  }
-
-  /**
-   * 移除安全管理員
-   */
-  removeSecurityManager(manager: SecurityManager): void {
-    // TODO: 實作移除安全管理員確認對話框
-    this.snackBar.open(`移除 ${manager.entityId} 的安全管理員`, '關閉', { duration: 3000 });
-  }
-}
-```
-
 ## File: angular/src/app/features/organization/routes/organization.routes.ts
 ```typescript
 import { Routes } from '@angular/router';
@@ -11249,705 +10832,6 @@ export const organizationRoutes: Routes = [
     pathMatch: 'full'
   }
 ];
-```
-
-## File: angular/src/app/features/organization/services/github-aligned-api.service.ts
-```typescript
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { 
-  OrganizationDetail, 
-  CreateOrganizationRequest, 
-  UpdateOrganizationRequest,
-  Team,
-  TeamMember,
-  CreateTeamRequest,
-  UpdateTeamRequest,
-  OrganizationMember,
-  InviteMemberRequest,
-  UpdateMemberRoleRequest,
-  SecurityManager,
-  OrganizationRole
-} from '../models/organization.model';
-
-/**
- * GitHub 對齊的 API 服務
- * 實作對齊 GitHub REST API 模式的組織管理 API
- */
-@Injectable({
-  providedIn: 'root'
-})
-export class GitHubAlignedApiService {
-  private readonly http = inject(HttpClient);
-  private readonly baseUrl = '/api';
-
-  // ==================== 組織管理 API ====================
-  
-  /**
-   * 獲取組織資訊 (對齊 GitHub: GET /orgs/{org})
-   */
-  getOrganization(orgSlug: string): Observable<OrganizationDetail> {
-    return this.http.get<OrganizationDetail>(`${this.baseUrl}/orgs/${orgSlug}`);
-  }
-
-  /**
-   * 創建組織 (對齊 GitHub: POST /orgs)
-   */
-  createOrganization(org: CreateOrganizationRequest): Observable<OrganizationDetail> {
-    return this.http.post<OrganizationDetail>(`${this.baseUrl}/orgs`, org);
-  }
-
-  /**
-   * 更新組織 (對齊 GitHub: PUT /orgs/{org})
-   */
-  updateOrganization(orgSlug: string, updates: UpdateOrganizationRequest): Observable<OrganizationDetail> {
-    return this.http.put<OrganizationDetail>(`${this.baseUrl}/orgs/${orgSlug}`, updates);
-  }
-
-  /**
-   * 刪除組織 (對齊 GitHub: DELETE /orgs/{org})
-   */
-  deleteOrganization(orgSlug: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}`);
-  }
-
-  // ==================== 組織成員管理 API ====================
-
-  /**
-   * 獲取組織成員列表 (對齊 GitHub: GET /orgs/{org}/members)
-   */
-  getOrganizationMembers(orgSlug: string): Observable<OrganizationMember[]> {
-    return this.http.get<OrganizationMember[]>(`${this.baseUrl}/orgs/${orgSlug}/members`);
-  }
-
-  /**
-   * 邀請成員加入組織 (對齊 GitHub: POST /orgs/{org}/members)
-   */
-  inviteMember(orgSlug: string, invite: InviteMemberRequest): Observable<OrganizationMember> {
-    return this.http.post<OrganizationMember>(`${this.baseUrl}/orgs/${orgSlug}/members`, invite);
-  }
-
-  /**
-   * 更新成員角色 (對齊 GitHub: PUT /orgs/{org}/members/{username})
-   */
-  updateMemberRole(orgSlug: string, userId: string, update: UpdateMemberRoleRequest): Observable<OrganizationMember> {
-    return this.http.put<OrganizationMember>(`${this.baseUrl}/orgs/${orgSlug}/members/${userId}`, update);
-  }
-
-  /**
-   * 移除組織成員 (對齊 GitHub: DELETE /orgs/{org}/members/{username})
-   */
-  removeMember(orgSlug: string, userId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}/members/${userId}`);
-  }
-
-  // ==================== 團隊管理 API ====================
-
-  /**
-   * 獲取組織團隊列表 (對齊 GitHub: GET /orgs/{org}/teams)
-   */
-  getTeams(orgSlug: string): Observable<Team[]> {
-    return this.http.get<Team[]>(`${this.baseUrl}/orgs/${orgSlug}/teams`);
-  }
-
-  /**
-   * 創建團隊 (對齊 GitHub: POST /orgs/{org}/teams)
-   */
-  createTeam(orgSlug: string, team: CreateTeamRequest): Observable<Team> {
-    return this.http.post<Team>(`${this.baseUrl}/orgs/${orgSlug}/teams`, team);
-  }
-
-  /**
-   * 獲取團隊詳情 (對齊 GitHub: GET /orgs/{org}/teams/{team_slug})
-   */
-  getTeam(orgSlug: string, teamSlug: string): Observable<Team> {
-    return this.http.get<Team>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}`);
-  }
-
-  /**
-   * 更新團隊 (對齊 GitHub: PUT /orgs/{org}/teams/{team_slug})
-   */
-  updateTeam(orgSlug: string, teamSlug: string, updates: UpdateTeamRequest): Observable<Team> {
-    return this.http.put<Team>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}`, updates);
-  }
-
-  /**
-   * 刪除團隊 (對齊 GitHub: DELETE /orgs/{org}/teams/{team_slug})
-   */
-  deleteTeam(orgSlug: string, teamSlug: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}`);
-  }
-
-  // ==================== 團隊成員管理 API ====================
-
-  /**
-   * 獲取團隊成員列表 (對齊 GitHub: GET /orgs/{org}/teams/{team_slug}/members)
-   */
-  getTeamMembers(orgSlug: string, teamSlug: string): Observable<TeamMember[]> {
-    return this.http.get<TeamMember[]>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}/members`);
-  }
-
-  /**
-   * 添加團隊成員 (對齊 GitHub: PUT /orgs/{org}/teams/{team_slug}/members/{username})
-   */
-  addTeamMember(orgSlug: string, teamSlug: string, userId: string): Observable<TeamMember> {
-    return this.http.put<TeamMember>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}/members/${userId}`, {});
-  }
-
-  /**
-   * 移除團隊成員 (對齊 GitHub: DELETE /orgs/{org}/teams/{team_slug}/members/{username})
-   */
-  removeTeamMember(orgSlug: string, teamSlug: string, userId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}/teams/${teamSlug}/members/${userId}`);
-  }
-
-  // ==================== 安全管理器 API ====================
-
-  /**
-   * 獲取安全管理器列表
-   */
-  getSecurityManagers(orgSlug: string): Observable<SecurityManager[]> {
-    return this.http.get<SecurityManager[]>(`${this.baseUrl}/orgs/${orgSlug}/security-managers`);
-  }
-
-  /**
-   * 創建安全管理器
-   */
-  createSecurityManager(orgSlug: string, manager: Partial<SecurityManager>): Observable<SecurityManager> {
-    return this.http.post<SecurityManager>(`${this.baseUrl}/orgs/${orgSlug}/security-managers`, manager);
-  }
-
-  /**
-   * 更新安全管理器
-   */
-  updateSecurityManager(orgSlug: string, managerId: string, updates: Partial<SecurityManager>): Observable<SecurityManager> {
-    return this.http.put<SecurityManager>(`${this.baseUrl}/orgs/${orgSlug}/security-managers/${managerId}`, updates);
-  }
-
-  /**
-   * 刪除安全管理器
-   */
-  deleteSecurityManager(orgSlug: string, managerId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}/security-managers/${managerId}`);
-  }
-
-  // ==================== 組織角色 API ====================
-
-  /**
-   * 獲取組織角色列表
-   */
-  getOrganizationRoles(orgSlug: string): Observable<OrganizationRole[]> {
-    return this.http.get<OrganizationRole[]>(`${this.baseUrl}/orgs/${orgSlug}/roles`);
-  }
-
-  /**
-   * 創建組織角色
-   */
-  createOrganizationRole(orgSlug: string, role: Partial<OrganizationRole>): Observable<OrganizationRole> {
-    return this.http.post<OrganizationRole>(`${this.baseUrl}/orgs/${orgSlug}/roles`, role);
-  }
-
-  /**
-   * 更新組織角色
-   */
-  updateOrganizationRole(orgSlug: string, roleId: string, updates: Partial<OrganizationRole>): Observable<OrganizationRole> {
-    return this.http.put<OrganizationRole>(`${this.baseUrl}/orgs/${orgSlug}/roles/${roleId}`, updates);
-  }
-
-  /**
-   * 刪除組織角色
-   */
-  deleteOrganizationRole(orgSlug: string, roleId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/orgs/${orgSlug}/roles/${roleId}`);
-  }
-}
-```
-
-## File: angular/src/app/features/organization/services/permission-calculation.service.ts
-```typescript
-import { Injectable, signal, computed } from '@angular/core';
-import { 
-  OrganizationDetail, 
-  Team, 
-  SecurityManager, 
-  OrganizationRole, 
-  PermissionResult 
-} from '../models/organization.model';
-
-/**
- * 權限計算服務
- * 實作混合權限系統：結合遞迴計算和選擇性快取
- */
-@Injectable({
-  providedIn: 'root'
-})
-export class PermissionCalculationService {
-  private permissionCache = new Map<string, PermissionResult>();
-  private cacheExpiry = new Map<string, number>();
-  private readonly CACHE_TTL = 5 * 60 * 1000; // 5分鐘快取
-
-  // 使用 signals 進行響應式狀態管理
-  private _organizations = signal<OrganizationDetail[]>([]);
-  private _currentOrganization = signal<OrganizationDetail | null>(null);
-  private _teams = signal<Team[]>([]);
-  private _securityManagers = signal<SecurityManager[]>([]);
-  private _organizationRoles = signal<OrganizationRole[]>([]);
-
-  // 公開的只讀 signals
-  readonly organizations = this._organizations.asReadonly();
-  readonly currentOrganization = this._currentOrganization.asReadonly();
-  readonly teams = this._teams.asReadonly();
-  readonly securityManagers = this._securityManagers.asReadonly();
-  readonly organizationRoles = this._organizationRoles.asReadonly();
-
-  // 計算屬性
-  readonly teamHierarchy = computed(() => this.buildTeamHierarchy(this.teams()));
-
-  /**
-   * 主要權限檢查方法
-   */
-  async checkPermission(
-    userId: string, 
-    resourceId: string, 
-    action: string
-  ): Promise<boolean> {
-    const cacheKey = `${userId}:${resourceId}:${action}`;
-    
-    // 檢查快取
-    if (this.isCacheValid(cacheKey)) {
-      return this.permissionCache.get(cacheKey)!.granted;
-    }
-    
-    // 計算權限
-    const result = await this.calculatePermission(userId, resourceId, action);
-    
-    // 更新快取
-    this.updateCache(cacheKey, result);
-    
-    return result.granted;
-  }
-
-  /**
-   * 遞迴權限計算
-   */
-  private async calculatePermission(
-    userId: string, 
-    resourceId: string, 
-    action: string
-  ): Promise<PermissionResult> {
-    // 1. 檢查直接權限
-    const directPermission = await this.checkDirectPermission(userId, resourceId, action);
-    if (directPermission.granted) {
-      return directPermission;
-    }
-    
-    // 2. 檢查團隊繼承權限
-    const teamPermission = await this.checkTeamInheritedPermission(userId, resourceId, action);
-    if (teamPermission.granted) {
-      return teamPermission;
-    }
-    
-    // 3. 檢查組織角色權限
-    const rolePermission = await this.checkOrganizationRolePermission(userId, resourceId, action);
-    if (rolePermission.granted) {
-      return rolePermission;
-    }
-    
-    // 4. 檢查安全管理器權限
-    const securityPermission = await this.checkSecurityManagerPermission(userId, resourceId, action);
-    
-    return securityPermission;
-  }
-
-  /**
-   * 檢查直接權限
-   */
-  private async checkDirectPermission(
-    userId: string, 
-    resourceId: string, 
-    action: string
-  ): Promise<PermissionResult> {
-    const org = this._currentOrganization();
-    if (!org) {
-      return { granted: false, reason: 'No organization context' };
-    }
-
-    // 檢查是否為組織擁有者
-    if (org.members.some(member => member.userId === userId && member.role.level === 10)) {
-      return { granted: true, level: 'admin', reason: 'Organization owner' };
-    }
-
-    // 檢查直接成員權限
-    const member = org.members.find(m => m.userId === userId);
-    if (member && member.status === 'active') {
-      const hasPermission = member.role.permissions.some(
-        p => p.resource === resourceId && p.action === action
-      );
-      if (hasPermission) {
-        return { 
-          granted: true, 
-          level: this.mapRoleLevelToPermission(member.role.level),
-          reason: 'Direct member permission' 
-        };
-      }
-    }
-
-    return { granted: false, reason: 'No direct permission' };
-  }
-
-  /**
-   * 檢查團隊繼承權限
-   */
-  private async checkTeamInheritedPermission(
-    userId: string, 
-    resourceId: string, 
-    action: string
-  ): Promise<PermissionResult> {
-    const teams = this._teams();
-    const userTeams = teams.filter(team => 
-      team.members.some(member => member.userId === userId)
-    );
-
-    for (const team of userTeams) {
-      const teamPermission = await this.calculateTeamPermissions(userId, team.id, action);
-      if (teamPermission.granted) {
-        return teamPermission;
-      }
-    }
-
-    return { granted: false, reason: 'No team permission found' };
-  }
-
-  /**
-   * 計算團隊權限
-   */
-  private async calculateTeamPermissions(
-    userId: string, 
-    teamId: string, 
-    action: string
-  ): Promise<PermissionResult> {
-    const team = this._teams().find(t => t.id === teamId);
-    if (!team) {
-      return { granted: false, reason: 'Team not found' };
-    }
-
-    // 檢查直接團隊成員權限
-    const teamMember = team.members.find(member => member.userId === userId);
-    if (teamMember) {
-      const permissionLevel = this.mapTeamRoleToPermission(teamMember.role);
-      return this.applyTeamPermissionLevel(
-        { granted: true, level: permissionLevel, reason: 'Team member' },
-        team.permission
-      );
-    }
-
-    // 檢查父團隊繼承權限
-    if (team.parentTeamId) {
-      const parentPermission = await this.calculateTeamPermissions(userId, team.parentTeamId, action);
-      if (parentPermission.granted) {
-        // 父團隊權限會降級一級
-        return this.downgradePermissionLevel(parentPermission);
-      }
-    }
-
-    return { granted: false, reason: 'No team permission found' };
-  }
-
-  /**
-   * 檢查組織角色權限
-   */
-  private async checkOrganizationRolePermission(
-    userId: string, 
-    resourceId: string, 
-    action: string
-  ): Promise<PermissionResult> {
-    const org = this._currentOrganization();
-    if (!org) {
-      return { granted: false, reason: 'No organization context' };
-    }
-
-    const member = org.members.find(m => m.userId === userId);
-    if (!member || member.status !== 'active') {
-      return { granted: false, reason: 'Not an active member' };
-    }
-
-    const role = this._organizationRoles().find(r => r.id === member.role.id);
-    if (!role) {
-      return { granted: false, reason: 'Role not found' };
-    }
-
-    const hasPermission = role.permissions.some(
-      p => p.resource === resourceId && p.action === action
-    );
-
-    if (hasPermission) {
-      return {
-        granted: true,
-        level: this.mapRoleLevelToPermission(role.level),
-        reason: 'Organization role permission'
-      };
-    }
-
-    return { granted: false, reason: 'No role permission' };
-  }
-
-  /**
-   * 檢查安全管理器權限
-   */
-  private async checkSecurityManagerPermission(
-    userId: string, 
-    resourceId: string, 
-    action: string
-  ): Promise<PermissionResult> {
-    const securityManagers = this._securityManagers();
-    const userSecurityRole = securityManagers.find(
-      sm => sm.type === 'user' && sm.entityId === userId
-    );
-
-    if (!userSecurityRole) {
-      return { granted: false, reason: 'Not a security manager' };
-    }
-
-    // 檢查安全管理器權限範圍
-    const scopePermission = await this.checkSecurityScope(userSecurityRole, resourceId);
-    if (!scopePermission) {
-      return { granted: false, reason: 'Outside security scope' };
-    }
-
-    // 檢查特定安全管理權限
-    const specificPermission = await this.checkSpecificSecurityPermission(
-      userSecurityRole, 
-      action
-    );
-
-    return specificPermission;
-  }
-
-  /**
-   * 檢查安全管理器權限範圍
-   */
-  private async checkSecurityScope(
-    securityRole: SecurityManager, 
-    resourceId: string
-  ): Promise<boolean> {
-    switch (securityRole.type) {
-      case 'user':
-        return await this.checkUserSecurityScope(securityRole.entityId, resourceId);
-      case 'team':
-        return await this.checkTeamSecurityScope(securityRole.entityId, resourceId);
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * 檢查用戶安全管理範圍
-   */
-  private async checkUserSecurityScope(userId: string, resourceId: string): Promise<boolean> {
-    // 實作用戶安全管理範圍檢查邏輯
-    return true; // 簡化實作
-  }
-
-  /**
-   * 檢查團隊安全管理範圍
-   */
-  private async checkTeamSecurityScope(teamId: string, resourceId: string): Promise<boolean> {
-    // 實作團隊安全管理範圍檢查邏輯
-    return true; // 簡化實作
-  }
-
-  /**
-   * 檢查特定安全管理權限
-   */
-  private async checkSpecificSecurityPermission(
-    securityRole: SecurityManager, 
-    action: string
-  ): Promise<PermissionResult> {
-    const hasPermission = securityRole.permissions.some(
-      p => p.action === action
-    );
-
-    if (hasPermission) {
-      return {
-        granted: true,
-        level: 'admin',
-        reason: 'Security manager permission'
-      };
-    }
-
-    return { granted: false, reason: 'No security manager permission' };
-  }
-
-  /**
-   * 權限等級降級邏輯
-   */
-  private downgradePermissionLevel(permission: PermissionResult): PermissionResult {
-    const levelMap: Record<string, 'read' | 'write' | 'admin' | 'none'> = { 
-      'admin': 'write', 
-      'write': 'read', 
-      'read': 'none' 
-    };
-    const newLevel = levelMap[permission.level || 'read'] || 'none';
-    
-    return {
-      ...permission,
-      level: newLevel,
-      granted: newLevel !== 'none'
-    };
-  }
-
-  /**
-   * 應用團隊權限等級
-   */
-  private applyTeamPermissionLevel(
-    permission: PermissionResult, 
-    teamPermission: 'read' | 'write' | 'admin'
-  ): PermissionResult {
-    const teamLevelMap: Record<string, 'read' | 'write' | 'admin'> = { 
-      'read': 'read', 
-      'write': 'write', 
-      'admin': 'admin' 
-    };
-    const finalLevel = teamLevelMap[teamPermission];
-    
-    return {
-      ...permission,
-      level: finalLevel,
-      granted: true
-    };
-  }
-
-  /**
-   * 映射角色等級到權限等級
-   */
-  private mapRoleLevelToPermission(level: number): 'read' | 'write' | 'admin' {
-    if (level >= 8) return 'admin';
-    if (level >= 5) return 'write';
-    return 'read';
-  }
-
-  /**
-   * 映射團隊角色到權限等級
-   */
-  private mapTeamRoleToPermission(role: 'member' | 'maintainer' | 'admin'): 'read' | 'write' | 'admin' {
-    switch (role) {
-      case 'admin': return 'admin';
-      case 'maintainer': return 'write';
-      case 'member': return 'read';
-      default: return 'read';
-    }
-  }
-
-  /**
-   * 建立團隊層級結構
-   */
-  private buildTeamHierarchy(teams: Team[]): Team[] {
-    const teamMap = new Map<string, Team & { children: Team[] }>();
-    const rootTeams: (Team & { children: Team[] })[] = [];
-
-    // 初始化所有團隊
-    teams.forEach(team => {
-      teamMap.set(team.id, { ...team, children: [] });
-    });
-
-    // 建立層級關係
-    teams.forEach(team => {
-      const teamWithChildren = teamMap.get(team.id)!;
-      if (team.parentTeamId) {
-        const parent = teamMap.get(team.parentTeamId);
-        if (parent) {
-          parent.children.push(teamWithChildren);
-        }
-      } else {
-        rootTeams.push(teamWithChildren);
-      }
-    });
-
-    return rootTeams;
-  }
-
-  /**
-   * 檢查快取是否有效
-   */
-  private isCacheValid(cacheKey: string): boolean {
-    const expiry = this.cacheExpiry.get(cacheKey);
-    return expiry ? Date.now() < expiry : false;
-  }
-
-  /**
-   * 更新快取
-   */
-  private updateCache(cacheKey: string, result: PermissionResult): void {
-    this.permissionCache.set(cacheKey, result);
-    this.cacheExpiry.set(cacheKey, Date.now() + this.CACHE_TTL);
-  }
-
-  /**
-   * 清除快取
-   */
-  clearCache(): void {
-    this.permissionCache.clear();
-    this.cacheExpiry.clear();
-  }
-
-  // ==================== 狀態管理方法 ====================
-
-  /**
-   * 設定組織列表
-   */
-  setOrganizations(orgs: OrganizationDetail[]): void {
-    this._organizations.set(orgs);
-  }
-
-  /**
-   * 設定當前組織
-   */
-  setCurrentOrganization(org: OrganizationDetail | null): void {
-    this._currentOrganization.set(org);
-    if (org) {
-      this._teams.set(org.teams);
-      this._securityManagers.set(org.securityManagers);
-      this._organizationRoles.set(org.organizationRoles);
-    }
-  }
-
-  /**
-   * 新增團隊
-   */
-  addTeam(team: Team): void {
-    this._teams.update(teams => [...teams, team]);
-  }
-
-  /**
-   * 更新團隊
-   */
-  updateTeam(teamId: string, updates: Partial<Team>): void {
-    this._teams.update(teams => 
-      teams.map(team => team.id === teamId ? { ...team, ...updates } : team)
-    );
-  }
-
-  /**
-   * 移除團隊
-   */
-  removeTeam(teamId: string): void {
-    this._teams.update(teams => teams.filter(team => team.id !== teamId));
-  }
-}
-```
-
-## File: angular/src/app/features/organization/index.ts
-```typescript
-// 組織模組匯出檔案
-export * from './components/organization-card.component';
-export * from './components/team-management.component';
-export * from './components/security-manager.component';
-export * from './components/organization-roles.component';
-export * from './services/github-aligned-api.service';
-export * from './services/permission-calculation.service';
-export * from './models/organization.model';
-export * from './routes/organization.routes';
 ```
 
 ## File: angular/src/app/features/user/auth/auth.service.ts
@@ -13395,6 +12279,1109 @@ export class ValidationUtils {
 }
 ```
 
+## File: angular/src/app/features/organization/components/organization-roles.component.ts
+```typescript
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatBadgeModule } from '@angular/material/badge';
+
+import { OrganizationRole, Permission } from '../models/organization.model';
+import { PermissionService } from '../services/permission.service';
+
+/**
+ * 組織角色系統組件
+ * 管理組織的角色和權限設定
+ */
+@Component({
+  selector: 'app-organization-roles',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatChipsModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    MatTooltipModule,
+    MatMenuModule,
+    MatProgressSpinnerModule,
+    MatBadgeModule
+  ],
+  template: `
+    <div class="organization-roles-container">
+      <!-- 標題區域 -->
+      <div class="header-section">
+        <div class="title-section">
+          <h2 class="page-title">
+            <mat-icon>admin_panel_settings</mat-icon>
+            組織角色系統
+          </h2>
+          <p class="page-description">
+            管理組織的角色和權限設定，建立完整的權限體系
+          </p>
+        </div>
+        <div class="action-section">
+          <button 
+            mat-raised-button 
+            color="primary"
+            (click)="openCreateRoleDialog()"
+            [disabled]="isLoading()">
+            <mat-icon>add</mat-icon>
+            新增角色
+          </button>
+        </div>
+      </div>
+
+      <!-- 統計卡片 -->
+      <div class="stats-section">
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <mat-icon class="stat-icon">admin_panel_settings</mat-icon>
+              <div class="stat-details">
+                <div class="stat-number">{{ organizationRoles().length }}</div>
+                <div class="stat-label">總角色數</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <mat-icon class="stat-icon">build</mat-icon>
+              <div class="stat-details">
+                <div class="stat-number">{{ systemRoles().length }}</div>
+                <div class="stat-label">系統角色</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <mat-icon class="stat-icon">person_add</mat-icon>
+              <div class="stat-details">
+                <div class="stat-number">{{ customRoles().length }}</div>
+                <div class="stat-label">自訂角色</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <mat-icon class="stat-icon">security</mat-icon>
+              <div class="stat-details">
+                <div class="stat-number">{{ totalPermissions() }}</div>
+                <div class="stat-label">總權限數</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- 角色列表 -->
+      <mat-card class="main-card">
+        <mat-card-header>
+          <mat-card-title>角色列表</mat-card-title>
+          <mat-card-subtitle>管理組織的角色和權限設定</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <div class="table-container" *ngIf="!isLoading(); else loadingTemplate">
+            <table mat-table [dataSource]="organizationRoles()" class="roles-table">
+              <!-- 角色名稱欄位 -->
+              <ng-container matColumnDef="name">
+                <th mat-header-cell *matHeaderCellDef>角色名稱</th>
+                <td mat-cell *matCellDef="let role">
+                  <div class="role-name">
+                    <mat-icon class="role-icon">{{ getRoleIcon(role.level) }}</mat-icon>
+                    <div class="role-details">
+                      <div class="role-title">{{ role.name }}</div>
+                      <div class="role-description">{{ role.description }}</div>
+                    </div>
+                    <mat-chip *ngIf="role.isSystemRole" color="accent" class="system-chip">
+                      系統角色
+                    </mat-chip>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- 等級欄位 -->
+              <ng-container matColumnDef="level">
+                <th mat-header-cell *matHeaderCellDef>等級</th>
+                <td mat-cell *matCellDef="let role">
+                  <mat-chip-set>
+                    <mat-chip [color]="getLevelColor(role.level)">
+                      <mat-icon>star</mat-icon>
+                      Level {{ role.level }}
+                    </mat-chip>
+                  </mat-chip-set>
+                </td>
+              </ng-container>
+
+              <!-- 權限數量欄位 -->
+              <ng-container matColumnDef="permissions">
+                <th mat-header-cell *matHeaderCellDef>權限數量</th>
+                <td mat-cell *matCellDef="let role">
+                  <mat-chip-set>
+                    <mat-chip color="primary">
+                      <mat-icon>security</mat-icon>
+                      {{ role.permissions.length }} 個權限
+                    </mat-chip>
+                  </mat-chip-set>
+                </td>
+              </ng-container>
+
+              <!-- 權限範圍欄位 -->
+              <ng-container matColumnDef="scopes">
+                <th mat-header-cell *matHeaderCellDef>權限範圍</th>
+                <td mat-cell *matCellDef="let role">
+                  <div class="scopes-container">
+                    <mat-chip 
+                      *ngFor="let scope of getUniqueScopes(role.permissions)" 
+                      [color]="getScopeColor(scope)"
+                      class="scope-chip">
+                      {{ getScopeLabel(scope) }}
+                    </mat-chip>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- 建立時間欄位 -->
+              <ng-container matColumnDef="createdAt">
+                <th mat-header-cell *matHeaderCellDef>建立時間</th>
+                <td mat-cell *matCellDef="let role">
+                  {{ formatDate(role.createdAt) }}
+                </td>
+              </ng-container>
+
+              <!-- 操作欄位 -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>操作</th>
+                <td mat-cell *matCellDef="let role">
+                  <button 
+                    mat-icon-button 
+                    [matMenuTriggerFor]="actionMenu"
+                    [matTooltip]="'更多操作'">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  
+                  <mat-menu #actionMenu="matMenu">
+                    <button mat-menu-item (click)="viewRoleDetails(role)">
+                      <mat-icon>visibility</mat-icon>
+                      查看詳情
+                    </button>
+                    <button mat-menu-item (click)="editRole(role)" [disabled]="role.isSystemRole">
+                      <mat-icon>edit</mat-icon>
+                      編輯角色
+                    </button>
+                    <button mat-menu-item (click)="duplicateRole(role)">
+                      <mat-icon>content_copy</mat-icon>
+                      複製角色
+                    </button>
+                    <button mat-menu-item (click)="deleteRole(role)" [disabled]="role.isSystemRole" class="danger-action">
+                      <mat-icon>delete</mat-icon>
+                      刪除角色
+                    </button>
+                  </mat-menu>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          </div>
+
+          <ng-template #loadingTemplate>
+            <div class="loading-container">
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>載入角色資料中...</p>
+            </div>
+          </ng-template>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  `,
+  styles: [`
+    .organization-roles-container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+    }
+
+    .title-section {
+      flex: 1;
+    }
+
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 500;
+      color: #1976d2;
+    }
+
+    .page-description {
+      margin: 0;
+      color: #666;
+      font-size: 16px;
+    }
+
+    .action-section {
+      display: flex;
+      gap: 12px;
+    }
+
+    .stats-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .stat-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    .stat-details {
+      flex: 1;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: 600;
+      color: #333;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .main-card {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .roles-table {
+      width: 100%;
+    }
+
+    .role-name {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .role-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      color: #1976d2;
+    }
+
+    .role-details {
+      flex: 1;
+    }
+
+    .role-title {
+      font-weight: 500;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .role-description {
+      font-size: 14px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .system-chip {
+      font-size: 12px;
+    }
+
+    .scopes-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .scope-chip {
+      font-size: 12px;
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      gap: 16px;
+    }
+
+    .danger-action {
+      color: #f44336;
+    }
+
+    .danger-action mat-icon {
+      color: #f44336;
+    }
+
+    @media (max-width: 768px) {
+      .organization-roles-container {
+        padding: 16px;
+      }
+
+      .header-section {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .stats-section {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .role-name {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+    }
+  `]
+})
+export class OrganizationRolesComponent implements OnInit {
+  private permissionService = inject(PermissionService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+
+  // 響應式狀態
+  private _isLoading = signal(false);
+  private _organizationRoles = signal<OrganizationRole[]>([]);
+
+  // 公開的只讀 signals
+  readonly isLoading = this._isLoading.asReadonly();
+  readonly organizationRoles = this._organizationRoles.asReadonly();
+
+  // 計算屬性
+  readonly systemRoles = computed(() => 
+    this.organizationRoles().filter(role => role.isSystemRole)
+  );
+
+  readonly customRoles = computed(() => 
+    this.organizationRoles().filter(role => !role.isSystemRole)
+  );
+
+  readonly totalPermissions = computed(() => 
+    this.organizationRoles().reduce((total, role) => total + role.permissions.length, 0)
+  );
+
+  // 表格配置
+  displayedColumns: string[] = [
+    'name', 
+    'level', 
+    'permissions', 
+    'scopes', 
+    'createdAt', 
+    'actions'
+  ];
+
+  ngOnInit(): void {
+    this.loadOrganizationRoles();
+  }
+
+  /**
+   * 載入組織角色資料
+   */
+  private async loadOrganizationRoles(): Promise<void> {
+    this._isLoading.set(true);
+    try {
+      // 從權限服務獲取組織角色資料
+      const roles = this.permissionService.organizationRoles();
+      this._organizationRoles.set(roles);
+    } catch (error) {
+      console.error('載入組織角色失敗:', error);
+      this.snackBar.open('載入組織角色資料失敗', '關閉', { duration: 3000 });
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  /**
+   * 獲取角色圖標
+   */
+  getRoleIcon(level: number): string {
+    if (level >= 8) return 'admin_panel_settings';
+    if (level >= 5) return 'security';
+    if (level >= 3) return 'verified_user';
+    return 'person';
+  }
+
+  /**
+   * 獲取等級顏色
+   */
+  getLevelColor(level: number): 'primary' | 'accent' | 'warn' {
+    if (level >= 8) return 'warn';
+    if (level >= 5) return 'accent';
+    return 'primary';
+  }
+
+  /**
+   * 獲取唯一權限範圍
+   */
+  getUniqueScopes(permissions: Permission[]): string[] {
+    const scopes = permissions.map(p => p.scope);
+    return [...new Set(scopes)];
+  }
+
+  /**
+   * 獲取範圍顏色
+   */
+  getScopeColor(scope: string): 'primary' | 'accent' | 'warn' {
+    switch (scope) {
+      case 'organization': return 'warn';
+      case 'team': return 'accent';
+      case 'project': return 'primary';
+      case 'user': return 'primary';
+      default: return 'primary';
+    }
+  }
+
+  /**
+   * 獲取範圍標籤
+   */
+  getScopeLabel(scope: string): string {
+    switch (scope) {
+      case 'organization': return '組織';
+      case 'team': return '團隊';
+      case 'project': return '專案';
+      case 'user': return '用戶';
+      default: return scope;
+    }
+  }
+
+  /**
+   * 格式化日期
+   */
+  formatDate(date: Date): string {
+    return new Date(date).toLocaleDateString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  /**
+   * 開啟新增角色對話框
+   */
+  openCreateRoleDialog(): void {
+    // TODO: 實作新增角色對話框
+    this.snackBar.open('新增角色功能開發中', '關閉', { duration: 3000 });
+  }
+
+  /**
+   * 查看角色詳情
+   */
+  viewRoleDetails(role: OrganizationRole): void {
+    // TODO: 實作查看角色詳情對話框
+    this.snackBar.open(`查看角色 ${role.name} 的詳情`, '關閉', { duration: 3000 });
+  }
+
+  /**
+   * 編輯角色
+   */
+  editRole(role: OrganizationRole): void {
+    // TODO: 實作編輯角色對話框
+    this.snackBar.open(`編輯角色 ${role.name}`, '關閉', { duration: 3000 });
+  }
+
+  /**
+   * 複製角色
+   */
+  duplicateRole(role: OrganizationRole): void {
+    // TODO: 實作複製角色功能
+    this.snackBar.open(`複製角色 ${role.name}`, '關閉', { duration: 3000 });
+  }
+
+  /**
+   * 刪除角色
+   */
+  deleteRole(role: OrganizationRole): void {
+    // TODO: 實作刪除角色確認對話框
+    this.snackBar.open(`刪除角色 ${role.name}`, '關閉', { duration: 3000 });
+  }
+}
+```
+
+## File: angular/src/app/features/organization/components/security-manager.component.ts
+```typescript
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
+import { SecurityManager, SecurityPermission } from '../models/organization.model';
+import { PermissionService } from '../services/permission.service';
+
+/**
+ * 安全管理器組件
+ * 管理組織的安全權限和安全管理員
+ */
+@Component({
+  selector: 'app-security-manager',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTableModule,
+    MatChipsModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    MatTooltipModule,
+    MatMenuModule,
+    MatProgressSpinnerModule
+  ],
+  template: `
+    <div class="security-manager-container">
+      <!-- 標題區域 -->
+      <div class="header-section">
+        <div class="title-section">
+          <h2 class="page-title">
+            <mat-icon>security</mat-icon>
+            安全管理器
+          </h2>
+          <p class="page-description">
+            管理組織的安全權限和安全管理員設定
+          </p>
+        </div>
+        <div class="action-section">
+          <button 
+            mat-raised-button 
+            color="primary"
+            (click)="openAddSecurityManagerDialog()"
+            [disabled]="isLoading()">
+            <mat-icon>add</mat-icon>
+            新增安全管理員
+          </button>
+        </div>
+      </div>
+
+      <!-- 統計卡片 -->
+      <div class="stats-section">
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <mat-icon class="stat-icon">admin_panel_settings</mat-icon>
+              <div class="stat-details">
+                <div class="stat-number">{{ securityManagers().length }}</div>
+                <div class="stat-label">安全管理員</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <mat-icon class="stat-icon">verified_user</mat-icon>
+              <div class="stat-details">
+                <div class="stat-number">{{ totalPermissions() }}</div>
+                <div class="stat-label">總權限數</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <mat-icon class="stat-icon">group</mat-icon>
+              <div class="stat-details">
+                <div class="stat-number">{{ userSecurityManagers().length }}</div>
+                <div class="stat-label">用戶管理員</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <mat-icon class="stat-icon">groups</mat-icon>
+              <div class="stat-details">
+                <div class="stat-number">{{ teamSecurityManagers().length }}</div>
+                <div class="stat-label">團隊管理員</div>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- 安全管理員列表 -->
+      <mat-card class="main-card">
+        <mat-card-header>
+          <mat-card-title>安全管理員列表</mat-card-title>
+          <mat-card-subtitle>管理組織的安全權限設定</mat-card-subtitle>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <div class="table-container" *ngIf="!isLoading(); else loadingTemplate">
+            <table mat-table [dataSource]="securityManagers()" class="security-table">
+              <!-- 類型欄位 -->
+              <ng-container matColumnDef="type">
+                <th mat-header-cell *matHeaderCellDef>類型</th>
+                <td mat-cell *matCellDef="let manager">
+                  <mat-chip-set>
+                    <mat-chip [color]="getTypeColor(manager.type)">
+                      <mat-icon>{{ getTypeIcon(manager.type) }}</mat-icon>
+                      {{ getTypeLabel(manager.type) }}
+                    </mat-chip>
+                  </mat-chip-set>
+                </td>
+              </ng-container>
+
+              <!-- 實體欄位 -->
+              <ng-container matColumnDef="entity">
+                <th mat-header-cell *matHeaderCellDef>實體</th>
+                <td mat-cell *matCellDef="let manager">
+                  <div class="entity-info">
+                    <mat-icon class="entity-icon">{{ getTypeIcon(manager.type) }}</mat-icon>
+                    <span class="entity-name">{{ getEntityName(manager) }}</span>
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- 權限數量欄位 -->
+              <ng-container matColumnDef="permissions">
+                <th mat-header-cell *matHeaderCellDef>權限數量</th>
+                <td mat-cell *matCellDef="let manager">
+                  <mat-chip-set>
+                    <mat-chip color="accent">
+                      {{ manager.permissions.length }} 個權限
+                    </mat-chip>
+                  </mat-chip-set>
+                </td>
+              </ng-container>
+
+              <!-- 指派時間欄位 -->
+              <ng-container matColumnDef="assignedAt">
+                <th mat-header-cell *matHeaderCellDef>指派時間</th>
+                <td mat-cell *matCellDef="let manager">
+                  {{ formatDate(manager.assignedAt) }}
+                </td>
+              </ng-container>
+
+              <!-- 指派者欄位 -->
+              <ng-container matColumnDef="assignedBy">
+                <th mat-header-cell *matHeaderCellDef>指派者</th>
+                <td mat-cell *matCellDef="let manager">
+                  <div class="assigned-by">
+                    <mat-icon class="user-icon">person</mat-icon>
+                    {{ manager.assignedBy }}
+                  </div>
+                </td>
+              </ng-container>
+
+              <!-- 操作欄位 -->
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef>操作</th>
+                <td mat-cell *matCellDef="let manager">
+                  <button 
+                    mat-icon-button 
+                    [matMenuTriggerFor]="actionMenu"
+                    [matTooltip]="'更多操作'">
+                    <mat-icon>more_vert</mat-icon>
+                  </button>
+                  
+                  <mat-menu #actionMenu="matMenu">
+                    <button mat-menu-item (click)="viewPermissions(manager)">
+                      <mat-icon>visibility</mat-icon>
+                      查看權限
+                    </button>
+                    <button mat-menu-item (click)="editSecurityManager(manager)">
+                      <mat-icon>edit</mat-icon>
+                      編輯
+                    </button>
+                    <button mat-menu-item (click)="removeSecurityManager(manager)" class="danger-action">
+                      <mat-icon>delete</mat-icon>
+                      移除
+                    </button>
+                  </mat-menu>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            </table>
+          </div>
+
+          <ng-template #loadingTemplate>
+            <div class="loading-container">
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>載入安全管理員資料中...</p>
+            </div>
+          </ng-template>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  `,
+  styles: [`
+    .security-manager-container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+    }
+
+    .title-section {
+      flex: 1;
+    }
+
+    .page-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 8px 0;
+      font-size: 28px;
+      font-weight: 500;
+      color: #1976d2;
+    }
+
+    .page-description {
+      margin: 0;
+      color: #666;
+      font-size: 16px;
+    }
+
+    .action-section {
+      display: flex;
+      gap: 12px;
+    }
+
+    .stats-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .stat-content {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #1976d2;
+    }
+
+    .stat-details {
+      flex: 1;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: 600;
+      color: #333;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .main-card {
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .security-table {
+      width: 100%;
+    }
+
+    .entity-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .entity-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .entity-name {
+      font-weight: 500;
+    }
+
+    .assigned-by {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .user-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      gap: 16px;
+    }
+
+    .danger-action {
+      color: #f44336;
+    }
+
+    .danger-action mat-icon {
+      color: #f44336;
+    }
+
+    @media (max-width: 768px) {
+      .security-manager-container {
+        padding: 16px;
+      }
+
+      .header-section {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .stats-section {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  `]
+})
+export class SecurityManagerComponent implements OnInit {
+  private permissionService = inject(PermissionService);
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+
+  // 響應式狀態
+  private _isLoading = signal(false);
+  private _securityManagers = signal<SecurityManager[]>([]);
+
+  // 公開的只讀 signals
+  readonly isLoading = this._isLoading.asReadonly();
+  readonly securityManagers = this._securityManagers.asReadonly();
+
+  // 計算屬性
+  readonly userSecurityManagers = computed(() => 
+    this.securityManagers().filter(sm => sm.type === 'user')
+  );
+
+  readonly teamSecurityManagers = computed(() => 
+    this.securityManagers().filter(sm => sm.type === 'team')
+  );
+
+  readonly totalPermissions = computed(() => 
+    this.securityManagers().reduce((total, sm) => total + sm.permissions.length, 0)
+  );
+
+  // 表格配置
+  displayedColumns: string[] = [
+    'type', 
+    'entity', 
+    'permissions', 
+    'assignedAt', 
+    'assignedBy', 
+    'actions'
+  ];
+
+  ngOnInit(): void {
+    this.loadSecurityManagers();
+  }
+
+  /**
+   * 載入安全管理員資料
+   */
+  private async loadSecurityManagers(): Promise<void> {
+    this._isLoading.set(true);
+    try {
+      // 從權限服務獲取安全管理員資料
+      const managers = this.permissionService.securityManagers();
+      this._securityManagers.set(managers);
+    } catch (error) {
+      console.error('載入安全管理員失敗:', error);
+      this.snackBar.open('載入安全管理員資料失敗', '關閉', { duration: 3000 });
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  /**
+   * 獲取類型顏色
+   */
+  getTypeColor(type: 'user' | 'team'): 'primary' | 'accent' | 'warn' {
+    switch (type) {
+      case 'user': return 'primary';
+      case 'team': return 'accent';
+      default: return 'warn';
+    }
+  }
+
+  /**
+   * 獲取類型圖標
+   */
+  getTypeIcon(type: 'user' | 'team'): string {
+    switch (type) {
+      case 'user': return 'person';
+      case 'team': return 'groups';
+      default: return 'help';
+    }
+  }
+
+  /**
+   * 獲取類型標籤
+   */
+  getTypeLabel(type: 'user' | 'team'): string {
+    switch (type) {
+      case 'user': return '用戶';
+      case 'team': return '團隊';
+      default: return '未知';
+    }
+  }
+
+  /**
+   * 獲取實體名稱
+   */
+  getEntityName(manager: SecurityManager): string {
+    // 這裡應該根據 entityId 查找實際的用戶名或團隊名
+    // 簡化實作，直接返回 ID
+    return manager.entityId;
+  }
+
+  /**
+   * 格式化日期
+   */
+  formatDate(date: Date): string {
+    return new Date(date).toLocaleDateString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  /**
+   * 開啟新增安全管理員對話框
+   */
+  openAddSecurityManagerDialog(): void {
+    // TODO: 實作新增安全管理員對話框
+    this.snackBar.open('新增安全管理員功能開發中', '關閉', { duration: 3000 });
+  }
+
+  /**
+   * 查看權限
+   */
+  viewPermissions(manager: SecurityManager): void {
+    // TODO: 實作查看權限對話框
+    this.snackBar.open(`查看 ${manager.entityId} 的權限`, '關閉', { duration: 3000 });
+  }
+
+  /**
+   * 編輯安全管理員
+   */
+  editSecurityManager(manager: SecurityManager): void {
+    // TODO: 實作編輯安全管理員對話框
+    this.snackBar.open(`編輯 ${manager.entityId} 的安全管理員設定`, '關閉', { duration: 3000 });
+  }
+
+  /**
+   * 移除安全管理員
+   */
+  removeSecurityManager(manager: SecurityManager): void {
+    // TODO: 實作移除安全管理員確認對話框
+    this.snackBar.open(`移除 ${manager.entityId} 的安全管理員`, '關閉', { duration: 3000 });
+  }
+}
+```
+
 ## File: angular/src/app/features/organization/components/team-management.component.ts
 ```typescript
 import { Component, Input, Output, EventEmitter, signal, computed, inject } from '@angular/core';
@@ -13946,6 +13933,19 @@ export class TeamHierarchyComponent {
 import { FlatTreeControl } from '@angular/cdk/tree';
 import { MatTreeFlatDataSource, MatTreeFlattener } from '@angular/material/tree';
 import { effect } from '@angular/core';
+```
+
+## File: angular/src/app/features/organization/index.ts
+```typescript
+// 組織模組匯出檔案
+export * from './components/organization-card.component';
+export * from './components/team-management.component';
+export * from './components/security-manager.component';
+export * from './components/organization-roles.component';
+export * from './services/organization-api.service';
+export * from './services/permission.service';
+export * from './models/organization.model';
+export * from './routes/organization.routes';
 ```
 
 ## File: angular/src/app/features/user/profile/profile-management.component.ts

@@ -19,7 +19,7 @@ import {
   UserApiResponse,
   SocialAccountApiResponse,
   PaginatedResponse
-} from './user.model';
+} from '../models/user.model';
 
 /**
  * 用戶服務 - Firebase 整合版本

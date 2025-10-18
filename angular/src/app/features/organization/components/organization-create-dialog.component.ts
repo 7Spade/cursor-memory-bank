@@ -11,15 +11,15 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 
-import { OrganizationService } from '../../core/services/organization.service';
-import { ValidationService } from '../../core/services/validation.service';
-import { NotificationService } from '../../core/services/notification.service';
-import { AuthService } from '../../core/services/auth.service';
+import { OrganizationService } from '../../../core/services/organization.service';
+import { ValidationService } from '../../../core/services/validation.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { 
   OrganizationCreateRequest, 
   OrganizationCreateFormState,
   OrganizationCreatedEvent 
-} from '../../core/models/organization-create.model';
+} from '../models/organization-create.model';
 
 /**
  * 組織建立對話框組件

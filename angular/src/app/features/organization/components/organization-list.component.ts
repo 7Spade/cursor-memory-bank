@@ -11,9 +11,9 @@ import { OrganizationService } from '../../../core/services/organization.service
 import { AuthService } from '../../../core/services/auth.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { OrganizationCardComponent } from '../components/organization-card.component';
-import { OrganizationCreateDialogComponent } from '../../../core/components/organization-create-dialog.component';
+import { OrganizationCreateDialogComponent } from '../components/organization-create-dialog.component';
 import { OrganizationDetail } from '../models/organization.model';
-import { OrganizationCreatedEvent } from '../../../core/models/organization-create.model';
+import { OrganizationCreatedEvent } from '../models/organization-create.model';
 
 /**
  * 組織列表組件

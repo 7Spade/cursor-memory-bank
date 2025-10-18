@@ -8,8 +8,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { Team } from '../models/organization.model';
-import { TeamCreateDialogComponent } from '../../../core/components/team-create-dialog.component';
-import { TeamCreatedEvent } from '../../../core/models/team-create.model';
+import { TeamCreateDialogComponent } from '../components/team-create-dialog.component';
+import { TeamCreatedEvent } from '../models/team-create.model';
 
 /**
  * 團隊節點介面

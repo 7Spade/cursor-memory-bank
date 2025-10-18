@@ -11,14 +11,14 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
 import { MatDividerModule } from '@angular/material/divider';
 
-import { OrganizationService } from '../../core/services/organization.service';
-import { ValidationService } from '../../core/services/validation.service';
-import { NotificationService } from '../../core/services/notification.service';
+import { OrganizationService } from '../../../core/services/organization.service';
+import { ValidationService } from '../../../core/services/validation.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { 
   TeamCreateRequest, 
   TeamCreateFormState,
   TeamCreatedEvent 
-} from '../../core/models/team-create.model';
+} from '../models/team-create.model';
 
 /**
  * 團隊建立對話框組件

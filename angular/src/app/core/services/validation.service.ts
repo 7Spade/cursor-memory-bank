@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ValidationResult, ValidationRule, ValidationConfig } from '../models/validation.model';
+import { ValidationResult, ValidationRule, ValidationConfig } from '../../shared/types/validation.types';
 
 /**
  * 驗證服務
