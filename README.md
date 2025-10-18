@@ -1,4 +1,4 @@
-# Graph Bank System v0.7-beta
+# Graph Bank System v0.8-beta
 
 ## A Message from the Creator
 
@@ -28,7 +28,7 @@ Thank you for making my personal project a success. The future is even more exci
 
 ---
 
-A token-optimized, hierarchical task management system that integrates with Cursor custom modes for efficient development workflows.
+A **Memory + Graph** system that integrates MCP Memory Server, Graph Bank, and Context7 for zero-cognition AI agent workflows with hierarchical task management.
 
 ```mermaid
 graph TD
@@ -36,19 +36,27 @@ graph TD
     Main --> Rules["Hierarchical Rule Loading"]
     Main --> Visual["Visual Process Maps"]
     Main --> Token["Token Optimization"]
+    Main --> MCP["MCP Integration"]
     
-    Modes --> VAN["VAN: Initialization"]
+    Modes --> INIT["INIT: System Initialization"]
+    Modes --> VAN["VAN: Project Analysis"]
     Modes --> PLAN["PLAN: Task Planning"]
     Modes --> CREATIVE["CREATIVE: Design"]
     Modes --> IMPLEMENT["IMPLEMENT: Building"]
     Modes --> REFLECT["REFLECT: Review"]
     Modes --> ARCHIVE["ARCHIVE: Documentation"]
     
+    MCP --> Memory["MCP Memory Server"]
+    MCP --> Context7["Context7"]
+    MCP --> GraphBank["Graph Bank"]
+    
     style Main fill:#4da6ff,stroke:#0066cc,color:white
     style Modes fill:#f8d486,stroke:#e8b84d,color:black
     style Rules fill:#80ffaa,stroke:#4dbb5f,color:black
     style Visual fill:#d9b3ff,stroke:#b366ff,color:black
     style Token fill:#ff9980,stroke:#ff5533,color:black
+    style MCP fill:#ff6b9d,stroke:#e91e63,color:white
+    style INIT fill:#ff9f43,stroke:#ff6b35,color:white
 ```
 
 > **Personal Note**: Graph Bank is my personal hobby project that I develop for my own use in coding projects. As this is a personal project, I don't maintain an issues tracker or actively collect feedback. However, if you're using these rules and encounter issues, one of the great advantages is that you can ask the Cursor AI directly to modify or update the rules to better suit your specific workflow. The system is designed to be adaptable by the AI, allowing you to customize it for your own needs without requiring external support.
@@ -57,26 +65,35 @@ graph TD
 
 Graph Bank is a personal project that provides a structured approach to development using specialized modes for different phases of the development process. It uses a hierarchical rule loading architecture that loads only the rules needed for each phase, optimizing token usage and providing tailored guidance.
 
+### Memory + Graph Architecture
+
+Version 0.8-beta introduces the **Memory + Graph** architecture that integrates:
+
+- **MCP Memory Server**: Persistent memory management with semantic search
+- **Graph Bank**: Structured project documentation and task tracking
+- **Context7**: Up-to-date library documentation and code examples
+- **Zero-Cognition Design**: AI agents interact with complex systems using simplified commands
+
 ### Token-Optimized Architecture
 
-Version 0.7-beta introduces significant token optimization improvements:
+Version 0.8-beta introduces significant token optimization improvements:
 
 - **Hierarchical Rule Loading**: Only loads essential rules initially with specialized lazy-loading
 - **Progressive Documentation**: Implements concise templates that scale with task complexity
 - **Optimized Mode Transitions**: Preserves critical context efficiently between modes
 - **Level-Specific Workflows**: Adapts documentation requirements to task complexity
-
-See the [Graph Bank Optimizations](MEMORY_BANK_OPTIMIZATIONS.md) document for detailed information about all optimization approaches.
+- **MCP Integration**: Zero-cognition commands for Memory Server and Context7 operations
 
 ### Beyond Basic Custom Modes
 
 While Cursor's documentation describes custom modes as primarily standalone configurations with basic prompts and tool selections, Graph Bank significantly extends this concept:
 
 - **Graph-Based Mode Integration**: Modes are interconnected nodes in a development workflow rather than isolated tools
-- **Workflow Progression**: Modes are designed to transition from one to another in a logical sequence (VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE)
-- **Shared Memory**: Persistent state maintained across mode transitions via Graph Bank files
+- **Workflow Progression**: Modes are designed to transition from one to another in a logical sequence (INIT → VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE)
+- **Shared Memory**: Persistent state maintained across mode transitions via Graph Bank files and MCP Memory Server
 - **Adaptive Behavior**: Each mode adjusts its recommendations based on project complexity
 - **Built-in QA Functions**: QA capabilities can be called from any mode for technical validation
+- **Zero-Cognition MCP Integration**: Simplified commands for Memory Server and Context7 operations
 
 This approach transforms custom modes from simple AI personalities into components of a coordinated development system with specialized phases working together.
 
@@ -93,12 +110,15 @@ For a detailed explanation of how Graph Bank implements these principles, see th
 
 ## Key Features
 
+- **Memory + Graph Architecture**: Integrates MCP Memory Server, Graph Bank, and Context7
+- **Zero-Cognition Design**: AI agents use simplified commands without understanding underlying MCP implementation
 - **Hierarchical Rule Loading**: Load only the essential rules with specialized lazy-loading
 - **Progressive Documentation**: Concise templates that scale with task complexity
 - **Unified Context Transfer**: Efficient context preservation between modes
 - **Mode-Specific Visual Maps**: Clear visual representations for each development phase
 - **Level-Specific Workflows**: Adapted processes based on complexity (Levels 1-4)
 - **Platform-Aware Commands**: Automatically adapts commands to your operating system
+- **INIT Mode**: Unified system initialization and health checks
 
 ## Installation Instructions
 
@@ -128,7 +148,7 @@ Note: other documents are not necessary for memory bank operation, they are expl
 
 ### Step 2: Setting Up Custom Modes in Cursor
 
-**This is the most critical and challenging part of the setup.** You'll need to manually create six custom modes in Cursor and copy the instruction content from the provided files:
+**This is the most critical and challenging part of the setup.** You'll need to manually create seven custom modes in Cursor and copy the instruction content from the provided files:
 
 #### How to Add a Custom Mode in Cursor
 
@@ -137,7 +157,7 @@ Note: other documents are not necessary for memory bank operation, they are expl
 <img src="assets/add_custom_mode.png" alt="Add Custom Mode"/>
 
 3. In the configuration screen:
-   - Enter the mode name (you can include emoji icons like 🔍, 📋, 🎨, ⚒️ by copy-pasting them at the beginning of the name)
+   - Enter the mode name (you can include emoji icons like 🚀, 🔍, 📋, 🎨, ⚒️ by copy-pasting them at the beginning of the name)
    - Select an icon from Cursor's limited predefined options
    - Add a shortcut (optional)
    - Check the required tools
@@ -148,41 +168,38 @@ Note: other documents are not necessary for memory bank operation, they are expl
 
 For each mode, configure as follows (If MCPs are showing, you can keep them on, they probably won't work):
 
-1. **VAN MODE** (Initialization)
+1. **INIT MODE** (System Initialization)
+   - **Name**: 🚀 INIT
+   - **Tools**: Enable "Codebase Search", "Read File", "Terminal", "List Directory", "Fetch Rules"
+   - **Advanced options**: Paste from `.cursor/rules/isolation_rules/Modes/init-mode-detailed.mdc`
+
+2. **VAN MODE** (Project Analysis)
    - **Name**: 🔍 VAN
    - **Tools**: Enable "Codebase Search", "Read File", "Terminal", "List Directory", "Fetch Rules"
-   - **Advanced options**: Paste from `custom_modes/van_instructions.md`
+   - **Advanced options**: Paste from `.cursor/rules/isolation_rules/Modes/van-mode-detailed.mdc`
 
 
 <img src="assets/van_mode_1.png" height="300" style="display: inline-block;"/> <img src="assets/van_mode_2.png" height="300" style="display: inline-block;"/>
 
-2. **PLAN MODE** (Task Planning)
+3. **PLAN MODE** (Task Planning)
    - **Name**: 📋 PLAN
    - **Tools**: Enable "Codebase Search", "Read File", "Terminal", "List Directory"
-   - **Advanced options**: Paste from `custom_modes/plan_instructions.md`
+   - **Advanced options**: Paste from `.cursor/rules/isolation_rules/Modes/plan-mode-detailed.mdc`
 
-<img src="assets/plan_mode_1.png" height="300"/> <img src="assets/plan_mode_2.png" height="300" style="display: inline-block;"/>
-
-3. **CREATIVE MODE** (Design Decisions)
+4. **CREATIVE MODE** (Design Decisions)
    - **Name**: 🎨 CREATIVE
    - **Tools**: Enable "Codebase Search", "Read File", "Terminal", "List Directory", "Edit File", "Fetch Rules"
-   - **Advanced options**: Paste from `custom_modes/creative_instructions.md`
+   - **Advanced options**: Paste from `.cursor/rules/isolation_rules/Modes/creative-mode-detailed.mdc`
 
-<img src="assets/creative_mode_1.png" height="300"/> <img src="assets/creative_mode_2.png" height="300" style="display: inline-block;"/>
-
-4. **IMPLEMENT MODE** (Code Implementation)
+5. **IMPLEMENT MODE** (Code Implementation)
    - **Name**: ⚒️ IMPLEMENT
    - **Tools**: Enable all tools
-   - **Advanced options**: Paste from `custom_modes/implement_instructions.md`
+   - **Advanced options**: Paste from `.cursor/rules/isolation_rules/Modes/implement-mode-detailed.mdc`
 
-<img src="assets/implement_mode_1.png" height="300"/> <img src="assets/implement_mode_2.png" height="300" style="display: inline-block;"/>
-
-5. **REFLECT & ARHIVE MODE** (Review)
+6. **REFLECT & ARCHIVE MODE** (Review)
    - **Name**: 🔍 REFLECT or ARCHIVE
    - **Tools**: Enable "Codebase Search", "Read File", "Terminal", "List Directory"
-   - **Advanced options**: Paste from `custom_modes/reflect_archive_instructions.md`
-
-<img src="assets/reflect_mode_1.png" height="300"/> <img src="assets/reflect_mode_2.png" height="300" style="display: inline-block;"/>
+   - **Advanced options**: Paste from `.cursor/rules/isolation_rules/Modes/reflect-archive-mode-detailed.mdc`
    
 
 > **Note**: REFLECT and ARCHIVE instructions are combined in a single file and mode to optimize for Cursor's character and custom mode limits  while maintaining functionality. Thanks to GitHub user @joshmac007 for implementing this optimization.
@@ -195,23 +212,21 @@ QA is not a separate custom mode but rather a set of validation functions that c
 
 ## Basic Usage
 
-1. **Start with VAN Mode**:
-   - Switch to VAN mode in Cursor
-   - Type "VAN" to initiate the initialization process
-   - VAN will analyze your project structure and determine complexity
+1. **Start with INIT Mode**:
+   - Switch to INIT mode in Cursor
+   - Type "INIT" to initiate the system initialization process
+   - INIT will perform system health checks and prepare the environment
 
 2. **Follow the Workflow Based on Complexity**:
-   - **Level 1 tasks**: May proceed directly to IMPLEMENT after VAN
-   - **Level 2 tasks**: Simplified workflow (VAN → PLAN → IMPLEMENT → REFLECT)
-   - **Level 3-4 tasks**: Full workflow (VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE)
+   - **Level 1 tasks**: INIT → VAN → IMPLEMENT
+   - **Level 2 tasks**: INIT → VAN → PLAN → IMPLEMENT → REFLECT
+   - **Level 3-4 tasks**: INIT → VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
    - **At any point**: Type "QA" to perform technical validation
-
-
-<img src="assets/chat_van.png" height="50"/> <img src="assets/chat_plan.png" height="50" style="display: inline-block;"/> <img src="assets/chat_implement.png" height="50" style="display: inline-block;"/> <img src="assets/chat_creative.png" height="50" style="display: inline-block;"/> <img src="assets/chat_implement.png" height="50" style="display: inline-block;"/> <img src="assets/chat_reflect.png" height="50" style="display: inline-block;"/> <img src="assets/chat_archive.png" height="50" style="display: inline-block;"/>
 
 3. **Mode-Specific Commands**:
    ```
-   VAN - Initialize project and determine complexity
+   INIT - System initialization and health checks
+   VAN - Analyze project structure and determine complexity
    PLAN - Create detailed implementation plan
    CREATIVE - Explore design options for complex components
    IMPLEMENT - Systematically build planned components
@@ -267,10 +282,6 @@ graph LR
    - Ensure you're running commands from the correct directory
    - Verify platform-specific commands are being used correctly
 
-## Version Information
-
-This is version v0.7-beta of the Graph Bank system. It introduces significant token optimization improvements over v0.6-beta while maintaining all functionality. See the [Release Notes](RELEASE_NOTES.md) for detailed information about the changes.
-
 ### Ongoing Development
 
 The Graph Bank system is actively being developed and improved. Key points to understand:
@@ -280,15 +291,243 @@ The Graph Bank system is actively being developed and improved. Key points to un
 - **Previous Version Available**: If you prefer the stability of the previous version (v0.1-legacy), you can continue using it while this version matures.
 - **Architectural Benefits**: Before deciding which version to use, please read the [Graph Bank Upgrade Guide](memory_bank_upgrade_guide.md) to understand the significant benefits of the new architecture.
 
-## Resources
+## Release Notes
 
-- [Graph Bank Optimizations](MEMORY_BANK_OPTIMIZATIONS.md) - Detailed overview of token efficiency improvements
-- [Release Notes](RELEASE_NOTES.md) - Information about the latest changes
-- [Cursor Custom Modes Documentation](https://docs.cursor.com/chat/custom-modes)
-- [Graph Bank Upgrade Guide](memory_bank_upgrade_guide.md)
-- [CREATIVE Mode and Claude's "Think" Tool](creative_mode_think_tool.md)
-- Mode-specific instruction files in the `custom_modes/` directory
+### Version 0.8-beta - Memory + Graph Architecture
+
+> Building upon the architectural foundations established in v0.7-beta, this release introduces the **Memory + Graph** architecture with MCP integration, unified system initialization, and enhanced workflow capabilities.
+
+#### 🌟 Major Features
+
+**Memory + Graph Architecture _(New)_**
+- **MCP Memory Server Integration**: Persistent memory management with semantic search
+- **Graph Bank Enhancement**: Structured project documentation and task tracking
+- **Context7 Integration**: Up-to-date library documentation and code examples
+- **Zero-Cognition Design**: AI agents interact with complex systems using simplified commands
+
+**INIT Mode _(New)_**
+- Unified system initialization and health checks
+- MCP Memory Server status verification
+- Graph Bank file structure validation
+- Development environment configuration checks
+- Project dependency integrity verification
+- System component initialization
+- Status report generation
+
+**Enhanced Workflow System _(Enhanced)_**
+- **New Workflow**: INIT → VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
+- **Level 1 tasks**: INIT → VAN → IMPLEMENT
+- **Level 2 tasks**: INIT → VAN → PLAN → IMPLEMENT → REFLECT
+- **Level 3-4 tasks**: INIT → VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
+
+#### 🔄 Process Improvements
+
+**MCP Integration Architecture**
+- **Zero-Cognition Commands**: Simplified interface for Memory Server and Context7 operations
+- **Command Mapping**: Abstract commands mapped to specific MCP tool calls
+- **Memory Management**: Persistent cross-session memory with semantic search
+- **Documentation Access**: Real-time library documentation and code examples
+
+**Mode-Based Optimization**
+- **INIT Mode**: Unified system initialization and health checks
+- **VAN Mode**: Focused project analysis without system initialization overhead
+- **PLAN Mode**: Complexity-appropriate planning templates
+- **CREATIVE Mode**: Progressive documentation with tabular comparisons
+- **IMPLEMENT Mode**: Streamlined implementation guidance
+- **REFLECT Mode**: Context-aware review mechanisms
+- **ARCHIVE Mode**: Efficient knowledge preservation
+
+**Enhanced Workflow Optimization**
+- **Separation of Concerns**: Clear separation between system initialization and project analysis
+- **Unified Entry Point**: All workflows start with INIT mode
+- **Intelligent Level Transition**: Automatic complexity assessment and workflow selection
+- **Enhanced Task Tracking**: Improved Graph Bank integration and MCP Memory Server coordination
+
+#### 📚 Documentation Enhancements
+- **INIT Mode Documentation**: Comprehensive system initialization guides
+- **MCP Integration Guides**: Zero-cognition command references
+- **Enhanced Mode Instructions**: Detailed workflows for each mode
+- **Level-specific Documentation Templates**: Adapted to task complexity
+- **Progressive Disclosure Model**: Efficient documentation scaling
+- **Standardized Comparison Formats**: Improved design decision documentation
+
+#### 🛠 Technical Improvements
+- **MCP Server Integration**: Memory Server and Context7 integration
+- **Command Mapping System**: Abstract to concrete command translation
+- **Enhanced Rule Architecture**: Improved rule loading and management
+- **Context Compression**: Optimized memory bank file management
+- **Adaptive Rule Partitioning**: Targeted rule loading based on context
+- **File Structure Migration**: Moved from `custom_modes/` to `.cursor/rules/isolation_rules/Modes/`
+
+#### 🔜 Upcoming Features
+- Enhanced MCP Memory Server features
+- Advanced Context7 integration
+- Dynamic template generation based on task characteristics
+- Automatic context summarization for long-running tasks
+- Cross-task knowledge preservation
+- Partial rule loading within specialized rule files
+- Advanced MCP workflow adherence mechanisms
+
+#### 📝 Notes
+- This release builds upon v0.7-beta's architectural foundation
+- Introduces Memory + Graph architecture with MCP integration
+- Adds INIT mode for unified system initialization
+- Migrates mode files to `.cursor/rules/isolation_rules/Modes/` directory
+- No manual migration required for existing installations
+
+#### 🔧 Requirements
+- Requires Cursor version 0.48 or higher
+- Compatible with Claude 4 Sonnet (recommended) and newer models
+- Compatible with all existing Graph Bank v0.7-beta installations
+- MCP Memory Server and Context7 integration (optional but recommended)
+
+#### 📈 Optimization Approaches
+- **MCP Integration**: Zero-cognition commands with abstract-to-concrete mapping
+- **INIT Mode**: Unified system initialization and health checks
+- **Memory Management**: Persistent cross-session memory with semantic search
+- **Documentation Access**: Real-time library documentation and code examples
+- **Rule Loading**: Hierarchical loading with core caching and specialized lazy-loading
+- **Creative Phase**: Progressive documentation with tabular comparisons
+- **Mode Transitions**: Unified context transfer with selective preservation
+- **Graph Bank**: Differential updates and context compression
 
 ---
 
-*Note: This README is for v0.7-beta and subject to change as the system evolves.*
+Released on: January 15, 2025
+
+## Terminology Guide
+
+### 📋 Terminology Standards
+
+This guide ensures consistent terminology usage throughout the Graph Bank System.
+
+#### 🔄 Graph Bank Related Terms
+
+**Purpose**: Refer to the project's internal memory management system
+
+**Terms**:
+- **Graph Bank System** - System's English name
+- **記憶銀行系統** - System's Chinese name (project name)
+- **Graph Bank** - Short form
+- **graph-bank** - Directory name
+- **Graph Bank Files** - Files within the system
+
+**Usage Scenarios**:
+- System architecture descriptions
+- File titles
+- Feature descriptions
+- Workflow descriptions
+
+#### ✅ Memory Related Terms
+
+**Purpose**: Refer to MCP memory server and related functions
+
+**Terms**:
+- **memory.json** - MCP memory server file
+- **MEMORY.CHECK** - MCP memory check command
+- **MEMORY.LOAD** - MCP memory load command
+- **MEMORY.UPDATE** - MCP memory update command
+- **記憶體初始化協議** - MCP memory initialization
+- **記憶體檢查指令** - MCP memory check
+- **記憶體上下文載入** - MCP memory context
+- **MEMORY_FILE_PATH** - MCP memory configuration
+
+**Usage Scenarios**:
+- MCP memory server configuration
+- Agent memory check processes
+- Memory initialization protocols
+- Technical implementation details
+
+#### 🔒 Unchanged Terms
+
+**Project Names and Directories**:
+- **cursor-memory-bank** - Project directory name
+- **記憶銀行系統** - Project's Chinese name
+
+### 📝 Usage Examples
+
+#### ✅ Correct Usage
+
+```markdown
+# Graph Bank System - AI Agents Guide
+
+## Overview
+Graph Bank System uses specialized AI agents to handle different phases of development.
+
+## Agent Memory Check Commands
+Each Agent must perform memory checks before starting work:
+
+### General Commands
+- `MEMORY.CHECK` - Check memory.json status
+- `MEMORY.LOAD` - Load memory context
+- `MEMORY.UPDATE` - Update memory content
+```
+
+#### ❌ Incorrect Usage
+
+```markdown
+# Memory Bank System - AI Agents Guide  ❌ Wrong
+
+## Overview
+Memory Bank System uses specialized AI agents...  ❌ Wrong
+
+## Agent Memory Check Commands
+Each Agent must perform memory checks before starting work:
+
+### General Commands
+- `GRAPH.CHECK` - Check graph-bank status  ❌ Wrong
+- `GRAPH.LOAD` - Load Graph Bank context  ❌ Wrong
+```
+
+### 🔍 Checklist
+
+When writing or modifying files, please check:
+
+#### Graph Bank Terminology Check
+- [ ] System name uses "Graph Bank System"
+- [ ] Feature descriptions use "Graph Bank"
+- [ ] File titles use correct terminology
+- [ ] Workflow descriptions use correct terminology
+
+#### Memory Terminology Check
+- [ ] MCP memory server related uses "memory"
+- [ ] Agent commands use "MEMORY.*"
+- [ ] Memory check processes use correct terminology
+- [ ] Technical implementation details use correct terminology
+
+#### Project Name Check
+- [ ] Project directory name remains "cursor-memory-bank"
+- [ ] Project Chinese name remains "記憶銀行系統"
+- [ ] Don't confuse project name with system name
+
+### 🚨 Common Errors
+
+#### Error 1: Confusing System Names
+```markdown
+❌ Memory Bank System uses Graph Bank files
+✅ Graph Bank System uses Graph Bank files
+```
+
+#### Error 2: Confusing MCP memory and Graph Bank
+```markdown
+❌ Use GRAPH.CHECK to check memory.json
+✅ Use MEMORY.CHECK to check memory.json
+```
+
+#### Error 3: Wrong Terminology Combinations
+```markdown
+❌ Memory Bank uses MEMORY.CHECK commands
+✅ Graph Bank System uses MEMORY.CHECK commands
+```
+
+## Resources
+
+- [Graph Bank Optimizations](MEMORY_BANK_OPTIMIZATIONS.md) - Detailed overview of token efficiency improvements
+- [Cursor Custom Modes Documentation](https://docs.cursor.com/chat/custom-modes)
+- [Graph Bank Upgrade Guide](memory_bank_upgrade_guide.md)
+- [CREATIVE Mode and Claude's "Think" Tool](creative_mode_think_tool.md)
+- Mode-specific instruction files in the `.cursor/rules/isolation_rules/Modes/` directory
+
+---
+
+*Note: This README is for v0.8-beta and subject to change as the system evolves.*
