@@ -39,18 +39,11 @@ angular/
   src/
     app/
       core/
-        components/
-          organization-create-dialog.component.ts
-          team-create-dialog.component.ts
         guards/
           permission.guard.ts
         models/
           auth.model.ts
-          dialog-event.model.ts
           index.ts
-          organization-create.model.ts
-          team-create.model.ts
-          validation.model.ts
         services/
           auth.service.ts
           notification.service.ts
@@ -71,19 +64,23 @@ angular/
           components/
             members-list.component.ts
             organization-card.component.ts
+            organization-create-dialog.component.ts
             organization-create.component.ts
             organization-detail.component.ts
             organization-list.component.ts
             organization-roles.component.ts
             organization-settings.component.ts
             security-manager.component.ts
+            team-create-dialog.component.ts
             team-create.component.ts
             team-detail.component.ts
             team-edit.component.ts
             team-management.component.ts
             teams-list.component.ts
           models/
+            organization-create.model.ts
             organization.model.ts
+            team-create.model.ts
           routes/
             organization-detail.routes.ts
             organization.routes.ts
@@ -94,12 +91,22 @@ angular/
         repository/
           components/
             collaborator-management.component.ts
+            index.ts
             repository-detail.component.ts
             repository-list.component.ts
+          guards/
+            index.ts
           models/
+            index.ts
             repository.model.ts
           routes/
+            index.ts
             repository.routes.ts
+          services/
+            index.ts
+          utils/
+            index.ts
+          index.ts
         user/
           auth/
             auth.guard.ts
@@ -109,14 +116,27 @@ angular/
             role.guard.ts
             signup.component.ts
             unauthorized.component.ts
+          models/
+            user.model.ts
           profile/
             profile-management.component.ts
+          services/
+            user.service.ts
           index.ts
           user.model.ts
           user.routes.ts
-          user.service.ts
       landing/
         landing.component.ts
+      shared/
+        components/
+          index.ts
+        types/
+          dialog-event.types.ts
+          index.ts
+          validation.types.ts
+        utils/
+          index.ts
+        index.ts
       app.config.ts
       app.html
       app.routes.ts
@@ -132,1213 +152,6 @@ angular/
 ```
 
 # Files
-
-## File: angular/src/app/core/components/organization-create-dialog.component.ts
-```typescript
-import { Component, inject, signal, computed, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
-
-import { OrganizationService } from '../../core/services/organization.service';
-import { ValidationService } from '../../core/services/validation.service';
-import { NotificationService } from '../../core/services/notification.service';
-import { AuthService } from '../../core/services/auth.service';
-import { 
-  OrganizationCreateRequest, 
-  OrganizationCreateFormState,
-  OrganizationCreatedEvent 
-} from '../../core/models/organization-create.model';
-
-/**
- * 組織建立對話框組件
- * 單一職責：處理組織建立的用戶界面和表單提交
- * 遵循單一職責原則：只負責組織建立的 UI 和用戶交互
- */
-@Component({
-  selector: 'app-organization-create-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatProgressSpinnerModule,
-    MatCardModule,
-    MatDividerModule
-  ],
-  template: `
-    <div class="dialog-container">
-      <div class="dialog-header">
-        <h2 mat-dialog-title>
-          <mat-icon>business</mat-icon>
-          建立新組織
-        </h2>
-        <button mat-icon-button (click)="onCancel()" class="close-button">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-
-      <mat-divider></mat-divider>
-
-      <div class="dialog-content">
-        <form (ngSubmit)="onSubmit()" #organizationForm="ngForm">
-          <mat-card class="form-card">
-            <mat-card-content>
-              <!-- 組織名稱 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織名稱 *</mat-label>
-                <input 
-                  matInput 
-                  [(ngModel)]="formState.values.name"
-                  name="name"
-                  placeholder="輸入組織名稱"
-                  required
-                  (blur)="validateField('name')"
-                  [class.error]="formState.errors.name">
-                <mat-hint>組織的顯示名稱</mat-hint>
-                @if (formState.errors.name) {
-                  <mat-error>{{ formState.errors.name }}</mat-error>
-                }
-              </mat-form-field>
-
-              <!-- 組織登入名稱 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織標識符 *</mat-label>
-                <input 
-                  matInput 
-                  [(ngModel)]="formState.values.login"
-                  name="login"
-                  placeholder="輸入組織標識符"
-                  required
-                  (blur)="validateField('login')"
-                  [class.error]="formState.errors.login">
-                <mat-hint>用於 URL 的唯一標識符</mat-hint>
-                @if (formState.errors.login) {
-                  <mat-error>{{ formState.errors.login }}</mat-error>
-                }
-              </mat-form-field>
-
-              <!-- 組織描述 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>組織描述</mat-label>
-                <textarea 
-                  matInput 
-                  [(ngModel)]="formState.values.description"
-                  name="description"
-                  placeholder="描述組織的用途和目標"
-                  rows="3"
-                  (blur)="validateField('description')"
-                  [class.error]="formState.errors.description">
-                </textarea>
-                <mat-hint>可選的描述信息</mat-hint>
-                @if (formState.errors.description) {
-                  <mat-error>{{ formState.errors.description }}</mat-error>
-                }
-              </mat-form-field>
-
-              <!-- 隱私設定 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>隱私設定 *</mat-label>
-                <mat-select 
-                  [(ngModel)]="formState.values.privacy"
-                  name="privacy"
-                  required>
-                  <mat-option value="public">公開</mat-option>
-                  <mat-option value="private">私有</mat-option>
-                </mat-select>
-                <mat-hint>選擇組織的可見性</mat-hint>
-              </mat-form-field>
-            </mat-card-content>
-          </mat-card>
-        </form>
-      </div>
-
-      <mat-divider></mat-divider>
-
-      <div class="dialog-actions">
-        <button 
-          mat-button 
-          type="button" 
-          (click)="onCancel()"
-          [disabled]="formState.isSubmitting">
-          取消
-        </button>
-        <button 
-          mat-raised-button 
-          color="primary" 
-          type="button"
-          (click)="onSubmit()"
-          [disabled]="!formState.isValid || formState.isSubmitting">
-          @if (formState.isSubmitting) {
-            <mat-spinner diameter="20"></mat-spinner>
-            建立中...
-          } @else {
-            <mat-icon>add</mat-icon>
-            建立組織
-          }
-        </button>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .dialog-container {
-      min-width: 500px;
-      max-width: 600px;
-    }
-
-    .dialog-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px 0 24px;
-    }
-
-    .dialog-header h2 {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 500;
-    }
-
-    .close-button {
-      margin-left: auto;
-    }
-
-    .dialog-content {
-      padding: 24px;
-    }
-
-    .form-card {
-      box-shadow: none;
-      border: 1px solid #e0e0e0;
-    }
-
-    .full-width {
-      width: 100%;
-      margin-bottom: 16px;
-    }
-
-    .dialog-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding: 16px 24px;
-    }
-
-    .error {
-      border-color: #f44336 !important;
-    }
-
-    mat-spinner {
-      margin-right: 8px;
-    }
-
-    @media (max-width: 600px) {
-      .dialog-container {
-        min-width: 300px;
-        max-width: 90vw;
-      }
-      
-      .dialog-content {
-        padding: 16px;
-      }
-      
-      .dialog-actions {
-        padding: 16px;
-      }
-    }
-  `]
-})
-export class OrganizationCreateDialogComponent {
-  // 服務注入
-  private organizationService = inject(OrganizationService);
-  private validationService = inject(ValidationService);
-  private notificationService = inject(NotificationService);
-  private authService = inject(AuthService);
-  private dialogRef = inject(MatDialogRef<OrganizationCreateDialogComponent>);
-
-  // 事件發射器
-  @Output() organizationCreated = new EventEmitter<OrganizationCreatedEvent>();
-
-  // 表單狀態
-  formState: OrganizationCreateFormState = {
-    isSubmitting: false,
-    isValid: false,
-    errors: {},
-    values: {
-      name: '',
-      login: '',
-      description: '',
-      privacy: 'private'
-    }
-  };
-
-  // 計算屬性
-  readonly isFormValid = computed(() => {
-    return this.formState.values.name.trim().length > 0 &&
-           this.formState.values.login.trim().length > 0 &&
-           !this.formState.errors.name &&
-           !this.formState.errors.login &&
-           !this.formState.errors.description;
-  });
-
-  constructor() {
-    // 監聽表單變化
-    this.updateFormValidity();
-  }
-
-  /**
-   * 驗證單個字段
-   */
-  validateField(field: string): void {
-    switch (field) {
-      case 'name':
-        const nameResult = this.validationService.validateOrganizationName(this.formState.values.name);
-        this.formState.errors.name = nameResult.errors[0] || undefined;
-        break;
-      case 'login':
-        const loginResult = this.validationService.validateOrganizationLogin(this.formState.values.login);
-        this.formState.errors.login = loginResult.errors[0] || undefined;
-        break;
-      case 'description':
-        const descResult = this.validationService.validateOrganizationDescription(this.formState.values.description);
-        this.formState.errors.description = descResult.errors[0] || undefined;
-        break;
-    }
-    
-    this.updateFormValidity();
-  }
-
-  /**
-   * 更新表單有效性
-   */
-  private updateFormValidity(): void {
-    this.formState.isValid = this.isFormValid();
-  }
-
-  /**
-   * 提交表單
-   */
-  async onSubmit(): Promise<void> {
-    if (!this.formState.isValid || this.formState.isSubmitting) {
-      return;
-    }
-
-    // 驗證所有字段
-    this.validateField('name');
-    this.validateField('login');
-    this.validateField('description');
-
-    if (!this.formState.isValid) {
-      this.notificationService.showValidationErrors([
-        this.formState.errors.name,
-        this.formState.errors.login,
-        this.formState.errors.description
-      ].filter(error => error) as string[]);
-      return;
-    }
-
-    this.formState.isSubmitting = true;
-
-    try {
-      const currentUser = this.authService.currentAccount();
-      if (!currentUser) {
-        throw new Error('用戶未登入');
-      }
-
-      const request: OrganizationCreateRequest = {
-        name: this.formState.values.name.trim(),
-        login: this.formState.values.login.trim(),
-        description: this.formState.values.description.trim(),
-        privacy: this.formState.values.privacy,
-        ownerId: currentUser.id
-      };
-
-      const organizationId = await this.organizationService.createOrganization(
-        request.name,
-        request.login,
-        request.ownerId,
-        request.description
-      );
-
-      // 發射成功事件
-      this.organizationCreated.emit({
-        organization: {
-          id: organizationId,
-          name: request.name,
-          login: request.login,
-          description: request.description,
-          privacy: request.privacy,
-          ownerId: request.ownerId,
-          createdAt: new Date()
-        },
-        success: true
-      });
-
-      this.notificationService.showOrganizationCreatedSuccess(request.name);
-      this.dialogRef.close({ success: true, organizationId });
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-      
-      this.organizationCreated.emit({
-        organization: {} as any,
-        success: false,
-        error: errorMessage
-      });
-
-      this.notificationService.showOrganizationCreatedError(errorMessage);
-    } finally {
-      this.formState.isSubmitting = false;
-    }
-  }
-
-  /**
-   * 取消操作
-   */
-  onCancel(): void {
-    this.dialogRef.close({ success: false });
-  }
-}
-```
-
-## File: angular/src/app/core/components/team-create-dialog.component.ts
-```typescript
-import { Component, inject, signal, computed, Input, Output, EventEmitter, Inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatCardModule } from '@angular/material/card';
-import { MatDividerModule } from '@angular/material/divider';
-
-import { OrganizationService } from '../../core/services/organization.service';
-import { ValidationService } from '../../core/services/validation.service';
-import { NotificationService } from '../../core/services/notification.service';
-import { 
-  TeamCreateRequest, 
-  TeamCreateFormState,
-  TeamCreatedEvent 
-} from '../../core/models/team-create.model';
-
-/**
- * 團隊建立對話框組件
- * 單一職責：處理團隊建立的用戶界面和表單提交
- * 遵循單一職責原則：只負責團隊建立的 UI 和用戶交互
- */
-@Component({
-  selector: 'app-team-create-dialog',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatIconModule,
-    MatSelectModule,
-    MatProgressSpinnerModule,
-    MatCardModule,
-    MatDividerModule
-  ],
-  template: `
-    <div class="dialog-container">
-      <div class="dialog-header">
-        <h2 mat-dialog-title>
-          <mat-icon>groups</mat-icon>
-          建立新團隊
-        </h2>
-        <button mat-icon-button (click)="onCancel()" class="close-button">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-
-      <mat-divider></mat-divider>
-
-      <div class="dialog-content">
-        <form (ngSubmit)="onSubmit()" #teamForm="ngForm">
-          <mat-card class="form-card">
-            <mat-card-content>
-              <!-- 團隊名稱 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>團隊名稱 *</mat-label>
-                <input 
-                  matInput 
-                  [(ngModel)]="formState().values.name"
-                  name="name"
-                  placeholder="輸入團隊名稱"
-                  required
-                  (blur)="validateField('name')"
-                  [class.error]="formState().errors.name">
-                <mat-hint>團隊的顯示名稱</mat-hint>
-                @if (formState().errors.name) {
-                  <mat-error>{{ formState().errors.name }}</mat-error>
-                }
-              </mat-form-field>
-
-              <!-- 團隊標識符 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>團隊標識符 *</mat-label>
-                <input 
-                  matInput 
-                  [(ngModel)]="formState().values.slug"
-                  name="slug"
-                  placeholder="輸入團隊標識符"
-                  required
-                  (blur)="validateField('slug')"
-                  [class.error]="formState().errors.slug">
-                <mat-hint>用於 URL 的唯一標識符</mat-hint>
-                @if (formState().errors.slug) {
-                  <mat-error>{{ formState().errors.slug }}</mat-error>
-                }
-              </mat-form-field>
-
-              <!-- 團隊描述 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>團隊描述</mat-label>
-                <textarea 
-                  matInput 
-                  [(ngModel)]="formState().values.description"
-                  name="description"
-                  placeholder="描述團隊的職責和目標"
-                  rows="3"
-                  (blur)="validateField('description')"
-                  [class.error]="formState().errors.description">
-                </textarea>
-                <mat-hint>可選的描述信息</mat-hint>
-                @if (formState().errors.description) {
-                  <mat-error>{{ formState().errors.description }}</mat-error>
-                }
-              </mat-form-field>
-
-              <!-- 隱私設定 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>隱私設定 *</mat-label>
-                <mat-select 
-                  [(ngModel)]="formState().values.privacy"
-                  name="privacy"
-                  required>
-                  <mat-option value="open">公開</mat-option>
-                  <mat-option value="closed">私有</mat-option>
-                </mat-select>
-                <mat-hint>選擇團隊的可見性</mat-hint>
-              </mat-form-field>
-
-              <!-- 權限等級 -->
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>權限等級 *</mat-label>
-                <mat-select 
-                  [(ngModel)]="formState().values.permission"
-                  name="permission"
-                  required>
-                  <mat-option value="read">讀取</mat-option>
-                  <mat-option value="write">寫入</mat-option>
-                  <mat-option value="admin">管理</mat-option>
-                </mat-select>
-                <mat-hint>團隊的默認權限等級</mat-hint>
-              </mat-form-field>
-            </mat-card-content>
-          </mat-card>
-        </form>
-      </div>
-
-      <mat-divider></mat-divider>
-
-      <div class="dialog-actions">
-        <button 
-          mat-button 
-          type="button" 
-          (click)="onCancel()"
-          [disabled]="formState().isSubmitting">
-          取消
-        </button>
-        <button 
-          mat-raised-button 
-          color="primary" 
-          type="button"
-          (click)="onSubmit()"
-          [disabled]="!formState().isValid || formState().isSubmitting">
-          @if (formState().isSubmitting) {
-            <mat-spinner diameter="20"></mat-spinner>
-            建立中...
-          } @else {
-            <mat-icon>add</mat-icon>
-            建立團隊
-          }
-        </button>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .dialog-container {
-      min-width: 500px;
-      max-width: 600px;
-    }
-
-    .dialog-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px 0 24px;
-    }
-
-    .dialog-header h2 {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 500;
-    }
-
-    .close-button {
-      margin-left: auto;
-    }
-
-    .dialog-content {
-      padding: 24px;
-    }
-
-    .form-card {
-      box-shadow: none;
-      border: 1px solid #e0e0e0;
-    }
-
-    .full-width {
-      width: 100%;
-      margin-bottom: 16px;
-    }
-
-    .dialog-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding: 16px 24px;
-    }
-
-    .error {
-      border-color: #f44336 !important;
-    }
-
-    mat-spinner {
-      margin-right: 8px;
-    }
-
-    @media (max-width: 600px) {
-      .dialog-container {
-        min-width: 300px;
-        max-width: 90vw;
-      }
-      
-      .dialog-content {
-        padding: 16px;
-      }
-      
-      .dialog-actions {
-        padding: 16px;
-      }
-    }
-  `]
-})
-export class TeamCreateDialogComponent {
-  // 服務注入
-  private organizationService = inject(OrganizationService);
-  private validationService = inject(ValidationService);
-  private notificationService = inject(NotificationService);
-  private dialogRef = inject(MatDialogRef<TeamCreateDialogComponent>);
-
-  // 對話框數據注入
-  constructor(@Inject(MAT_DIALOG_DATA) public data: { organizationId: string; parentTeamId?: string }) {
-    // 監聽表單變化
-    this.updateFormValidity();
-  }
-
-  // 事件發射器
-  @Output() teamCreated = new EventEmitter<TeamCreatedEvent>();
-
-  // 表單狀態
-  formState = signal<TeamCreateFormState>({
-    isSubmitting: false,
-    isValid: false,
-    errors: {},
-    values: {
-      name: '',
-      slug: '',
-      description: '',
-      privacy: 'open',
-      permission: 'read'
-    }
-  });
-
-  // 計算屬性
-  readonly isFormValid = computed(() => {
-    const state = this.formState();
-    return state.values.name.trim().length > 0 &&
-           state.values.slug.trim().length > 0 &&
-           !state.errors.name &&
-           !state.errors.slug &&
-           !state.errors.description;
-  });
-
-  /**
-   * 驗證單個字段
-   */
-  validateField(field: string): void {
-    const currentState = this.formState();
-    let newState = { ...currentState };
-    
-    switch (field) {
-      case 'name':
-        const nameResult = this.validationService.validateTeamName(currentState.values.name);
-        newState.errors.name = nameResult.errors[0] || undefined;
-        break;
-      case 'slug':
-        const slugResult = this.validationService.validateTeamSlug(currentState.values.slug);
-        newState.errors.slug = slugResult.errors[0] || undefined;
-        break;
-      case 'description':
-        const descResult = this.validationService.validateTeamDescription(currentState.values.description);
-        newState.errors.description = descResult.errors[0] || undefined;
-        break;
-    }
-    
-    this.formState.set(newState);
-    this.updateFormValidity();
-  }
-
-  /**
-   * 更新表單有效性
-   */
-  private updateFormValidity(): void {
-    const currentState = this.formState();
-    const newState = { ...currentState, isValid: this.isFormValid() };
-    this.formState.set(newState);
-  }
-
-  /**
-   * 提交表單
-   */
-  async onSubmit(): Promise<void> {
-    const currentState = this.formState();
-    
-    if (!currentState.isValid || currentState.isSubmitting) {
-      return;
-    }
-
-    // 驗證所有字段
-    this.validateField('name');
-    this.validateField('slug');
-    this.validateField('description');
-
-    const updatedState = this.formState();
-    if (!updatedState.isValid) {
-      this.notificationService.showValidationErrors([
-        updatedState.errors.name,
-        updatedState.errors.slug,
-        updatedState.errors.description
-      ].filter(error => error) as string[]);
-      return;
-    }
-
-    // 設置提交狀態
-    this.formState.update(state => ({ ...state, isSubmitting: true }));
-
-    try {
-      if (!this.data.organizationId) {
-        throw new Error('組織 ID 不能為空');
-      }
-
-      const request: TeamCreateRequest = {
-        name: updatedState.values.name.trim(),
-        slug: updatedState.values.slug.trim(),
-        description: updatedState.values.description.trim(),
-        organizationId: this.data.organizationId,
-        parentTeamId: this.data.parentTeamId,
-        privacy: updatedState.values.privacy,
-        permission: updatedState.values.permission
-      };
-
-      const teamId = await this.organizationService.createTeam(
-        request.organizationId,
-        request.name,
-        request.slug
-      );
-
-      // 發射成功事件
-      this.teamCreated.emit({
-        team: {
-          id: teamId,
-          name: request.name,
-          slug: request.slug,
-          description: request.description,
-          organizationId: request.organizationId,
-          parentTeamId: request.parentTeamId,
-          privacy: request.privacy,
-          permission: request.permission,
-          createdAt: new Date()
-        },
-        success: true
-      });
-
-      this.notificationService.showSuccess('團隊建立成功！');
-      this.dialogRef.close({ success: true, teamId });
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-      
-      this.teamCreated.emit({
-        team: {} as any,
-        success: false,
-        error: errorMessage
-      });
-
-      this.notificationService.showError(errorMessage);
-    } finally {
-      // 重置提交狀態
-      this.formState.update(state => ({ ...state, isSubmitting: false }));
-    }
-  }
-
-  /**
-   * 取消操作
-   */
-  onCancel(): void {
-    this.dialogRef.close({ success: false });
-  }
-}
-```
-
-## File: angular/src/app/core/models/dialog-event.model.ts
-```typescript
-/**
- * 對話框事件相關的模型定義
- * 遵循單一職責原則：只包含對話框事件所需的數據結構
- */
-
-/**
- * 對話框關閉事件介面
- * 單一職責：定義對話框關閉事件的數據結構
- */
-export interface DialogCloseEvent {
-  /** 關閉原因 */
-  reason: 'cancel' | 'confirm' | 'backdrop' | 'escape';
-  /** 對話框數據 */
-  data?: any;
-  /** 是否成功 */
-  success?: boolean;
-}
-
-/**
- * 對話框狀態介面
- * 單一職責：定義對話框狀態的數據結構
- */
-export interface DialogState {
-  /** 對話框是否打開 */
-  isOpen: boolean;
-  /** 對話框是否正在加載 */
-  isLoading: boolean;
-  /** 對話框標題 */
-  title: string;
-  /** 對話框數據 */
-  data?: any;
-  /** 對話框配置 */
-  config?: DialogConfig;
-}
-
-/**
- * 對話框配置介面
- * 單一職責：定義對話框配置的數據結構
- */
-export interface DialogConfig {
-  /** 對話框寬度 */
-  width?: string;
-  /** 對話框高度 */
-  height?: string;
-  /** 是否禁用關閉 */
-  disableClose?: boolean;
-  /** 是否顯示關閉按鈕 */
-  hasCloseIcon?: boolean;
-  /** 是否顯示確認按鈕 */
-  hasConfirmButton?: boolean;
-  /** 是否顯示取消按鈕 */
-  hasCancelButton?: boolean;
-  /** 確認按鈕文字 */
-  confirmButtonText?: string;
-  /** 取消按鈕文字 */
-  cancelButtonText?: string;
-  /** 確認按鈕顏色 */
-  confirmButtonColor?: 'primary' | 'accent' | 'warn';
-  /** 取消按鈕顏色 */
-  cancelButtonColor?: 'primary' | 'accent' | 'warn';
-}
-
-/**
- * 對話框結果介面
- * 單一職責：定義對話框結果的數據結構
- */
-export interface DialogResult<T = any> {
-  /** 是否確認 */
-  confirmed: boolean;
-  /** 結果數據 */
-  data?: T;
-  /** 錯誤訊息 */
-  error?: string;
-  /** 關閉原因 */
-  reason?: 'cancel' | 'confirm' | 'backdrop' | 'escape';
-}
-
-/**
- * 對話框事件類型
- * 單一職責：定義對話框事件類型
- */
-export type DialogEventType = 
-  | 'open'
-  | 'close'
-  | 'confirm'
-  | 'cancel'
-  | 'backdrop'
-  | 'escape'
-  | 'loading'
-  | 'loaded'
-  | 'error';
-
-/**
- * 對話框事件介面
- * 單一職責：定義對話框事件的數據結構
- */
-export interface DialogEvent {
-  /** 事件類型 */
-  type: DialogEventType;
-  /** 事件數據 */
-  data?: any;
-  /** 時間戳 */
-  timestamp: Date;
-  /** 對話框 ID */
-  dialogId?: string;
-}
-```
-
-## File: angular/src/app/core/models/index.ts
-```typescript
-/**
- * Core Models 導出文件
- * 遵循單一職責原則：統一導出所有核心模型
- */
-
-// 認證相關模型
-export * from './auth.model';
-
-// 組織建立相關模型
-export * from './organization-create.model';
-
-// 團隊建立相關模型
-export * from './team-create.model';
-
-// 驗證相關模型
-export * from './validation.model';
-
-// 對話框事件相關模型
-export * from './dialog-event.model';
-```
-
-## File: angular/src/app/core/models/organization-create.model.ts
-```typescript
-/**
- * 組織建立相關的模型定義
- * 遵循單一職責原則：只包含組織建立所需的數據結構
- */
-
-/**
- * 組織建立請求介面
- * 單一職責：定義組織建立請求的數據結構
- */
-export interface OrganizationCreateRequest {
-  /** 組織名稱 */
-  name: string;
-  /** 組織描述（可選） */
-  description?: string;
-  /** 隱私設定 */
-  privacy: 'public' | 'private';
-  /** 擁有者 ID */
-  ownerId: string;
-  /** 組織登入名稱（唯一標識符） */
-  login: string;
-}
-
-/**
- * 組織建立響應介面
- * 單一職責：定義組織建立響應的數據結構
- */
-export interface OrganizationCreateResponse {
-  /** 是否成功 */
-  success: boolean;
-  /** 組織 ID */
-  organizationId?: string;
-  /** 錯誤訊息 */
-  error?: string;
-  /** 建立的組織數據 */
-  organization?: {
-    id: string;
-    name: string;
-    login: string;
-    description?: string;
-    privacy: 'public' | 'private';
-    ownerId: string;
-    createdAt: Date;
-  };
-}
-
-/**
- * 組織建立事件介面
- * 單一職責：定義組織建立事件的數據結構
- */
-export interface OrganizationCreatedEvent {
-  /** 建立的組織 */
-  organization: {
-    id: string;
-    name: string;
-    login: string;
-    description?: string;
-    privacy: 'public' | 'private';
-    ownerId: string;
-    createdAt: Date;
-  };
-  /** 是否成功 */
-  success: boolean;
-  /** 錯誤訊息（如果失敗） */
-  error?: string;
-}
-
-/**
- * 組織建立表單狀態介面
- * 單一職責：定義組織建立表單的狀態
- */
-export interface OrganizationCreateFormState {
-  /** 表單是否正在提交 */
-  isSubmitting: boolean;
-  /** 表單是否有效 */
-  isValid: boolean;
-  /** 表單錯誤 */
-  errors: {
-    name?: string;
-    login?: string;
-    description?: string;
-    privacy?: string;
-  };
-  /** 表單值 */
-  values: {
-    name: string;
-    login: string;
-    description: string;
-    privacy: 'public' | 'private';
-  };
-}
-```
-
-## File: angular/src/app/core/models/team-create.model.ts
-```typescript
-/**
- * 團隊建立相關的模型定義
- * 遵循單一職責原則：只包含團隊建立所需的數據結構
- */
-
-/**
- * 團隊建立請求介面
- * 單一職責：定義團隊建立請求的數據結構
- */
-export interface TeamCreateRequest {
-  /** 團隊名稱 */
-  name: string;
-  /** 團隊描述（可選） */
-  description?: string;
-  /** 所屬組織 ID */
-  organizationId: string;
-  /** 父團隊 ID（可選，用於層級團隊） */
-  parentTeamId?: string;
-  /** 隱私設定 */
-  privacy: 'open' | 'closed';
-  /** 權限等級 */
-  permission: 'read' | 'write' | 'admin';
-  /** 團隊 slug（唯一標識符） */
-  slug: string;
-}
-
-/**
- * 團隊建立響應介面
- * 單一職責：定義團隊建立響應的數據結構
- */
-export interface TeamCreateResponse {
-  /** 是否成功 */
-  success: boolean;
-  /** 團隊 ID */
-  teamId?: string;
-  /** 錯誤訊息 */
-  error?: string;
-  /** 建立的團隊數據 */
-  team?: {
-    id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    organizationId: string;
-    parentTeamId?: string;
-    privacy: 'open' | 'closed';
-    permission: 'read' | 'write' | 'admin';
-    createdAt: Date;
-  };
-}
-
-/**
- * 團隊建立事件介面
- * 單一職責：定義團隊建立事件的數據結構
- */
-export interface TeamCreatedEvent {
-  /** 建立的團隊 */
-  team: {
-    id: string;
-    name: string;
-    slug: string;
-    description?: string;
-    organizationId: string;
-    parentTeamId?: string;
-    privacy: 'open' | 'closed';
-    permission: 'read' | 'write' | 'admin';
-    createdAt: Date;
-  };
-  /** 是否成功 */
-  success: boolean;
-  /** 錯誤訊息（如果失敗） */
-  error?: string;
-}
-
-/**
- * 團隊建立表單狀態介面
- * 單一職責：定義團隊建立表單的狀態
- */
-export interface TeamCreateFormState {
-  /** 表單是否正在提交 */
-  isSubmitting: boolean;
-  /** 表單是否有效 */
-  isValid: boolean;
-  /** 表單錯誤 */
-  errors: {
-    name?: string;
-    slug?: string;
-    description?: string;
-    privacy?: string;
-    permission?: string;
-  };
-  /** 表單值 */
-  values: {
-    name: string;
-    slug: string;
-    description: string;
-    privacy: 'open' | 'closed';
-    permission: 'read' | 'write' | 'admin';
-  };
-}
-```
-
-## File: angular/src/app/core/models/validation.model.ts
-```typescript
-/**
- * 驗證相關的模型定義
- * 遵循單一職責原則：只包含驗證所需的數據結構
- */
-
-/**
- * 驗證結果介面
- * 單一職責：定義驗證結果的數據結構
- */
-export interface ValidationResult {
-  /** 驗證是否通過 */
-  isValid: boolean;
-  /** 錯誤訊息列表 */
-  errors: string[];
-  /** 警告訊息列表（可選） */
-  warnings?: string[];
-  /** 驗證的字段名稱 */
-  field?: string;
-  /** 驗證的值 */
-  value?: any;
-}
-
-/**
- * 表單驗證狀態介面
- * 單一職責：定義表單驗證狀態的數據結構
- */
-export interface FormValidationState {
-  /** 整個表單是否有效 */
-  isValid: boolean;
-  /** 是否正在驗證 */
-  isValidating: boolean;
-  /** 字段驗證結果 */
-  fieldResults: Record<string, ValidationResult>;
-  /** 表單級別錯誤 */
-  formErrors: string[];
-  /** 表單級別警告 */
-  formWarnings: string[];
-}
-
-/**
- * 驗證規則介面
- * 單一職責：定義驗證規則的數據結構
- */
-export interface ValidationRule {
-  /** 規則名稱 */
-  name: string;
-  /** 規則描述 */
-  description: string;
-  /** 驗證函數 */
-  validator: (value: any) => ValidationResult;
-  /** 是否必填 */
-  required?: boolean;
-  /** 最小長度 */
-  minLength?: number;
-  /** 最大長度 */
-  maxLength?: number;
-  /** 正則表達式 */
-  pattern?: RegExp;
-  /** 自定義錯誤訊息 */
-  errorMessage?: string;
-}
-
-/**
- * 驗證配置介面
- * 單一職責：定義驗證配置的數據結構
- */
-export interface ValidationConfig {
-  /** 字段驗證規則 */
-  fields: Record<string, ValidationRule[]>;
-  /** 表單級別驗證規則 */
-  formRules?: ValidationRule[];
-  /** 是否實時驗證 */
-  realTimeValidation?: boolean;
-  /** 驗證延遲時間（毫秒） */
-  validationDelay?: number;
-}
-```
 
 ## File: angular/src/app/core/services/notification.service.ts
 ```typescript
@@ -3634,6 +2447,390 @@ export class MembersListComponent implements OnInit {
 }
 ```
 
+## File: angular/src/app/features/organization/components/organization-create-dialog.component.ts
+```typescript
+import { Component, inject, signal, computed, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+
+import { OrganizationService } from '../../../core/services/organization.service';
+import { ValidationService } from '../../../core/services/validation.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { 
+  OrganizationCreateRequest, 
+  OrganizationCreateFormState,
+  OrganizationCreatedEvent 
+} from '../models/organization-create.model';
+
+/**
+ * 組織建立對話框組件
+ * 單一職責：處理組織建立的用戶界面和表單提交
+ * 遵循單一職責原則：只負責組織建立的 UI 和用戶交互
+ */
+@Component({
+  selector: 'app-organization-create-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSelectModule,
+    MatProgressSpinnerModule,
+    MatCardModule,
+    MatDividerModule
+  ],
+  template: `
+    <div class="dialog-container">
+      <div class="dialog-header">
+        <h2 mat-dialog-title>
+          <mat-icon>business</mat-icon>
+          建立新組織
+        </h2>
+        <button mat-icon-button (click)="onCancel()" class="close-button">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="dialog-content">
+        <form (ngSubmit)="onSubmit()" #organizationForm="ngForm">
+          <mat-card class="form-card">
+            <mat-card-content>
+              <!-- 組織名稱 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>組織名稱 *</mat-label>
+                <input 
+                  matInput 
+                  [(ngModel)]="formState.values.name"
+                  name="name"
+                  placeholder="輸入組織名稱"
+                  required
+                  (blur)="validateField('name')"
+                  [class.error]="formState.errors.name">
+                <mat-hint>組織的顯示名稱</mat-hint>
+                @if (formState.errors.name) {
+                  <mat-error>{{ formState.errors.name }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 組織登入名稱 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>組織標識符 *</mat-label>
+                <input 
+                  matInput 
+                  [(ngModel)]="formState.values.login"
+                  name="login"
+                  placeholder="輸入組織標識符"
+                  required
+                  (blur)="validateField('login')"
+                  [class.error]="formState.errors.login">
+                <mat-hint>用於 URL 的唯一標識符</mat-hint>
+                @if (formState.errors.login) {
+                  <mat-error>{{ formState.errors.login }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 組織描述 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>組織描述</mat-label>
+                <textarea 
+                  matInput 
+                  [(ngModel)]="formState.values.description"
+                  name="description"
+                  placeholder="描述組織的用途和目標"
+                  rows="3"
+                  (blur)="validateField('description')"
+                  [class.error]="formState.errors.description">
+                </textarea>
+                <mat-hint>可選的描述信息</mat-hint>
+                @if (formState.errors.description) {
+                  <mat-error>{{ formState.errors.description }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 隱私設定 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>隱私設定 *</mat-label>
+                <mat-select 
+                  [(ngModel)]="formState.values.privacy"
+                  name="privacy"
+                  required>
+                  <mat-option value="public">公開</mat-option>
+                  <mat-option value="private">私有</mat-option>
+                </mat-select>
+                <mat-hint>選擇組織的可見性</mat-hint>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+        </form>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="dialog-actions">
+        <button 
+          mat-button 
+          type="button" 
+          (click)="onCancel()"
+          [disabled]="formState.isSubmitting">
+          取消
+        </button>
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="button"
+          (click)="onSubmit()"
+          [disabled]="!formState.isValid || formState.isSubmitting">
+          @if (formState.isSubmitting) {
+            <mat-spinner diameter="20"></mat-spinner>
+            建立中...
+          } @else {
+            <mat-icon>add</mat-icon>
+            建立組織
+          }
+        </button>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .dialog-container {
+      min-width: 500px;
+      max-width: 600px;
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px 0 24px;
+    }
+
+    .dialog-header h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+
+    .close-button {
+      margin-left: auto;
+    }
+
+    .dialog-content {
+      padding: 24px;
+    }
+
+    .form-card {
+      box-shadow: none;
+      border: 1px solid #e0e0e0;
+    }
+
+    .full-width {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 16px 24px;
+    }
+
+    .error {
+      border-color: #f44336 !important;
+    }
+
+    mat-spinner {
+      margin-right: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .dialog-container {
+        min-width: 300px;
+        max-width: 90vw;
+      }
+      
+      .dialog-content {
+        padding: 16px;
+      }
+      
+      .dialog-actions {
+        padding: 16px;
+      }
+    }
+  `]
+})
+export class OrganizationCreateDialogComponent {
+  // 服務注入
+  private organizationService = inject(OrganizationService);
+  private validationService = inject(ValidationService);
+  private notificationService = inject(NotificationService);
+  private authService = inject(AuthService);
+  private dialogRef = inject(MatDialogRef<OrganizationCreateDialogComponent>);
+
+  // 事件發射器
+  @Output() organizationCreated = new EventEmitter<OrganizationCreatedEvent>();
+
+  // 表單狀態
+  formState: OrganizationCreateFormState = {
+    isSubmitting: false,
+    isValid: false,
+    errors: {},
+    values: {
+      name: '',
+      login: '',
+      description: '',
+      privacy: 'private'
+    }
+  };
+
+  // 計算屬性
+  readonly isFormValid = computed(() => {
+    return this.formState.values.name.trim().length > 0 &&
+           this.formState.values.login.trim().length > 0 &&
+           !this.formState.errors.name &&
+           !this.formState.errors.login &&
+           !this.formState.errors.description;
+  });
+
+  constructor() {
+    // 監聽表單變化
+    this.updateFormValidity();
+  }
+
+  /**
+   * 驗證單個字段
+   */
+  validateField(field: string): void {
+    switch (field) {
+      case 'name':
+        const nameResult = this.validationService.validateOrganizationName(this.formState.values.name);
+        this.formState.errors.name = nameResult.errors[0] || undefined;
+        break;
+      case 'login':
+        const loginResult = this.validationService.validateOrganizationLogin(this.formState.values.login);
+        this.formState.errors.login = loginResult.errors[0] || undefined;
+        break;
+      case 'description':
+        const descResult = this.validationService.validateOrganizationDescription(this.formState.values.description);
+        this.formState.errors.description = descResult.errors[0] || undefined;
+        break;
+    }
+    
+    this.updateFormValidity();
+  }
+
+  /**
+   * 更新表單有效性
+   */
+  private updateFormValidity(): void {
+    this.formState.isValid = this.isFormValid();
+  }
+
+  /**
+   * 提交表單
+   */
+  async onSubmit(): Promise<void> {
+    if (!this.formState.isValid || this.formState.isSubmitting) {
+      return;
+    }
+
+    // 驗證所有字段
+    this.validateField('name');
+    this.validateField('login');
+    this.validateField('description');
+
+    if (!this.formState.isValid) {
+      this.notificationService.showValidationErrors([
+        this.formState.errors.name,
+        this.formState.errors.login,
+        this.formState.errors.description
+      ].filter(error => error) as string[]);
+      return;
+    }
+
+    this.formState.isSubmitting = true;
+
+    try {
+      const currentUser = this.authService.currentAccount();
+      if (!currentUser) {
+        throw new Error('用戶未登入');
+      }
+
+      const request: OrganizationCreateRequest = {
+        name: this.formState.values.name.trim(),
+        login: this.formState.values.login.trim(),
+        description: this.formState.values.description.trim(),
+        privacy: this.formState.values.privacy,
+        ownerId: currentUser.id
+      };
+
+      const organizationId = await this.organizationService.createOrganization(
+        request.name,
+        request.login,
+        request.ownerId,
+        request.description
+      );
+
+      // 發射成功事件
+      this.organizationCreated.emit({
+        organization: {
+          id: organizationId,
+          name: request.name,
+          login: request.login,
+          description: request.description,
+          privacy: request.privacy,
+          ownerId: request.ownerId,
+          createdAt: new Date()
+        },
+        success: true
+      });
+
+      this.notificationService.showOrganizationCreatedSuccess(request.name);
+      this.dialogRef.close({ success: true, organizationId });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      
+      this.organizationCreated.emit({
+        organization: {} as any,
+        success: false,
+        error: errorMessage
+      });
+
+      this.notificationService.showOrganizationCreatedError(errorMessage);
+    } finally {
+      this.formState.isSubmitting = false;
+    }
+  }
+
+  /**
+   * 取消操作
+   */
+  onCancel(): void {
+    this.dialogRef.close({ success: false });
+  }
+}
+```
+
 ## File: angular/src/app/features/organization/components/organization-create.component.ts
 ```typescript
 import { Component, inject, signal, OnInit } from '@angular/core';
@@ -4679,6 +3876,418 @@ export class OrganizationSettingsComponent implements OnInit {
 
   goBack() {
     this.router.navigate(['..'], { relativeTo: this.route });
+  }
+}
+```
+
+## File: angular/src/app/features/organization/components/team-create-dialog.component.ts
+```typescript
+import { Component, inject, signal, computed, Input, Output, EventEmitter, Inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+
+import { OrganizationService } from '../../../core/services/organization.service';
+import { ValidationService } from '../../../core/services/validation.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { 
+  TeamCreateRequest, 
+  TeamCreateFormState,
+  TeamCreatedEvent 
+} from '../models/team-create.model';
+
+/**
+ * 團隊建立對話框組件
+ * 單一職責：處理團隊建立的用戶界面和表單提交
+ * 遵循單一職責原則：只負責團隊建立的 UI 和用戶交互
+ */
+@Component({
+  selector: 'app-team-create-dialog',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatSelectModule,
+    MatProgressSpinnerModule,
+    MatCardModule,
+    MatDividerModule
+  ],
+  template: `
+    <div class="dialog-container">
+      <div class="dialog-header">
+        <h2 mat-dialog-title>
+          <mat-icon>groups</mat-icon>
+          建立新團隊
+        </h2>
+        <button mat-icon-button (click)="onCancel()" class="close-button">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="dialog-content">
+        <form (ngSubmit)="onSubmit()" #teamForm="ngForm">
+          <mat-card class="form-card">
+            <mat-card-content>
+              <!-- 團隊名稱 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>團隊名稱 *</mat-label>
+                <input 
+                  matInput 
+                  [(ngModel)]="formState().values.name"
+                  name="name"
+                  placeholder="輸入團隊名稱"
+                  required
+                  (blur)="validateField('name')"
+                  [class.error]="formState().errors.name">
+                <mat-hint>團隊的顯示名稱</mat-hint>
+                @if (formState().errors.name) {
+                  <mat-error>{{ formState().errors.name }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 團隊標識符 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>團隊標識符 *</mat-label>
+                <input 
+                  matInput 
+                  [(ngModel)]="formState().values.slug"
+                  name="slug"
+                  placeholder="輸入團隊標識符"
+                  required
+                  (blur)="validateField('slug')"
+                  [class.error]="formState().errors.slug">
+                <mat-hint>用於 URL 的唯一標識符</mat-hint>
+                @if (formState().errors.slug) {
+                  <mat-error>{{ formState().errors.slug }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 團隊描述 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>團隊描述</mat-label>
+                <textarea 
+                  matInput 
+                  [(ngModel)]="formState().values.description"
+                  name="description"
+                  placeholder="描述團隊的職責和目標"
+                  rows="3"
+                  (blur)="validateField('description')"
+                  [class.error]="formState().errors.description">
+                </textarea>
+                <mat-hint>可選的描述信息</mat-hint>
+                @if (formState().errors.description) {
+                  <mat-error>{{ formState().errors.description }}</mat-error>
+                }
+              </mat-form-field>
+
+              <!-- 隱私設定 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>隱私設定 *</mat-label>
+                <mat-select 
+                  [(ngModel)]="formState().values.privacy"
+                  name="privacy"
+                  required>
+                  <mat-option value="open">公開</mat-option>
+                  <mat-option value="closed">私有</mat-option>
+                </mat-select>
+                <mat-hint>選擇團隊的可見性</mat-hint>
+              </mat-form-field>
+
+              <!-- 權限等級 -->
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>權限等級 *</mat-label>
+                <mat-select 
+                  [(ngModel)]="formState().values.permission"
+                  name="permission"
+                  required>
+                  <mat-option value="read">讀取</mat-option>
+                  <mat-option value="write">寫入</mat-option>
+                  <mat-option value="admin">管理</mat-option>
+                </mat-select>
+                <mat-hint>團隊的默認權限等級</mat-hint>
+              </mat-form-field>
+            </mat-card-content>
+          </mat-card>
+        </form>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="dialog-actions">
+        <button 
+          mat-button 
+          type="button" 
+          (click)="onCancel()"
+          [disabled]="formState().isSubmitting">
+          取消
+        </button>
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="button"
+          (click)="onSubmit()"
+          [disabled]="!formState().isValid || formState().isSubmitting">
+          @if (formState().isSubmitting) {
+            <mat-spinner diameter="20"></mat-spinner>
+            建立中...
+          } @else {
+            <mat-icon>add</mat-icon>
+            建立團隊
+          }
+        </button>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .dialog-container {
+      min-width: 500px;
+      max-width: 600px;
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px 0 24px;
+    }
+
+    .dialog-header h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+    }
+
+    .close-button {
+      margin-left: auto;
+    }
+
+    .dialog-content {
+      padding: 24px;
+    }
+
+    .form-card {
+      box-shadow: none;
+      border: 1px solid #e0e0e0;
+    }
+
+    .full-width {
+      width: 100%;
+      margin-bottom: 16px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 16px 24px;
+    }
+
+    .error {
+      border-color: #f44336 !important;
+    }
+
+    mat-spinner {
+      margin-right: 8px;
+    }
+
+    @media (max-width: 600px) {
+      .dialog-container {
+        min-width: 300px;
+        max-width: 90vw;
+      }
+      
+      .dialog-content {
+        padding: 16px;
+      }
+      
+      .dialog-actions {
+        padding: 16px;
+      }
+    }
+  `]
+})
+export class TeamCreateDialogComponent {
+  // 服務注入
+  private organizationService = inject(OrganizationService);
+  private validationService = inject(ValidationService);
+  private notificationService = inject(NotificationService);
+  private dialogRef = inject(MatDialogRef<TeamCreateDialogComponent>);
+
+  // 對話框數據注入
+  constructor(@Inject(MAT_DIALOG_DATA) public data: { organizationId: string; parentTeamId?: string }) {
+    // 監聽表單變化
+    this.updateFormValidity();
+  }
+
+  // 事件發射器
+  @Output() teamCreated = new EventEmitter<TeamCreatedEvent>();
+
+  // 表單狀態
+  formState = signal<TeamCreateFormState>({
+    isSubmitting: false,
+    isValid: false,
+    errors: {},
+    values: {
+      name: '',
+      slug: '',
+      description: '',
+      privacy: 'open',
+      permission: 'read'
+    }
+  });
+
+  // 計算屬性
+  readonly isFormValid = computed(() => {
+    const state = this.formState();
+    return state.values.name.trim().length > 0 &&
+           state.values.slug.trim().length > 0 &&
+           !state.errors.name &&
+           !state.errors.slug &&
+           !state.errors.description;
+  });
+
+  /**
+   * 驗證單個字段
+   */
+  validateField(field: string): void {
+    const currentState = this.formState();
+    let newState = { ...currentState };
+    
+    switch (field) {
+      case 'name':
+        const nameResult = this.validationService.validateTeamName(currentState.values.name);
+        newState.errors.name = nameResult.errors[0] || undefined;
+        break;
+      case 'slug':
+        const slugResult = this.validationService.validateTeamSlug(currentState.values.slug);
+        newState.errors.slug = slugResult.errors[0] || undefined;
+        break;
+      case 'description':
+        const descResult = this.validationService.validateTeamDescription(currentState.values.description);
+        newState.errors.description = descResult.errors[0] || undefined;
+        break;
+    }
+    
+    this.formState.set(newState);
+    this.updateFormValidity();
+  }
+
+  /**
+   * 更新表單有效性
+   */
+  private updateFormValidity(): void {
+    const currentState = this.formState();
+    const newState = { ...currentState, isValid: this.isFormValid() };
+    this.formState.set(newState);
+  }
+
+  /**
+   * 提交表單
+   */
+  async onSubmit(): Promise<void> {
+    const currentState = this.formState();
+    
+    if (!currentState.isValid || currentState.isSubmitting) {
+      return;
+    }
+
+    // 驗證所有字段
+    this.validateField('name');
+    this.validateField('slug');
+    this.validateField('description');
+
+    const updatedState = this.formState();
+    if (!updatedState.isValid) {
+      this.notificationService.showValidationErrors([
+        updatedState.errors.name,
+        updatedState.errors.slug,
+        updatedState.errors.description
+      ].filter(error => error) as string[]);
+      return;
+    }
+
+    // 設置提交狀態
+    this.formState.update(state => ({ ...state, isSubmitting: true }));
+
+    try {
+      if (!this.data.organizationId) {
+        throw new Error('組織 ID 不能為空');
+      }
+
+      const request: TeamCreateRequest = {
+        name: updatedState.values.name.trim(),
+        slug: updatedState.values.slug.trim(),
+        description: updatedState.values.description.trim(),
+        organizationId: this.data.organizationId,
+        parentTeamId: this.data.parentTeamId,
+        privacy: updatedState.values.privacy,
+        permission: updatedState.values.permission
+      };
+
+      const teamId = await this.organizationService.createTeam(
+        request.organizationId,
+        request.name,
+        request.slug
+      );
+
+      // 發射成功事件
+      this.teamCreated.emit({
+        team: {
+          id: teamId,
+          name: request.name,
+          slug: request.slug,
+          description: request.description,
+          organizationId: request.organizationId,
+          parentTeamId: request.parentTeamId,
+          privacy: request.privacy,
+          permission: request.permission,
+          createdAt: new Date()
+        },
+        success: true
+      });
+
+      this.notificationService.showSuccess('團隊建立成功！');
+      this.dialogRef.close({ success: true, teamId });
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
+      
+      this.teamCreated.emit({
+        team: {} as any,
+        success: false,
+        error: errorMessage
+      });
+
+      this.notificationService.showError(errorMessage);
+    } finally {
+      // 重置提交狀態
+      this.formState.update(state => ({ ...state, isSubmitting: false }));
+    }
+  }
+
+  /**
+   * 取消操作
+   */
+  onCancel(): void {
+    this.dialogRef.close({ success: false });
   }
 }
 ```
@@ -5902,6 +5511,100 @@ export class TeamsListComponent implements OnInit {
 }
 ```
 
+## File: angular/src/app/features/organization/models/organization-create.model.ts
+```typescript
+/**
+ * 組織建立相關的模型定義
+ * 遵循單一職責原則：只包含組織建立所需的數據結構
+ */
+
+/**
+ * 組織建立請求介面
+ * 單一職責：定義組織建立請求的數據結構
+ */
+export interface OrganizationCreateRequest {
+  /** 組織名稱 */
+  name: string;
+  /** 組織描述（可選） */
+  description?: string;
+  /** 隱私設定 */
+  privacy: 'public' | 'private';
+  /** 擁有者 ID */
+  ownerId: string;
+  /** 組織登入名稱（唯一標識符） */
+  login: string;
+}
+
+/**
+ * 組織建立響應介面
+ * 單一職責：定義組織建立響應的數據結構
+ */
+export interface OrganizationCreateResponse {
+  /** 是否成功 */
+  success: boolean;
+  /** 組織 ID */
+  organizationId?: string;
+  /** 錯誤訊息 */
+  error?: string;
+  /** 建立的組織數據 */
+  organization?: {
+    id: string;
+    name: string;
+    login: string;
+    description?: string;
+    privacy: 'public' | 'private';
+    ownerId: string;
+    createdAt: Date;
+  };
+}
+
+/**
+ * 組織建立事件介面
+ * 單一職責：定義組織建立事件的數據結構
+ */
+export interface OrganizationCreatedEvent {
+  /** 建立的組織 */
+  organization: {
+    id: string;
+    name: string;
+    login: string;
+    description?: string;
+    privacy: 'public' | 'private';
+    ownerId: string;
+    createdAt: Date;
+  };
+  /** 是否成功 */
+  success: boolean;
+  /** 錯誤訊息（如果失敗） */
+  error?: string;
+}
+
+/**
+ * 組織建立表單狀態介面
+ * 單一職責：定義組織建立表單的狀態
+ */
+export interface OrganizationCreateFormState {
+  /** 表單是否正在提交 */
+  isSubmitting: boolean;
+  /** 表單是否有效 */
+  isValid: boolean;
+  /** 表單錯誤 */
+  errors: {
+    name?: string;
+    login?: string;
+    description?: string;
+    privacy?: string;
+  };
+  /** 表單值 */
+  values: {
+    name: string;
+    login: string;
+    description: string;
+    privacy: 'public' | 'private';
+  };
+}
+```
+
 ## File: angular/src/app/features/organization/models/organization.model.ts
 ```typescript
 /**
@@ -6049,6 +5752,110 @@ export interface PermissionResult {
   reason?: string;
   level?: 'read' | 'write' | 'admin' | 'none';
   expiresAt?: Date;
+}
+```
+
+## File: angular/src/app/features/organization/models/team-create.model.ts
+```typescript
+/**
+ * 團隊建立相關的模型定義
+ * 遵循單一職責原則：只包含團隊建立所需的數據結構
+ */
+
+/**
+ * 團隊建立請求介面
+ * 單一職責：定義團隊建立請求的數據結構
+ */
+export interface TeamCreateRequest {
+  /** 團隊名稱 */
+  name: string;
+  /** 團隊描述（可選） */
+  description?: string;
+  /** 所屬組織 ID */
+  organizationId: string;
+  /** 父團隊 ID（可選，用於層級團隊） */
+  parentTeamId?: string;
+  /** 隱私設定 */
+  privacy: 'open' | 'closed';
+  /** 權限等級 */
+  permission: 'read' | 'write' | 'admin';
+  /** 團隊 slug（唯一標識符） */
+  slug: string;
+}
+
+/**
+ * 團隊建立響應介面
+ * 單一職責：定義團隊建立響應的數據結構
+ */
+export interface TeamCreateResponse {
+  /** 是否成功 */
+  success: boolean;
+  /** 團隊 ID */
+  teamId?: string;
+  /** 錯誤訊息 */
+  error?: string;
+  /** 建立的團隊數據 */
+  team?: {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    organizationId: string;
+    parentTeamId?: string;
+    privacy: 'open' | 'closed';
+    permission: 'read' | 'write' | 'admin';
+    createdAt: Date;
+  };
+}
+
+/**
+ * 團隊建立事件介面
+ * 單一職責：定義團隊建立事件的數據結構
+ */
+export interface TeamCreatedEvent {
+  /** 建立的團隊 */
+  team: {
+    id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    organizationId: string;
+    parentTeamId?: string;
+    privacy: 'open' | 'closed';
+    permission: 'read' | 'write' | 'admin';
+    createdAt: Date;
+  };
+  /** 是否成功 */
+  success: boolean;
+  /** 錯誤訊息（如果失敗） */
+  error?: string;
+}
+
+/**
+ * 團隊建立表單狀態介面
+ * 單一職責：定義團隊建立表單的狀態
+ */
+export interface TeamCreateFormState {
+  /** 表單是否正在提交 */
+  isSubmitting: boolean;
+  /** 表單是否有效 */
+  isValid: boolean;
+  /** 表單錯誤 */
+  errors: {
+    name?: string;
+    slug?: string;
+    description?: string;
+    privacy?: string;
+    permission?: string;
+  };
+  /** 表單值 */
+  values: {
+    name: string;
+    slug: string;
+    description: string;
+    privacy: 'open' | 'closed';
+    permission: 'read' | 'write' | 'admin';
+  };
 }
 ```
 
@@ -7324,6 +7131,15 @@ export class CollaboratorManagementComponent implements OnInit {
 }
 ```
 
+## File: angular/src/app/features/repository/components/index.ts
+```typescript
+// Repository 組件匯出檔案
+// 目前暫無組件，未來可在此添加
+
+// 導出空對象以滿足模組要求
+export {};
+```
+
 ## File: angular/src/app/features/repository/components/repository-detail.component.ts
 ```typescript
 // src/app/features/repository/components/repository-detail.component.ts
@@ -8160,6 +7976,24 @@ export class RepositoryListComponent implements OnInit {
 }
 ```
 
+## File: angular/src/app/features/repository/guards/index.ts
+```typescript
+// Repository 守衛匯出檔案
+// 目前暫無守衛，未來可在此添加
+
+// 導出空對象以滿足模組要求
+export {};
+```
+
+## File: angular/src/app/features/repository/models/index.ts
+```typescript
+// Repository 模型匯出檔案
+// 目前暫無模型，未來可在此添加
+
+// 導出空對象以滿足模組要求
+export {};
+```
+
 ## File: angular/src/app/features/repository/models/repository.model.ts
 ```typescript
 // src/app/features/repository/models/repository.model.ts
@@ -8440,6 +8274,15 @@ export interface RepositoryCodeScanningResult {
 }
 ```
 
+## File: angular/src/app/features/repository/routes/index.ts
+```typescript
+// Repository 路由匯出檔案
+// 目前暫無路由，未來可在此添加
+
+// 導出空對象以滿足模組要求
+export {};
+```
+
 ## File: angular/src/app/features/repository/routes/repository.routes.ts
 ```typescript
 // src/app/features/repository/routes/repository.routes.ts
@@ -8465,6 +8308,35 @@ export const repositoryRoutes: Routes = [
     canActivate: [authGuard, repositoryManageGuard(':id')]
   }
 ];
+```
+
+## File: angular/src/app/features/repository/services/index.ts
+```typescript
+// Repository 服務匯出檔案
+// 目前暫無服務，未來可在此添加
+
+// 導出空對象以滿足模組要求
+export {};
+```
+
+## File: angular/src/app/features/repository/utils/index.ts
+```typescript
+// Repository 工具匯出檔案
+// 目前暫無工具，未來可在此添加
+
+// 導出空對象以滿足模組要求
+export {};
+```
+
+## File: angular/src/app/features/repository/index.ts
+```typescript
+// Repository 模組匯出檔案
+export * from './components';
+export * from './models';
+export * from './routes';
+export * from './services';
+export * from './guards';
+export * from './utils';
 ```
 
 ## File: angular/src/app/features/user/auth/auth.guard.ts
@@ -8590,24 +8462,539 @@ export class UnauthorizedComponent {
 }
 ```
 
-## File: angular/src/app/features/user/index.ts
+## File: angular/src/app/features/user/models/user.model.ts
 ```typescript
 /**
- * 用戶模組匯出檔案
- * 對齊 TREE.md 結構要求
+ * 用戶模型 - 對齊 GitHub Account 設計
+ * 實作完整的用戶資料結構和管理功能
  */
 
-// 模型匯出
-export * from './user.model';
+export interface User {
+  id: string;
+  uid: string; // Firebase UID
+  username: string;
+  email: string;
+  displayName: string;
+  avatar?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  company?: string;
+  blog?: string;
+  twitter?: string;
+  github?: string;
+  linkedin?: string;
+  status: 'active' | 'inactive' | 'suspended' | 'pending';
+  emailVerified: boolean;
+  twoFactorEnabled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  lastLoginAt?: Date;
+  lastActiveAt?: Date;
+  
+  // GitHub 對齊的社交帳戶
+  socialAccounts: SocialAccount[];
+  
+  // 專業證照
+  certificates: Certificate[];
+  
+  // 組織成員資格
+  organizationMemberships: OrganizationMembership[];
+  
+  // 通知偏好
+  notificationPreferences: NotificationPreferences;
+  
+  // 隱私設定
+  privacySettings: PrivacySettings;
+}
 
-// 服務匯出
-export * from './user.service';
+export interface SocialAccount {
+  id: string;
+  provider: 'twitter' | 'facebook' | 'linkedin' | 'youtube' | 'instagram' | 'github';
+  url: string;
+  username?: string;
+  verified: boolean;
+  addedAt: Date;
+}
 
-// 組件匯出
-export * from './profile/profile-management.component';
+export interface Certificate {
+  id: string;
+  name: string;
+  issuer: string;
+  issueDate: Date;
+  expiryDate?: Date;
+  credentialId?: string;
+  credentialUrl?: string;
+  status: 'valid' | 'expired' | 'pending' | 'revoked';
+  category: 'professional' | 'safety' | 'technical' | 'management';
+  uploadedAt: Date;
+  verifiedAt?: Date;
+}
 
-// 路由匯出
-export * from './user.routes';
+export interface OrganizationMembership {
+  id: string;
+  organizationId: string;
+  organizationName: string;
+  role: string;
+  status: 'active' | 'pending' | 'suspended';
+  joinedAt: Date;
+  permissions: string[];
+}
+
+export interface NotificationPreferences {
+  email: {
+    enabled: boolean;
+    frequency: 'immediate' | 'daily' | 'weekly' | 'never';
+    types: string[];
+  };
+  push: {
+    enabled: boolean;
+    types: string[];
+  };
+  inApp: {
+    enabled: boolean;
+    types: string[];
+  };
+}
+
+export interface PrivacySettings {
+  profileVisibility: 'public' | 'private' | 'organization';
+  emailVisibility: 'public' | 'private' | 'organization';
+  socialAccountsVisibility: 'public' | 'private' | 'organization';
+  certificatesVisibility: 'public' | 'private' | 'organization';
+  activityVisibility: 'public' | 'private' | 'organization';
+}
+
+// API 請求/響應模型
+export interface CreateUserRequest {
+  username: string;
+  email: string;
+  displayName: string;
+  password: string;
+}
+
+export interface UpdateUserRequest {
+  displayName?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  company?: string;
+  blog?: string;
+  twitter?: string;
+  github?: string;
+  linkedin?: string;
+}
+
+export interface AddSocialAccountRequest {
+  provider: string;
+  url: string;
+  username?: string;
+}
+
+export interface UpdateNotificationPreferencesRequest {
+  email?: Partial<NotificationPreferences['email']>;
+  push?: Partial<NotificationPreferences['push']>;
+  inApp?: Partial<NotificationPreferences['inApp']>;
+}
+
+export interface UpdatePrivacySettingsRequest {
+  profileVisibility?: 'public' | 'private' | 'organization';
+  emailVisibility?: 'public' | 'private' | 'organization';
+  socialAccountsVisibility?: 'public' | 'private' | 'organization';
+  certificatesVisibility?: 'public' | 'private' | 'organization';
+  activityVisibility?: 'public' | 'private' | 'organization';
+}
+
+// GitHub 對齊的 API 響應
+export interface UserApiResponse {
+  id: string;
+  username: string;
+  email: string;
+  displayName: string;
+  avatar?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  company?: string;
+  blog?: string;
+  twitter?: string;
+  github?: string;
+  linkedin?: string;
+  status: string;
+  emailVerified: boolean;
+  twoFactorEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastLoginAt?: string;
+  lastActiveAt?: string;
+}
+
+export interface SocialAccountApiResponse {
+  provider: string;
+  url: string;
+  username?: string;
+  verified: boolean;
+  addedAt: string;
+}
+
+// 分頁響應
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    perPage: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+```
+
+## File: angular/src/app/features/user/services/user.service.ts
+```typescript
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, from, of } from 'rxjs';
+import { map, catchError, switchMap } from 'rxjs/operators';
+import { Auth, User as FirebaseUser } from '@angular/fire/auth';
+import { Firestore, doc, getDoc, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
+import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
+import { 
+  User, 
+  CreateUserRequest, 
+  UpdateUserRequest,
+  SocialAccount,
+  AddSocialAccountRequest,
+  Certificate,
+  NotificationPreferences,
+  UpdateNotificationPreferencesRequest,
+  PrivacySettings,
+  UpdatePrivacySettingsRequest,
+  UserApiResponse,
+  SocialAccountApiResponse,
+  PaginatedResponse
+} from '../models/user.model';
+
+/**
+ * 用戶服務 - Firebase 整合版本
+ * 精簡主義實現，直接使用 app.config.ts 中的 Firebase 配置
+ */
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(Auth);
+  private readonly firestore = inject(Firestore);
+  private readonly storage = inject(Storage);
+  private readonly baseUrl = '/api';
+
+  // ==================== 用戶管理 API ====================
+  
+  /**
+   * 獲取當前用戶資訊 - Firebase 整合版本
+   */
+  getCurrentUser(): Observable<User | null> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) {
+      return of(null);
+    }
+    
+    return from(getDoc(doc(this.firestore, 'users', currentUser.uid))).pipe(
+      map(docSnap => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          return {
+            id: currentUser.uid,
+            uid: currentUser.uid,
+            username: data['username'] || currentUser.displayName || '',
+            email: currentUser.email || '',
+            displayName: data['displayName'] || currentUser.displayName || '',
+            bio: data['bio'] || '',
+            status: data['status'] || 'active',
+            emailVerified: currentUser.emailVerified,
+            twoFactorEnabled: data['twoFactorEnabled'] || false,
+            createdAt: data['createdAt']?.toDate() || new Date(),
+            updatedAt: data['updatedAt']?.toDate() || new Date(),
+            socialAccounts: data['socialAccounts'] || [],
+            certificates: data['certificates'] || [],
+            organizationMemberships: data['organizationMemberships'] || [],
+            notificationPreferences: data['notificationPreferences'] || {
+              email: { enabled: true, frequency: 'daily', types: [] },
+              push: { enabled: true, types: [] },
+              inApp: { enabled: true, types: [] }
+            },
+            privacySettings: data['privacySettings'] || {
+              profileVisibility: 'public',
+              emailVisibility: 'private',
+              socialAccountsVisibility: 'public',
+              certificatesVisibility: 'public',
+              activityVisibility: 'public'
+            }
+          } as User;
+        }
+        return null;
+      }),
+      catchError(() => of(null))
+    );
+  }
+
+  /**
+   * 獲取指定用戶資訊 (對齊 GitHub: GET /users/{username})
+   */
+  getUser(username: string): Observable<User> {
+    return this.http.get<User>(`${this.baseUrl}/users/${username}`);
+  }
+
+  /**
+   * 更新當前用戶資訊 - Firebase 整合版本
+   */
+  updateUser(updates: UpdateUserRequest): Observable<User | null> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) {
+      return of(null);
+    }
+    
+    const userRef = doc(this.firestore, 'users', currentUser.uid);
+    const updateData = {
+      ...updates,
+      updatedAt: new Date()
+    };
+    
+    return from(updateDoc(userRef, updateData)).pipe(
+      map(() => {
+        // 返回更新後的用戶資料
+        return {
+          id: currentUser.uid,
+          uid: currentUser.uid,
+          username: currentUser.displayName || '',
+          email: currentUser.email || '',
+          displayName: updates.displayName || currentUser.displayName || '',
+          bio: updates.bio || '',
+          status: 'active',
+          emailVerified: currentUser.emailVerified,
+          twoFactorEnabled: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          socialAccounts: [],
+          certificates: [],
+          organizationMemberships: [],
+          notificationPreferences: {
+            email: { enabled: true, frequency: 'daily', types: [] },
+            push: { enabled: true, types: [] },
+            inApp: { enabled: true, types: [] }
+          },
+          privacySettings: {
+            profileVisibility: 'public',
+            emailVisibility: 'private',
+            socialAccountsVisibility: 'public',
+            certificatesVisibility: 'public',
+            activityVisibility: 'public'
+          }
+        } as User;
+      }),
+      catchError(() => of(null))
+    );
+  }
+
+  /**
+   * 刪除當前用戶帳戶 (對齊 GitHub: DELETE /user)
+   */
+  deleteUser(): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/user`);
+  }
+
+  // ==================== 社交帳戶管理 API ====================
+  
+  /**
+   * 獲取用戶社交帳戶列表 (對齊 GitHub: GET /user/social_accounts)
+   */
+  getSocialAccounts(): Observable<SocialAccount[]> {
+    return this.http.get<SocialAccountApiResponse[]>(`${this.baseUrl}/user/social_accounts`)
+      .pipe(
+        // 轉換為內部格式
+        map(accounts => accounts.map(account => ({
+          id: this.generateId(),
+          provider: account.provider as any,
+          url: account.url,
+          username: account.username,
+          verified: account.verified,
+          addedAt: new Date(account.addedAt)
+        })))
+      );
+  }
+
+  /**
+   * 添加社交帳戶 (對齊 GitHub: POST /user/social_accounts)
+   */
+  addSocialAccount(account: AddSocialAccountRequest): Observable<SocialAccount> {
+    return this.http.post<SocialAccountApiResponse>(`${this.baseUrl}/user/social_accounts`, {
+      account_urls: [account.url]
+    }).pipe(
+      map(response => ({
+        id: this.generateId(),
+        provider: account.provider as any,
+        url: account.url,
+        username: account.username,
+        verified: response.verified,
+        addedAt: new Date(response.addedAt)
+      }))
+    );
+  }
+
+  /**
+   * 刪除社交帳戶 (對齊 GitHub: DELETE /user/social_accounts)
+   */
+  removeSocialAccounts(accountUrls: string[]): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/user/social_accounts`, {
+      body: { account_urls: accountUrls }
+    });
+  }
+
+  /**
+   * 獲取指定用戶的社交帳戶 (對齊 GitHub: GET /users/{username}/social_accounts)
+   */
+  getUserSocialAccounts(username: string): Observable<SocialAccount[]> {
+    return this.http.get<SocialAccountApiResponse[]>(`${this.baseUrl}/users/${username}/social_accounts`)
+      .pipe(
+        map(accounts => accounts.map(account => ({
+          id: this.generateId(),
+          provider: account.provider as any,
+          url: account.url,
+          username: account.username,
+          verified: account.verified,
+          addedAt: new Date(account.addedAt)
+        })))
+      );
+  }
+
+  // ==================== 證照管理 API ====================
+  
+  /**
+   * 獲取用戶證照列表
+   */
+  getCertificates(): Observable<Certificate[]> {
+    return this.http.get<Certificate[]>(`${this.baseUrl}/user/certificates`);
+  }
+
+  /**
+   * 添加證照
+   */
+  addCertificate(certificate: Partial<Certificate>): Observable<Certificate> {
+    return this.http.post<Certificate>(`${this.baseUrl}/user/certificates`, certificate);
+  }
+
+  /**
+   * 更新證照
+   */
+  updateCertificate(certificateId: string, updates: Partial<Certificate>): Observable<Certificate> {
+    return this.http.patch<Certificate>(`${this.baseUrl}/user/certificates/${certificateId}`, updates);
+  }
+
+  /**
+   * 刪除證照
+   */
+  deleteCertificate(certificateId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/user/certificates/${certificateId}`);
+  }
+
+  // ==================== 通知偏好管理 API ====================
+  
+  /**
+   * 獲取通知偏好設定
+   */
+  getNotificationPreferences(): Observable<NotificationPreferences> {
+    return this.http.get<NotificationPreferences>(`${this.baseUrl}/user/notification-preferences`);
+  }
+
+  /**
+   * 更新通知偏好設定
+   */
+  updateNotificationPreferences(preferences: UpdateNotificationPreferencesRequest): Observable<NotificationPreferences> {
+    return this.http.patch<NotificationPreferences>(`${this.baseUrl}/user/notification-preferences`, preferences);
+  }
+
+  // ==================== 隱私設定管理 API ====================
+  
+  /**
+   * 獲取隱私設定
+   */
+  getPrivacySettings(): Observable<PrivacySettings> {
+    return this.http.get<PrivacySettings>(`${this.baseUrl}/user/privacy-settings`);
+  }
+
+  /**
+   * 更新隱私設定
+   */
+  updatePrivacySettings(settings: UpdatePrivacySettingsRequest): Observable<PrivacySettings> {
+    return this.http.patch<PrivacySettings>(`${this.baseUrl}/user/privacy-settings`, settings);
+  }
+
+  // ==================== 組織成員資格管理 API ====================
+  
+  /**
+   * 獲取用戶的組織成員資格
+   */
+  getOrganizationMemberships(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.baseUrl}/user/organization-memberships`);
+  }
+
+  /**
+   * 離開組織
+   */
+  leaveOrganization(organizationId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/user/organization-memberships/${organizationId}`);
+  }
+
+  // ==================== 工具方法 ====================
+  
+  /**
+   * 生成唯一 ID
+   */
+  private generateId(): string {
+    return Math.random().toString(36).substr(2, 9);
+  }
+
+  /**
+   * 檢查用戶名是否可用
+   */
+  checkUsernameAvailability(username: string): Observable<{ available: boolean }> {
+    return this.http.get<{ available: boolean }>(`${this.baseUrl}/user/check-username/${username}`);
+  }
+
+  /**
+   * 檢查郵箱是否可用
+   */
+  checkEmailAvailability(email: string): Observable<{ available: boolean }> {
+    return this.http.get<{ available: boolean }>(`${this.baseUrl}/user/check-email/${email}`);
+  }
+
+  /**
+   * 上傳頭像 - Firebase Storage 整合版本
+   */
+  uploadAvatar(file: File): Observable<{ avatarUrl: string }> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) {
+      return of({ avatarUrl: '' });
+    }
+    
+    const avatarRef = ref(this.storage, `avatars/${currentUser.uid}/${file.name}`);
+    
+    return from(uploadBytes(avatarRef, file)).pipe(
+      switchMap(snapshot => from(getDownloadURL(snapshot.ref))),
+      map(url => ({ avatarUrl: url })),
+      catchError(() => of({ avatarUrl: '' }))
+    );
+  }
+
+  /**
+   * 刪除頭像
+   */
+  deleteAvatar(): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/user/avatar`);
+  }
+}
 ```
 
 ## File: angular/src/app/features/user/user.model.ts
@@ -9267,6 +9654,229 @@ export class LandingComponent {
 }
 ```
 
+## File: angular/src/app/shared/components/index.ts
+```typescript
+// 共享組件匯出檔案
+// 目前暫無共享組件，未來可在此添加
+
+// 導出空對象以滿足模組要求
+export {};
+```
+
+## File: angular/src/app/shared/types/dialog-event.types.ts
+```typescript
+/**
+ * 對話框事件相關的類型定義
+ * 遵循單一職責原則：只包含對話框事件所需的數據結構
+ */
+
+/**
+ * 對話框關閉事件介面
+ * 單一職責：定義對話框關閉事件的數據結構
+ */
+export interface DialogCloseEvent {
+  /** 關閉原因 */
+  reason: 'cancel' | 'confirm' | 'backdrop' | 'escape';
+  /** 對話框數據 */
+  data?: any;
+  /** 是否成功 */
+  success?: boolean;
+}
+
+/**
+ * 對話框狀態介面
+ * 單一職責：定義對話框狀態的數據結構
+ */
+export interface DialogState {
+  /** 對話框是否打開 */
+  isOpen: boolean;
+  /** 對話框是否正在加載 */
+  isLoading: boolean;
+  /** 對話框標題 */
+  title: string;
+  /** 對話框數據 */
+  data?: any;
+  /** 對話框配置 */
+  config?: DialogConfig;
+}
+
+/**
+ * 對話框配置介面
+ * 單一職責：定義對話框配置的數據結構
+ */
+export interface DialogConfig {
+  /** 對話框寬度 */
+  width?: string;
+  /** 對話框高度 */
+  height?: string;
+  /** 是否禁用關閉 */
+  disableClose?: boolean;
+  /** 是否顯示關閉按鈕 */
+  hasCloseIcon?: boolean;
+  /** 是否顯示確認按鈕 */
+  hasConfirmButton?: boolean;
+  /** 是否顯示取消按鈕 */
+  hasCancelButton?: boolean;
+  /** 確認按鈕文字 */
+  confirmButtonText?: string;
+  /** 取消按鈕文字 */
+  cancelButtonText?: string;
+  /** 確認按鈕顏色 */
+  confirmButtonColor?: 'primary' | 'accent' | 'warn';
+  /** 取消按鈕顏色 */
+  cancelButtonColor?: 'primary' | 'accent' | 'warn';
+}
+
+/**
+ * 對話框結果介面
+ * 單一職責：定義對話框結果的數據結構
+ */
+export interface DialogResult<T = any> {
+  /** 是否確認 */
+  confirmed: boolean;
+  /** 結果數據 */
+  data?: T;
+  /** 錯誤訊息 */
+  error?: string;
+  /** 關閉原因 */
+  reason?: 'cancel' | 'confirm' | 'backdrop' | 'escape';
+}
+
+/**
+ * 對話框事件類型
+ * 單一職責：定義對話框事件類型
+ */
+export type DialogEventType = 
+  | 'open'
+  | 'close'
+  | 'confirm'
+  | 'cancel'
+  | 'backdrop'
+  | 'escape'
+  | 'loading'
+  | 'loaded'
+  | 'error';
+
+/**
+ * 對話框事件介面
+ * 單一職責：定義對話框事件的數據結構
+ */
+export interface DialogEvent {
+  /** 事件類型 */
+  type: DialogEventType;
+  /** 事件數據 */
+  data?: any;
+  /** 時間戳 */
+  timestamp: Date;
+  /** 對話框 ID */
+  dialogId?: string;
+}
+```
+
+## File: angular/src/app/shared/types/index.ts
+```typescript
+// 共享類型匯出檔案
+export * from './dialog-event.types';
+export * from './validation.types';
+```
+
+## File: angular/src/app/shared/types/validation.types.ts
+```typescript
+/**
+ * 驗證相關的類型定義
+ * 遵循單一職責原則：只包含驗證所需的數據結構
+ */
+
+/**
+ * 驗證結果介面
+ * 單一職責：定義驗證結果的數據結構
+ */
+export interface ValidationResult {
+  /** 驗證是否通過 */
+  isValid: boolean;
+  /** 錯誤訊息列表 */
+  errors: string[];
+  /** 警告訊息列表（可選） */
+  warnings?: string[];
+  /** 驗證的字段名稱 */
+  field?: string;
+  /** 驗證的值 */
+  value?: any;
+}
+
+/**
+ * 表單驗證狀態介面
+ * 單一職責：定義表單驗證狀態的數據結構
+ */
+export interface FormValidationState {
+  /** 整個表單是否有效 */
+  isValid: boolean;
+  /** 是否正在驗證 */
+  isValidating: boolean;
+  /** 字段驗證結果 */
+  fieldResults: Record<string, ValidationResult>;
+  /** 表單級別錯誤 */
+  formErrors: string[];
+  /** 表單級別警告 */
+  formWarnings: string[];
+}
+
+/**
+ * 驗證規則介面
+ * 單一職責：定義驗證規則的數據結構
+ */
+export interface ValidationRule {
+  /** 規則名稱 */
+  name: string;
+  /** 規則描述 */
+  description: string;
+  /** 驗證函數 */
+  validator: (value: any) => ValidationResult;
+  /** 是否必填 */
+  required?: boolean;
+  /** 最小長度 */
+  minLength?: number;
+  /** 最大長度 */
+  maxLength?: number;
+  /** 正則表達式 */
+  pattern?: RegExp;
+  /** 自定義錯誤訊息 */
+  errorMessage?: string;
+}
+
+/**
+ * 驗證配置介面
+ * 單一職責：定義驗證配置的數據結構
+ */
+export interface ValidationConfig {
+  /** 字段驗證規則 */
+  fields: Record<string, ValidationRule[]>;
+  /** 表單級別驗證規則 */
+  formRules?: ValidationRule[];
+  /** 是否實時驗證 */
+  realTimeValidation?: boolean;
+  /** 驗證延遲時間（毫秒） */
+  validationDelay?: number;
+}
+```
+
+## File: angular/src/app/shared/utils/index.ts
+```typescript
+// 共享工具匯出檔案
+// 目前暫無共享工具，未來可在此添加
+
+// 導出空對象以滿足模組要求
+export {};
+```
+
+## File: angular/src/app/shared/index.ts
+```typescript
+// 共享模組匯出檔案
+export * from './types';
+export * from './components';
+export * from './utils';
+```
+
 ## File: angular/src/app/app.html
 ```html
 <div class="app-container">
@@ -9301,6 +9911,17 @@ import { App } from './app/app';
 
 bootstrapApplication(App, appConfig)
   .catch((err) => console.error(err));
+```
+
+## File: angular/src/app/core/models/index.ts
+```typescript
+/**
+ * Core Models 導出文件
+ * 遵循單一職責原則：統一導出所有核心模型
+ */
+
+// 認證相關模型
+export * from './auth.model';
 ```
 
 ## File: angular/src/app/core/services/organization.service.ts
@@ -9760,333 +10381,6 @@ export class OrganizationService {
 }
 ```
 
-## File: angular/src/app/core/services/validation.service.ts
-```typescript
-import { Injectable } from '@angular/core';
-import { ValidationResult, ValidationRule, ValidationConfig } from '../models/validation.model';
-
-/**
- * 驗證服務
- * 單一職責：提供表單驗證邏輯
- * 遵循單一職責原則：只負責驗證相關的業務邏輯
- */
-@Injectable({
-  providedIn: 'root'
-})
-export class ValidationService {
-
-  /**
-   * 驗證組織名稱
-   * @param name 組織名稱
-   * @returns 驗證結果
-   */
-  validateOrganizationName(name: string): ValidationResult {
-    const errors: string[] = [];
-    
-    if (!name || name.trim().length === 0) {
-      errors.push('組織名稱不能為空');
-    }
-    
-    if (name && name.length < 2) {
-      errors.push('組織名稱至少需要2個字符');
-    }
-    
-    if (name && name.length > 50) {
-      errors.push('組織名稱不能超過50個字符');
-    }
-    
-    if (name && !/^[a-zA-Z0-9\u4e00-\u9fa5\s\-_]+$/.test(name)) {
-      errors.push('組織名稱只能包含字母、數字、中文、空格、連字符和下劃線');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      field: 'name',
-      value: name
-    };
-  }
-
-  /**
-   * 驗證登入名稱 (通用方法)
-   * @param login 登入名稱
-   * @returns 驗證結果
-   */
-  validateLogin(login: string): ValidationResult {
-    const errors: string[] = [];
-    
-    if (!login || login.trim().length === 0) {
-      errors.push('登入名稱不能為空');
-    }
-    
-    if (login && login.length < 2) {
-      errors.push('登入名稱至少需要2個字符');
-    }
-    
-    if (login && login.length > 39) {
-      errors.push('登入名稱不能超過39個字符');
-    }
-    
-    if (login && !/^[a-zA-Z0-9\-_]+$/.test(login)) {
-      errors.push('登入名稱只能包含字母、數字、連字符和下劃線');
-    }
-    
-    if (login && (login.startsWith('-') || login.endsWith('-'))) {
-      errors.push('登入名稱不能以連字符開頭或結尾');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      field: 'login',
-      value: login
-    };
-  }
-
-  /**
-   * 驗證組織登入名稱
-   * @param login 組織登入名稱
-   * @returns 驗證結果
-   */
-  validateOrganizationLogin(login: string): ValidationResult {
-    const errors: string[] = [];
-    
-    if (!login || login.trim().length === 0) {
-      errors.push('組織登入名稱不能為空');
-    }
-    
-    if (login && login.length < 2) {
-      errors.push('組織登入名稱至少需要2個字符');
-    }
-    
-    if (login && login.length > 39) {
-      errors.push('組織登入名稱不能超過39個字符');
-    }
-    
-    if (login && !/^[a-zA-Z0-9\-_]+$/.test(login)) {
-      errors.push('組織登入名稱只能包含字母、數字、連字符和下劃線');
-    }
-    
-    if (login && login.startsWith('-') || login.endsWith('-')) {
-      errors.push('組織登入名稱不能以連字符開頭或結尾');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      field: 'login',
-      value: login
-    };
-  }
-
-  /**
-   * 驗證組織描述
-   * @param description 組織描述
-   * @returns 驗證結果
-   */
-  validateOrganizationDescription(description: string): ValidationResult {
-    const errors: string[] = [];
-    
-    if (description && description.length > 500) {
-      errors.push('組織描述不能超過500個字符');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      field: 'description',
-      value: description
-    };
-  }
-
-  /**
-   * 驗證團隊名稱
-   * @param name 團隊名稱
-   * @returns 驗證結果
-   */
-  validateTeamName(name: string): ValidationResult {
-    const errors: string[] = [];
-    
-    if (!name || name.trim().length === 0) {
-      errors.push('團隊名稱不能為空');
-    }
-    
-    if (name && name.length < 2) {
-      errors.push('團隊名稱至少需要2個字符');
-    }
-    
-    if (name && name.length > 50) {
-      errors.push('團隊名稱不能超過50個字符');
-    }
-    
-    if (name && !/^[a-zA-Z0-9\u4e00-\u9fa5\s\-_]+$/.test(name)) {
-      errors.push('團隊名稱只能包含字母、數字、中文、空格、連字符和下劃線');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      field: 'name',
-      value: name
-    };
-  }
-
-  /**
-   * 驗證團隊 slug
-   * @param slug 團隊 slug
-   * @returns 驗證結果
-   */
-  validateTeamSlug(slug: string): ValidationResult {
-    const errors: string[] = [];
-    
-    if (!slug || slug.trim().length === 0) {
-      errors.push('團隊標識符不能為空');
-    }
-    
-    if (slug && slug.length < 2) {
-      errors.push('團隊標識符至少需要2個字符');
-    }
-    
-    if (slug && slug.length > 39) {
-      errors.push('團隊標識符不能超過39個字符');
-    }
-    
-    if (slug && !/^[a-zA-Z0-9\-_]+$/.test(slug)) {
-      errors.push('團隊標識符只能包含字母、數字、連字符和下劃線');
-    }
-    
-    if (slug && (slug.startsWith('-') || slug.endsWith('-'))) {
-      errors.push('團隊標識符不能以連字符開頭或結尾');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      field: 'slug',
-      value: slug
-    };
-  }
-
-  /**
-   * 驗證團隊描述
-   * @param description 團隊描述
-   * @returns 驗證結果
-   */
-  validateTeamDescription(description: string): ValidationResult {
-    const errors: string[] = [];
-    
-    if (description && description.length > 500) {
-      errors.push('團隊描述不能超過500個字符');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      field: 'description',
-      value: description
-    };
-  }
-
-  /**
-   * 驗證電子郵件
-   * @param email 電子郵件
-   * @returns 驗證結果
-   */
-  validateEmail(email: string): ValidationResult {
-    const errors: string[] = [];
-    
-    if (!email || email.trim().length === 0) {
-      errors.push('電子郵件不能為空');
-    }
-    
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.push('請輸入有效的電子郵件地址');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      field: 'email',
-      value: email
-    };
-  }
-
-  /**
-   * 驗證密碼
-   * @param password 密碼
-   * @returns 驗證結果
-   */
-  validatePassword(password: string): ValidationResult {
-    const errors: string[] = [];
-    
-    if (!password || password.length === 0) {
-      errors.push('密碼不能為空');
-    }
-    
-    if (password && password.length < 8) {
-      errors.push('密碼至少需要8個字符');
-    }
-    
-    if (password && password.length > 128) {
-      errors.push('密碼不能超過128個字符');
-    }
-    
-    if (password && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
-      errors.push('密碼必須包含至少一個小寫字母、一個大寫字母和一個數字');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      field: 'password',
-      value: password
-    };
-  }
-
-  /**
-   * 驗證多個字段
-   * @param validations 驗證結果數組
-   * @returns 整體驗證結果
-   */
-  validateMultiple(validations: ValidationResult[]): ValidationResult {
-    const allErrors: string[] = [];
-    const allWarnings: string[] = [];
-    let isValid = true;
-    
-    validations.forEach(validation => {
-      if (!validation.isValid) {
-        isValid = false;
-        allErrors.push(...validation.errors);
-      }
-      
-      if (validation.warnings) {
-        allWarnings.push(...validation.warnings);
-      }
-    });
-    
-    return {
-      isValid,
-      errors: allErrors,
-      warnings: allWarnings.length > 0 ? allWarnings : undefined
-    };
-  }
-
-  /**
-   * 生成 slug 從名稱
-   * @param name 名稱
-   * @returns slug
-   */
-  generateSlugFromName(name: string): string {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s\-_]/g, '') // 移除特殊字符
-      .replace(/\s+/g, '-') // 空格替換為連字符
-      .replace(/-+/g, '-') // 多個連字符替換為單個
-      .replace(/^-|-$/g, ''); // 移除開頭和結尾的連字符
-  }
-}
-```
-
 ## File: angular/src/app/features/organization/components/organization-card.component.ts
 ```typescript
 import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
@@ -10445,363 +10739,6 @@ export class OrganizationCardComponent {
 }
 ```
 
-## File: angular/src/app/features/organization/components/organization-list.component.ts
-```typescript
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatCardModule } from '@angular/material/card';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatGridListModule } from '@angular/material/grid-list';
-
-import { OrganizationService } from '../../../core/services/organization.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { NotificationService } from '../../../core/services/notification.service';
-import { OrganizationCardComponent } from '../components/organization-card.component';
-import { OrganizationCreateDialogComponent } from '../../../core/components/organization-create-dialog.component';
-import { OrganizationDetail } from '../models/organization.model';
-import { OrganizationCreatedEvent } from '../../../core/models/organization-create.model';
-
-/**
- * 組織列表組件
- * 單一職責：顯示組織列表和提供建立組織的功能
- * 遵循單一職責原則：只負責組織列表的顯示和建立組織的入口
- */
-@Component({
-  selector: 'app-organization-list',
-  standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    MatCardModule,
-    MatDialogModule,
-    MatProgressSpinnerModule,
-    MatGridListModule,
-    OrganizationCardComponent
-  ],
-  template: `
-    <div class="organization-list-container">
-      <!-- 頁面標題和操作按鈕 -->
-      <div class="page-header">
-        <div class="header-content">
-          <h1>組織管理</h1>
-          <p>管理您的組織和團隊</p>
-        </div>
-        <div class="header-actions">
-          <button 
-            mat-raised-button 
-            color="primary"
-            (click)="openCreateOrganizationDialog()"
-            [disabled]="isLoading()">
-            <mat-icon>add</mat-icon>
-            建立組織
-          </button>
-        </div>
-      </div>
-
-      <!-- 載入狀態 -->
-      @if (isLoading()) {
-        <div class="loading-container">
-          <mat-spinner></mat-spinner>
-          <p>載入組織列表中...</p>
-        </div>
-      }
-
-      <!-- 錯誤狀態 -->
-      @if (error()) {
-        <div class="error-container">
-          <mat-icon>error</mat-icon>
-          <p>{{ error() }}</p>
-          <button mat-button (click)="loadOrganizations()">重試</button>
-        </div>
-      }
-
-      <!-- 組織列表 -->
-      @if (!isLoading() && !error()) {
-        @if (organizations().length === 0) {
-          <!-- 空狀態 -->
-          <div class="empty-state">
-            <mat-icon>business</mat-icon>
-            <h2>尚未建立任何組織</h2>
-            <p>建立您的第一個組織來開始管理團隊和專案</p>
-            <button 
-              mat-raised-button 
-              color="primary"
-              (click)="openCreateOrganizationDialog()">
-              <mat-icon>add</mat-icon>
-              建立第一個組織
-            </button>
-          </div>
-        } @else {
-          <!-- 組織網格 -->
-          <mat-grid-list 
-            cols="1" 
-            rowHeight="400px" 
-            gutterSize="16px"
-            class="organization-grid">
-            @for (organization of organizations(); track organization.id) {
-              <mat-grid-tile>
-                <app-organization-card
-                  [organization]="createOrganizationSignal(organization)"
-                  [isSelected]="createIsSelectedSignal(false)"
-                  (view)="onViewOrganization($event)"
-                  (edit)="onEditOrganization($event)"
-                  (settings)="onOrganizationSettings($event)"
-                  (members)="onOrganizationMembers($event)"
-                  (teams)="onOrganizationTeams($event)"
-                  (delete)="onDeleteOrganization($event)">
-                </app-organization-card>
-              </mat-grid-tile>
-            }
-          </mat-grid-list>
-        }
-      }
-    </div>
-  `,
-  styles: [`
-    .organization-list-container {
-      padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 32px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #e0e0e0;
-    }
-
-    .header-content h1 {
-      margin: 0 0 8px 0;
-      font-size: 2rem;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    .header-content p {
-      margin: 0;
-      color: var(--mdc-theme-on-surface-variant);
-      font-size: 1rem;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .loading-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-    }
-
-    .error-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-      color: var(--mdc-theme-error);
-    }
-
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 64px 0;
-      gap: 16px;
-      text-align: center;
-    }
-
-    .empty-state mat-icon {
-      font-size: 64px;
-      width: 64px;
-      height: 64px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .empty-state h2 {
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    .empty-state p {
-      margin: 0;
-      color: var(--mdc-theme-on-surface-variant);
-      max-width: 400px;
-    }
-
-    .organization-grid {
-      margin-top: 16px;
-    }
-
-    @media (min-width: 768px) {
-      .organization-grid {
-        cols: 2;
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .organization-grid {
-        cols: 3;
-      }
-    }
-
-    @media (max-width: 600px) {
-      .organization-list-container {
-        padding: 16px;
-      }
-
-      .page-header {
-        flex-direction: column;
-        gap: 16px;
-        align-items: stretch;
-      }
-
-      .header-actions {
-        justify-content: center;
-      }
-    }
-  `]
-})
-export class OrganizationListComponent implements OnInit {
-  // 服務注入
-  private organizationService = inject(OrganizationService);
-  private authService = inject(AuthService);
-  private notificationService = inject(NotificationService);
-  private dialog = inject(MatDialog);
-
-  // 狀態管理
-  private _organizations = signal<OrganizationDetail[]>([]);
-  private _isLoading = signal(false);
-  private _error = signal<string | null>(null);
-
-  // 只讀信號
-  readonly organizations = this._organizations.asReadonly();
-  readonly isLoading = this._isLoading.asReadonly();
-  readonly error = this._error.asReadonly();
-
-  ngOnInit(): void {
-    this.loadOrganizations();
-  }
-
-  /**
-   * 載入組織列表
-   */
-  async loadOrganizations(): Promise<void> {
-    try {
-      this._isLoading.set(true);
-      this._error.set(null);
-
-      // 這裡應該調用實際的服務方法來獲取組織列表
-      // 由於現有的 OrganizationService 沒有 getOrganizations 方法，
-      // 我們暫時使用空數組
-      const organizations: OrganizationDetail[] = [];
-      this._organizations.set(organizations);
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '載入組織列表失敗';
-      this._error.set(errorMessage);
-      this.notificationService.showError(errorMessage);
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
-
-  /**
-   * 建立組織信號
-   */
-  createOrganizationSignal(organization: OrganizationDetail) {
-    return signal(organization);
-  }
-
-  /**
-   * 建立選中狀態信號
-   */
-  createIsSelectedSignal(isSelected: boolean) {
-    return signal(isSelected);
-  }
-
-  /**
-   * 打開建立組織對話框
-   */
-  openCreateOrganizationDialog(): void {
-    const dialogRef = this.dialog.open(OrganizationCreateDialogComponent, {
-      width: '600px',
-      maxWidth: '90vw',
-      disableClose: false
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result?.success) {
-        this.loadOrganizations(); // 重新載入組織列表
-      }
-    });
-  }
-
-  /**
-   * 檢視組織
-   */
-  onViewOrganization(organization: OrganizationDetail): void {
-    console.log('檢視組織:', organization);
-    // TODO: 導航到組織詳情頁面
-  }
-
-  /**
-   * 編輯組織
-   */
-  onEditOrganization(organization: OrganizationDetail): void {
-    console.log('編輯組織:', organization);
-    // TODO: 打開編輯組織對話框
-  }
-
-  /**
-   * 組織設定
-   */
-  onOrganizationSettings(organization: OrganizationDetail): void {
-    console.log('組織設定:', organization);
-    // TODO: 導航到組織設定頁面
-  }
-
-  /**
-   * 組織成員
-   */
-  onOrganizationMembers(organization: OrganizationDetail): void {
-    console.log('組織成員:', organization);
-    // TODO: 導航到組織成員頁面
-  }
-
-  /**
-   * 組織團隊
-   */
-  onOrganizationTeams(organization: OrganizationDetail): void {
-    console.log('組織團隊:', organization);
-    // TODO: 導航到組織團隊頁面
-  }
-
-  /**
-   * 刪除組織
-   */
-  onDeleteOrganization(organization: OrganizationDetail): void {
-    console.log('刪除組織:', organization);
-    // TODO: 顯示刪除確認對話框
-  }
-}
-```
-
 ## File: angular/src/app/features/organization/routes/organization.routes.ts
 ```typescript
 import { Routes } from '@angular/router';
@@ -10887,350 +10824,11 @@ export class AuthService {
 }
 ```
 
-## File: angular/src/app/features/user/user.service.ts
+## File: angular/src/app/features/user/index.ts
 ```typescript
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, from, of } from 'rxjs';
-import { map, catchError, switchMap } from 'rxjs/operators';
-import { Auth, User as FirebaseUser } from '@angular/fire/auth';
-import { Firestore, doc, getDoc, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
-import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
-import { 
-  User, 
-  CreateUserRequest, 
-  UpdateUserRequest,
-  SocialAccount,
-  AddSocialAccountRequest,
-  Certificate,
-  NotificationPreferences,
-  UpdateNotificationPreferencesRequest,
-  PrivacySettings,
-  UpdatePrivacySettingsRequest,
-  UserApiResponse,
-  SocialAccountApiResponse,
-  PaginatedResponse
-} from './user.model';
-
-/**
- * 用戶服務 - Firebase 整合版本
- * 精簡主義實現，直接使用 app.config.ts 中的 Firebase 配置
- */
-@Injectable({
-  providedIn: 'root'
-})
-export class UserService {
-  private readonly http = inject(HttpClient);
-  private readonly auth = inject(Auth);
-  private readonly firestore = inject(Firestore);
-  private readonly storage = inject(Storage);
-  private readonly baseUrl = '/api';
-
-  // ==================== 用戶管理 API ====================
-  
-  /**
-   * 獲取當前用戶資訊 - Firebase 整合版本
-   */
-  getCurrentUser(): Observable<User | null> {
-    const currentUser = this.auth.currentUser;
-    if (!currentUser) {
-      return of(null);
-    }
-    
-    return from(getDoc(doc(this.firestore, 'users', currentUser.uid))).pipe(
-      map(docSnap => {
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          return {
-            id: currentUser.uid,
-            uid: currentUser.uid,
-            username: data['username'] || currentUser.displayName || '',
-            email: currentUser.email || '',
-            displayName: data['displayName'] || currentUser.displayName || '',
-            bio: data['bio'] || '',
-            status: data['status'] || 'active',
-            emailVerified: currentUser.emailVerified,
-            twoFactorEnabled: data['twoFactorEnabled'] || false,
-            createdAt: data['createdAt']?.toDate() || new Date(),
-            updatedAt: data['updatedAt']?.toDate() || new Date(),
-            socialAccounts: data['socialAccounts'] || [],
-            certificates: data['certificates'] || [],
-            organizationMemberships: data['organizationMemberships'] || [],
-            notificationPreferences: data['notificationPreferences'] || {
-              email: { enabled: true, frequency: 'daily', types: [] },
-              push: { enabled: true, types: [] },
-              inApp: { enabled: true, types: [] }
-            },
-            privacySettings: data['privacySettings'] || {
-              profileVisibility: 'public',
-              emailVisibility: 'private',
-              socialAccountsVisibility: 'public',
-              certificatesVisibility: 'public',
-              activityVisibility: 'public'
-            }
-          } as User;
-        }
-        return null;
-      }),
-      catchError(() => of(null))
-    );
-  }
-
-  /**
-   * 獲取指定用戶資訊 (對齊 GitHub: GET /users/{username})
-   */
-  getUser(username: string): Observable<User> {
-    return this.http.get<User>(`${this.baseUrl}/users/${username}`);
-  }
-
-  /**
-   * 更新當前用戶資訊 - Firebase 整合版本
-   */
-  updateUser(updates: UpdateUserRequest): Observable<User | null> {
-    const currentUser = this.auth.currentUser;
-    if (!currentUser) {
-      return of(null);
-    }
-    
-    const userRef = doc(this.firestore, 'users', currentUser.uid);
-    const updateData = {
-      ...updates,
-      updatedAt: new Date()
-    };
-    
-    return from(updateDoc(userRef, updateData)).pipe(
-      map(() => {
-        // 返回更新後的用戶資料
-        return {
-          id: currentUser.uid,
-          uid: currentUser.uid,
-          username: currentUser.displayName || '',
-          email: currentUser.email || '',
-          displayName: updates.displayName || currentUser.displayName || '',
-          bio: updates.bio || '',
-          status: 'active',
-          emailVerified: currentUser.emailVerified,
-          twoFactorEnabled: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          socialAccounts: [],
-          certificates: [],
-          organizationMemberships: [],
-          notificationPreferences: {
-            email: { enabled: true, frequency: 'daily', types: [] },
-            push: { enabled: true, types: [] },
-            inApp: { enabled: true, types: [] }
-          },
-          privacySettings: {
-            profileVisibility: 'public',
-            emailVisibility: 'private',
-            socialAccountsVisibility: 'public',
-            certificatesVisibility: 'public',
-            activityVisibility: 'public'
-          }
-        } as User;
-      }),
-      catchError(() => of(null))
-    );
-  }
-
-  /**
-   * 刪除當前用戶帳戶 (對齊 GitHub: DELETE /user)
-   */
-  deleteUser(): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/user`);
-  }
-
-  // ==================== 社交帳戶管理 API ====================
-  
-  /**
-   * 獲取用戶社交帳戶列表 (對齊 GitHub: GET /user/social_accounts)
-   */
-  getSocialAccounts(): Observable<SocialAccount[]> {
-    return this.http.get<SocialAccountApiResponse[]>(`${this.baseUrl}/user/social_accounts`)
-      .pipe(
-        // 轉換為內部格式
-        map(accounts => accounts.map(account => ({
-          id: this.generateId(),
-          provider: account.provider as any,
-          url: account.url,
-          username: account.username,
-          verified: account.verified,
-          addedAt: new Date(account.addedAt)
-        })))
-      );
-  }
-
-  /**
-   * 添加社交帳戶 (對齊 GitHub: POST /user/social_accounts)
-   */
-  addSocialAccount(account: AddSocialAccountRequest): Observable<SocialAccount> {
-    return this.http.post<SocialAccountApiResponse>(`${this.baseUrl}/user/social_accounts`, {
-      account_urls: [account.url]
-    }).pipe(
-      map(response => ({
-        id: this.generateId(),
-        provider: account.provider as any,
-        url: account.url,
-        username: account.username,
-        verified: response.verified,
-        addedAt: new Date(response.addedAt)
-      }))
-    );
-  }
-
-  /**
-   * 刪除社交帳戶 (對齊 GitHub: DELETE /user/social_accounts)
-   */
-  removeSocialAccounts(accountUrls: string[]): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/user/social_accounts`, {
-      body: { account_urls: accountUrls }
-    });
-  }
-
-  /**
-   * 獲取指定用戶的社交帳戶 (對齊 GitHub: GET /users/{username}/social_accounts)
-   */
-  getUserSocialAccounts(username: string): Observable<SocialAccount[]> {
-    return this.http.get<SocialAccountApiResponse[]>(`${this.baseUrl}/users/${username}/social_accounts`)
-      .pipe(
-        map(accounts => accounts.map(account => ({
-          id: this.generateId(),
-          provider: account.provider as any,
-          url: account.url,
-          username: account.username,
-          verified: account.verified,
-          addedAt: new Date(account.addedAt)
-        })))
-      );
-  }
-
-  // ==================== 證照管理 API ====================
-  
-  /**
-   * 獲取用戶證照列表
-   */
-  getCertificates(): Observable<Certificate[]> {
-    return this.http.get<Certificate[]>(`${this.baseUrl}/user/certificates`);
-  }
-
-  /**
-   * 添加證照
-   */
-  addCertificate(certificate: Partial<Certificate>): Observable<Certificate> {
-    return this.http.post<Certificate>(`${this.baseUrl}/user/certificates`, certificate);
-  }
-
-  /**
-   * 更新證照
-   */
-  updateCertificate(certificateId: string, updates: Partial<Certificate>): Observable<Certificate> {
-    return this.http.patch<Certificate>(`${this.baseUrl}/user/certificates/${certificateId}`, updates);
-  }
-
-  /**
-   * 刪除證照
-   */
-  deleteCertificate(certificateId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/user/certificates/${certificateId}`);
-  }
-
-  // ==================== 通知偏好管理 API ====================
-  
-  /**
-   * 獲取通知偏好設定
-   */
-  getNotificationPreferences(): Observable<NotificationPreferences> {
-    return this.http.get<NotificationPreferences>(`${this.baseUrl}/user/notification-preferences`);
-  }
-
-  /**
-   * 更新通知偏好設定
-   */
-  updateNotificationPreferences(preferences: UpdateNotificationPreferencesRequest): Observable<NotificationPreferences> {
-    return this.http.patch<NotificationPreferences>(`${this.baseUrl}/user/notification-preferences`, preferences);
-  }
-
-  // ==================== 隱私設定管理 API ====================
-  
-  /**
-   * 獲取隱私設定
-   */
-  getPrivacySettings(): Observable<PrivacySettings> {
-    return this.http.get<PrivacySettings>(`${this.baseUrl}/user/privacy-settings`);
-  }
-
-  /**
-   * 更新隱私設定
-   */
-  updatePrivacySettings(settings: UpdatePrivacySettingsRequest): Observable<PrivacySettings> {
-    return this.http.patch<PrivacySettings>(`${this.baseUrl}/user/privacy-settings`, settings);
-  }
-
-  // ==================== 組織成員資格管理 API ====================
-  
-  /**
-   * 獲取用戶的組織成員資格
-   */
-  getOrganizationMemberships(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.baseUrl}/user/organization-memberships`);
-  }
-
-  /**
-   * 離開組織
-   */
-  leaveOrganization(organizationId: string): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/user/organization-memberships/${organizationId}`);
-  }
-
-  // ==================== 工具方法 ====================
-  
-  /**
-   * 生成唯一 ID
-   */
-  private generateId(): string {
-    return Math.random().toString(36).substr(2, 9);
-  }
-
-  /**
-   * 檢查用戶名是否可用
-   */
-  checkUsernameAvailability(username: string): Observable<{ available: boolean }> {
-    return this.http.get<{ available: boolean }>(`${this.baseUrl}/user/check-username/${username}`);
-  }
-
-  /**
-   * 檢查郵箱是否可用
-   */
-  checkEmailAvailability(email: string): Observable<{ available: boolean }> {
-    return this.http.get<{ available: boolean }>(`${this.baseUrl}/user/check-email/${email}`);
-  }
-
-  /**
-   * 上傳頭像 - Firebase Storage 整合版本
-   */
-  uploadAvatar(file: File): Observable<{ avatarUrl: string }> {
-    const currentUser = this.auth.currentUser;
-    if (!currentUser) {
-      return of({ avatarUrl: '' });
-    }
-    
-    const avatarRef = ref(this.storage, `avatars/${currentUser.uid}/${file.name}`);
-    
-    return from(uploadBytes(avatarRef, file)).pipe(
-      switchMap(snapshot => from(getDownloadURL(snapshot.ref))),
-      map(url => ({ avatarUrl: url })),
-      catchError(() => of({ avatarUrl: '' }))
-    );
-  }
-
-  /**
-   * 刪除頭像
-   */
-  deleteAvatar(): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/user/avatar`);
-  }
-}
+// 用戶模組匯出檔案
+export * from './services/user.service';
+export * from './models/user.model';
 ```
 
 ## File: angular/src/app/app.spec.ts
@@ -11879,6 +11477,333 @@ export class ValidationUtils {
 }
 ```
 
+## File: angular/src/app/core/services/validation.service.ts
+```typescript
+import { Injectable } from '@angular/core';
+import { ValidationResult, ValidationRule, ValidationConfig } from '../../shared/types/validation.types';
+
+/**
+ * 驗證服務
+ * 單一職責：提供表單驗證邏輯
+ * 遵循單一職責原則：只負責驗證相關的業務邏輯
+ */
+@Injectable({
+  providedIn: 'root'
+})
+export class ValidationService {
+
+  /**
+   * 驗證組織名稱
+   * @param name 組織名稱
+   * @returns 驗證結果
+   */
+  validateOrganizationName(name: string): ValidationResult {
+    const errors: string[] = [];
+    
+    if (!name || name.trim().length === 0) {
+      errors.push('組織名稱不能為空');
+    }
+    
+    if (name && name.length < 2) {
+      errors.push('組織名稱至少需要2個字符');
+    }
+    
+    if (name && name.length > 50) {
+      errors.push('組織名稱不能超過50個字符');
+    }
+    
+    if (name && !/^[a-zA-Z0-9\u4e00-\u9fa5\s\-_]+$/.test(name)) {
+      errors.push('組織名稱只能包含字母、數字、中文、空格、連字符和下劃線');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      field: 'name',
+      value: name
+    };
+  }
+
+  /**
+   * 驗證登入名稱 (通用方法)
+   * @param login 登入名稱
+   * @returns 驗證結果
+   */
+  validateLogin(login: string): ValidationResult {
+    const errors: string[] = [];
+    
+    if (!login || login.trim().length === 0) {
+      errors.push('登入名稱不能為空');
+    }
+    
+    if (login && login.length < 2) {
+      errors.push('登入名稱至少需要2個字符');
+    }
+    
+    if (login && login.length > 39) {
+      errors.push('登入名稱不能超過39個字符');
+    }
+    
+    if (login && !/^[a-zA-Z0-9\-_]+$/.test(login)) {
+      errors.push('登入名稱只能包含字母、數字、連字符和下劃線');
+    }
+    
+    if (login && (login.startsWith('-') || login.endsWith('-'))) {
+      errors.push('登入名稱不能以連字符開頭或結尾');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      field: 'login',
+      value: login
+    };
+  }
+
+  /**
+   * 驗證組織登入名稱
+   * @param login 組織登入名稱
+   * @returns 驗證結果
+   */
+  validateOrganizationLogin(login: string): ValidationResult {
+    const errors: string[] = [];
+    
+    if (!login || login.trim().length === 0) {
+      errors.push('組織登入名稱不能為空');
+    }
+    
+    if (login && login.length < 2) {
+      errors.push('組織登入名稱至少需要2個字符');
+    }
+    
+    if (login && login.length > 39) {
+      errors.push('組織登入名稱不能超過39個字符');
+    }
+    
+    if (login && !/^[a-zA-Z0-9\-_]+$/.test(login)) {
+      errors.push('組織登入名稱只能包含字母、數字、連字符和下劃線');
+    }
+    
+    if (login && login.startsWith('-') || login.endsWith('-')) {
+      errors.push('組織登入名稱不能以連字符開頭或結尾');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      field: 'login',
+      value: login
+    };
+  }
+
+  /**
+   * 驗證組織描述
+   * @param description 組織描述
+   * @returns 驗證結果
+   */
+  validateOrganizationDescription(description: string): ValidationResult {
+    const errors: string[] = [];
+    
+    if (description && description.length > 500) {
+      errors.push('組織描述不能超過500個字符');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      field: 'description',
+      value: description
+    };
+  }
+
+  /**
+   * 驗證團隊名稱
+   * @param name 團隊名稱
+   * @returns 驗證結果
+   */
+  validateTeamName(name: string): ValidationResult {
+    const errors: string[] = [];
+    
+    if (!name || name.trim().length === 0) {
+      errors.push('團隊名稱不能為空');
+    }
+    
+    if (name && name.length < 2) {
+      errors.push('團隊名稱至少需要2個字符');
+    }
+    
+    if (name && name.length > 50) {
+      errors.push('團隊名稱不能超過50個字符');
+    }
+    
+    if (name && !/^[a-zA-Z0-9\u4e00-\u9fa5\s\-_]+$/.test(name)) {
+      errors.push('團隊名稱只能包含字母、數字、中文、空格、連字符和下劃線');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      field: 'name',
+      value: name
+    };
+  }
+
+  /**
+   * 驗證團隊 slug
+   * @param slug 團隊 slug
+   * @returns 驗證結果
+   */
+  validateTeamSlug(slug: string): ValidationResult {
+    const errors: string[] = [];
+    
+    if (!slug || slug.trim().length === 0) {
+      errors.push('團隊標識符不能為空');
+    }
+    
+    if (slug && slug.length < 2) {
+      errors.push('團隊標識符至少需要2個字符');
+    }
+    
+    if (slug && slug.length > 39) {
+      errors.push('團隊標識符不能超過39個字符');
+    }
+    
+    if (slug && !/^[a-zA-Z0-9\-_]+$/.test(slug)) {
+      errors.push('團隊標識符只能包含字母、數字、連字符和下劃線');
+    }
+    
+    if (slug && (slug.startsWith('-') || slug.endsWith('-'))) {
+      errors.push('團隊標識符不能以連字符開頭或結尾');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      field: 'slug',
+      value: slug
+    };
+  }
+
+  /**
+   * 驗證團隊描述
+   * @param description 團隊描述
+   * @returns 驗證結果
+   */
+  validateTeamDescription(description: string): ValidationResult {
+    const errors: string[] = [];
+    
+    if (description && description.length > 500) {
+      errors.push('團隊描述不能超過500個字符');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      field: 'description',
+      value: description
+    };
+  }
+
+  /**
+   * 驗證電子郵件
+   * @param email 電子郵件
+   * @returns 驗證結果
+   */
+  validateEmail(email: string): ValidationResult {
+    const errors: string[] = [];
+    
+    if (!email || email.trim().length === 0) {
+      errors.push('電子郵件不能為空');
+    }
+    
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      errors.push('請輸入有效的電子郵件地址');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      field: 'email',
+      value: email
+    };
+  }
+
+  /**
+   * 驗證密碼
+   * @param password 密碼
+   * @returns 驗證結果
+   */
+  validatePassword(password: string): ValidationResult {
+    const errors: string[] = [];
+    
+    if (!password || password.length === 0) {
+      errors.push('密碼不能為空');
+    }
+    
+    if (password && password.length < 8) {
+      errors.push('密碼至少需要8個字符');
+    }
+    
+    if (password && password.length > 128) {
+      errors.push('密碼不能超過128個字符');
+    }
+    
+    if (password && !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) {
+      errors.push('密碼必須包含至少一個小寫字母、一個大寫字母和一個數字');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+      field: 'password',
+      value: password
+    };
+  }
+
+  /**
+   * 驗證多個字段
+   * @param validations 驗證結果數組
+   * @returns 整體驗證結果
+   */
+  validateMultiple(validations: ValidationResult[]): ValidationResult {
+    const allErrors: string[] = [];
+    const allWarnings: string[] = [];
+    let isValid = true;
+    
+    validations.forEach(validation => {
+      if (!validation.isValid) {
+        isValid = false;
+        allErrors.push(...validation.errors);
+      }
+      
+      if (validation.warnings) {
+        allWarnings.push(...validation.warnings);
+      }
+    });
+    
+    return {
+      isValid,
+      errors: allErrors,
+      warnings: allWarnings.length > 0 ? allWarnings : undefined
+    };
+  }
+
+  /**
+   * 生成 slug 從名稱
+   * @param name 名稱
+   * @returns slug
+   */
+  generateSlugFromName(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s\-_]/g, '') // 移除特殊字符
+      .replace(/\s+/g, '-') // 空格替換為連字符
+      .replace(/-+/g, '-') // 多個連字符替換為單個
+      .replace(/^-|-$/g, ''); // 移除開頭和結尾的連字符
+  }
+}
+```
+
 ## File: angular/src/app/core/utils/validation.utils.ts
 ```typescript
 // src/app/core/utils/validation.utils.ts
@@ -12275,6 +12200,363 @@ export class ValidationUtils {
       isValid: errors.length === 0,
       errors
     };
+  }
+}
+```
+
+## File: angular/src/app/features/organization/components/organization-list.component.ts
+```typescript
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatGridListModule } from '@angular/material/grid-list';
+
+import { OrganizationService } from '../../../core/services/organization.service';
+import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { OrganizationCardComponent } from '../components/organization-card.component';
+import { OrganizationCreateDialogComponent } from '../components/organization-create-dialog.component';
+import { OrganizationDetail } from '../models/organization.model';
+import { OrganizationCreatedEvent } from '../models/organization-create.model';
+
+/**
+ * 組織列表組件
+ * 單一職責：顯示組織列表和提供建立組織的功能
+ * 遵循單一職責原則：只負責組織列表的顯示和建立組織的入口
+ */
+@Component({
+  selector: 'app-organization-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatCardModule,
+    MatDialogModule,
+    MatProgressSpinnerModule,
+    MatGridListModule,
+    OrganizationCardComponent
+  ],
+  template: `
+    <div class="organization-list-container">
+      <!-- 頁面標題和操作按鈕 -->
+      <div class="page-header">
+        <div class="header-content">
+          <h1>組織管理</h1>
+          <p>管理您的組織和團隊</p>
+        </div>
+        <div class="header-actions">
+          <button 
+            mat-raised-button 
+            color="primary"
+            (click)="openCreateOrganizationDialog()"
+            [disabled]="isLoading()">
+            <mat-icon>add</mat-icon>
+            建立組織
+          </button>
+        </div>
+      </div>
+
+      <!-- 載入狀態 -->
+      @if (isLoading()) {
+        <div class="loading-container">
+          <mat-spinner></mat-spinner>
+          <p>載入組織列表中...</p>
+        </div>
+      }
+
+      <!-- 錯誤狀態 -->
+      @if (error()) {
+        <div class="error-container">
+          <mat-icon>error</mat-icon>
+          <p>{{ error() }}</p>
+          <button mat-button (click)="loadOrganizations()">重試</button>
+        </div>
+      }
+
+      <!-- 組織列表 -->
+      @if (!isLoading() && !error()) {
+        @if (organizations().length === 0) {
+          <!-- 空狀態 -->
+          <div class="empty-state">
+            <mat-icon>business</mat-icon>
+            <h2>尚未建立任何組織</h2>
+            <p>建立您的第一個組織來開始管理團隊和專案</p>
+            <button 
+              mat-raised-button 
+              color="primary"
+              (click)="openCreateOrganizationDialog()">
+              <mat-icon>add</mat-icon>
+              建立第一個組織
+            </button>
+          </div>
+        } @else {
+          <!-- 組織網格 -->
+          <mat-grid-list 
+            cols="1" 
+            rowHeight="400px" 
+            gutterSize="16px"
+            class="organization-grid">
+            @for (organization of organizations(); track organization.id) {
+              <mat-grid-tile>
+                <app-organization-card
+                  [organization]="createOrganizationSignal(organization)"
+                  [isSelected]="createIsSelectedSignal(false)"
+                  (view)="onViewOrganization($event)"
+                  (edit)="onEditOrganization($event)"
+                  (settings)="onOrganizationSettings($event)"
+                  (members)="onOrganizationMembers($event)"
+                  (teams)="onOrganizationTeams($event)"
+                  (delete)="onDeleteOrganization($event)">
+                </app-organization-card>
+              </mat-grid-tile>
+            }
+          </mat-grid-list>
+        }
+      }
+    </div>
+  `,
+  styles: [`
+    .organization-list-container {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .header-content h1 {
+      margin: 0 0 8px 0;
+      font-size: 2rem;
+      font-weight: 500;
+      color: var(--mdc-theme-on-surface);
+    }
+
+    .header-content p {
+      margin: 0;
+      color: var(--mdc-theme-on-surface-variant);
+      font-size: 1rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+    }
+
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+      color: var(--mdc-theme-error);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 0;
+      gap: 16px;
+      text-align: center;
+    }
+
+    .empty-state mat-icon {
+      font-size: 64px;
+      width: 64px;
+      height: 64px;
+      color: var(--mdc-theme-on-surface-variant);
+    }
+
+    .empty-state h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: var(--mdc-theme-on-surface);
+    }
+
+    .empty-state p {
+      margin: 0;
+      color: var(--mdc-theme-on-surface-variant);
+      max-width: 400px;
+    }
+
+    .organization-grid {
+      margin-top: 16px;
+    }
+
+    @media (min-width: 768px) {
+      .organization-grid {
+        cols: 2;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .organization-grid {
+        cols: 3;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .organization-list-container {
+        padding: 16px;
+      }
+
+      .page-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+      }
+
+      .header-actions {
+        justify-content: center;
+      }
+    }
+  `]
+})
+export class OrganizationListComponent implements OnInit {
+  // 服務注入
+  private organizationService = inject(OrganizationService);
+  private authService = inject(AuthService);
+  private notificationService = inject(NotificationService);
+  private dialog = inject(MatDialog);
+
+  // 狀態管理
+  private _organizations = signal<OrganizationDetail[]>([]);
+  private _isLoading = signal(false);
+  private _error = signal<string | null>(null);
+
+  // 只讀信號
+  readonly organizations = this._organizations.asReadonly();
+  readonly isLoading = this._isLoading.asReadonly();
+  readonly error = this._error.asReadonly();
+
+  ngOnInit(): void {
+    this.loadOrganizations();
+  }
+
+  /**
+   * 載入組織列表
+   */
+  async loadOrganizations(): Promise<void> {
+    try {
+      this._isLoading.set(true);
+      this._error.set(null);
+
+      // 這裡應該調用實際的服務方法來獲取組織列表
+      // 由於現有的 OrganizationService 沒有 getOrganizations 方法，
+      // 我們暫時使用空數組
+      const organizations: OrganizationDetail[] = [];
+      this._organizations.set(organizations);
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '載入組織列表失敗';
+      this._error.set(errorMessage);
+      this.notificationService.showError(errorMessage);
+    } finally {
+      this._isLoading.set(false);
+    }
+  }
+
+  /**
+   * 建立組織信號
+   */
+  createOrganizationSignal(organization: OrganizationDetail) {
+    return signal(organization);
+  }
+
+  /**
+   * 建立選中狀態信號
+   */
+  createIsSelectedSignal(isSelected: boolean) {
+    return signal(isSelected);
+  }
+
+  /**
+   * 打開建立組織對話框
+   */
+  openCreateOrganizationDialog(): void {
+    const dialogRef = this.dialog.open(OrganizationCreateDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: false
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        this.loadOrganizations(); // 重新載入組織列表
+      }
+    });
+  }
+
+  /**
+   * 檢視組織
+   */
+  onViewOrganization(organization: OrganizationDetail): void {
+    console.log('檢視組織:', organization);
+    // TODO: 導航到組織詳情頁面
+  }
+
+  /**
+   * 編輯組織
+   */
+  onEditOrganization(organization: OrganizationDetail): void {
+    console.log('編輯組織:', organization);
+    // TODO: 打開編輯組織對話框
+  }
+
+  /**
+   * 組織設定
+   */
+  onOrganizationSettings(organization: OrganizationDetail): void {
+    console.log('組織設定:', organization);
+    // TODO: 導航到組織設定頁面
+  }
+
+  /**
+   * 組織成員
+   */
+  onOrganizationMembers(organization: OrganizationDetail): void {
+    console.log('組織成員:', organization);
+    // TODO: 導航到組織成員頁面
+  }
+
+  /**
+   * 組織團隊
+   */
+  onOrganizationTeams(organization: OrganizationDetail): void {
+    console.log('組織團隊:', organization);
+    // TODO: 導航到組織團隊頁面
+  }
+
+  /**
+   * 刪除組織
+   */
+  onDeleteOrganization(organization: OrganizationDetail): void {
+    console.log('刪除組織:', organization);
+    // TODO: 顯示刪除確認對話框
   }
 }
 ```
@@ -13382,6 +13664,21 @@ export class SecurityManagerComponent implements OnInit {
 }
 ```
 
+## File: angular/src/styles.scss
+```scss
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background-color: #f3f4f6;
+}
+```
+
 ## File: angular/src/app/features/organization/components/team-management.component.ts
 ```typescript
 import { Component, Input, Output, EventEmitter, signal, computed, inject } from '@angular/core';
@@ -13394,8 +13691,8 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { Team } from '../models/organization.model';
-import { TeamCreateDialogComponent } from '../../../core/components/team-create-dialog.component';
-import { TeamCreatedEvent } from '../../../core/models/team-create.model';
+import { TeamCreateDialogComponent } from '../components/team-create-dialog.component';
+import { TeamCreatedEvent } from '../models/team-create.model';
 
 /**
  * 團隊節點介面
@@ -13942,10 +14239,116 @@ export * from './components/organization-card.component';
 export * from './components/team-management.component';
 export * from './components/security-manager.component';
 export * from './components/organization-roles.component';
+export * from './components/organization-create-dialog.component';
+export * from './components/team-create-dialog.component';
 export * from './services/organization-api.service';
 export * from './services/permission.service';
 export * from './models/organization.model';
+export * from './models/organization-create.model';
+export * from './models/team-create.model';
 export * from './routes/organization.routes';
+```
+
+## File: angular/src/app/features/user/auth/role.guard.ts
+```typescript
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { AuthService } from '../../../core/services/auth.service';
+import { PermissionService } from '../../../core/services/permission.service';
+import { OrgRole } from '../../../core/models/auth.model';
+
+export function roleGuard(expectedRole: string): CanActivateFn {
+  return () => {
+    const authService = inject(AuthService);
+    const permissionService = inject(PermissionService);
+    const router = inject(Router);
+
+    const currentAccount = authService.currentAccount();
+    
+    if (!currentAccount) {
+      router.navigate(['/login']);
+      return false;
+    }
+
+    // 檢查用戶角色
+    if (currentAccount.type === 'user') {
+      const user = currentAccount;
+      const permissions = user.permissions;
+      
+      // 檢查是否有預期角色
+      if (permissions.roles.includes(expectedRole)) {
+        return true;
+      }
+      
+      // 如果沒有預期角色，重定向到未授權頁面
+      router.navigate(['/unauthorized']);
+      return false;
+    }
+
+    // 組織帳戶不支援角色守衛
+    router.navigate(['/unauthorized']);
+    return false;
+  };
+}
+
+// 組織角色守衛
+export function orgRoleGuard(expectedRole: OrgRole): CanActivateFn {
+  return () => {
+    const authService = inject(AuthService);
+    const permissionService = inject(PermissionService);
+    const router = inject(Router);
+
+    const currentAccount = authService.currentAccount();
+    
+    if (!currentAccount) {
+      router.navigate(['/login']);
+      return false;
+    }
+
+    // 檢查用戶是否為組織成員
+    if (currentAccount.type === 'user') {
+      const user = currentAccount;
+      
+      // 檢查組織角色
+      if (permissionService.hasOrgRole(expectedRole)) {
+        return true;
+      }
+      
+      // 沒有權限，重定向到未授權頁面
+      router.navigate(['/unauthorized']);
+      return false;
+    }
+
+    // 組織帳戶不支援此守衛
+    router.navigate(['/unauthorized']);
+    return false;
+  };
+}
+
+// 權限守衛
+export function permissionGuard(action: string, resource: string): CanActivateFn {
+  return () => {
+    const authService = inject(AuthService);
+    const permissionService = inject(PermissionService);
+    const router = inject(Router);
+
+    const currentAccount = authService.currentAccount();
+    
+    if (!currentAccount) {
+      router.navigate(['/login']);
+      return false;
+    }
+
+    // 檢查權限
+    if (permissionService.can(action, resource)) {
+      return true;
+    }
+
+    // 沒有權限，重定向到未授權頁面
+    router.navigate(['/unauthorized']);
+    return false;
+  };
+}
 ```
 
 ## File: angular/src/app/features/user/profile/profile-management.component.ts
@@ -13965,8 +14368,8 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 
-import { UserService } from '../user.service';
-import { User, SocialAccount, Certificate, NotificationPreferences, PrivacySettings } from '../user.model';
+import { UserService } from '../services/user.service';
+import { User, SocialAccount, Certificate, NotificationPreferences, PrivacySettings } from '../models/user.model';
 import { AvatarUtils } from '../../../core/utils/avatar.utils';
 
 /**
@@ -14562,123 +14965,6 @@ export class ProfileManagementComponent implements OnInit {
   getAvatarUrl(avatar: string | undefined): string {
     return AvatarUtils.getAvatarUrl(avatar);
   }
-}
-```
-
-## File: angular/src/styles.scss
-```scss
-/* You can add global styles to this file, and also import other style files */
-
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-
-
-body {
-  margin: 0;
-  font-family: 'Roboto', sans-serif;
-  background-color: #f3f4f6;
-}
-```
-
-## File: angular/src/app/features/user/auth/role.guard.ts
-```typescript
-import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
-import { PermissionService } from '../../../core/services/permission.service';
-import { OrgRole } from '../../../core/models/auth.model';
-
-export function roleGuard(expectedRole: string): CanActivateFn {
-  return () => {
-    const authService = inject(AuthService);
-    const permissionService = inject(PermissionService);
-    const router = inject(Router);
-
-    const currentAccount = authService.currentAccount();
-    
-    if (!currentAccount) {
-      router.navigate(['/login']);
-      return false;
-    }
-
-    // 檢查用戶角色
-    if (currentAccount.type === 'user') {
-      const user = currentAccount;
-      const permissions = user.permissions;
-      
-      // 檢查是否有預期角色
-      if (permissions.roles.includes(expectedRole)) {
-        return true;
-      }
-      
-      // 如果沒有預期角色，重定向到未授權頁面
-      router.navigate(['/unauthorized']);
-      return false;
-    }
-
-    // 組織帳戶不支援角色守衛
-    router.navigate(['/unauthorized']);
-    return false;
-  };
-}
-
-// 組織角色守衛
-export function orgRoleGuard(expectedRole: OrgRole): CanActivateFn {
-  return () => {
-    const authService = inject(AuthService);
-    const permissionService = inject(PermissionService);
-    const router = inject(Router);
-
-    const currentAccount = authService.currentAccount();
-    
-    if (!currentAccount) {
-      router.navigate(['/login']);
-      return false;
-    }
-
-    // 檢查用戶是否為組織成員
-    if (currentAccount.type === 'user') {
-      const user = currentAccount;
-      
-      // 檢查組織角色
-      if (permissionService.hasOrgRole(expectedRole)) {
-        return true;
-      }
-      
-      // 沒有權限，重定向到未授權頁面
-      router.navigate(['/unauthorized']);
-      return false;
-    }
-
-    // 組織帳戶不支援此守衛
-    router.navigate(['/unauthorized']);
-    return false;
-  };
-}
-
-// 權限守衛
-export function permissionGuard(action: string, resource: string): CanActivateFn {
-  return () => {
-    const authService = inject(AuthService);
-    const permissionService = inject(PermissionService);
-    const router = inject(Router);
-
-    const currentAccount = authService.currentAccount();
-    
-    if (!currentAccount) {
-      router.navigate(['/login']);
-      return false;
-    }
-
-    // 檢查權限
-    if (permissionService.can(action, resource)) {
-      return true;
-    }
-
-    // 沒有權限，重定向到未授權頁面
-    router.navigate(['/unauthorized']);
-    return false;
-  };
 }
 ```
 

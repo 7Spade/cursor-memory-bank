@@ -149,8 +149,10 @@ import {
             <mat-spinner diameter="20"></mat-spinner>
             建立中...
           } @else {
-            <mat-icon>add</mat-icon>
-            建立組織
+            <ng-container>
+              <mat-icon>add</mat-icon>
+              建立組織
+            </ng-container>
           }
         </button>
       </div>
