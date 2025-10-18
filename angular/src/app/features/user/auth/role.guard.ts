@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { Auth } from '@angular/fire/auth';
 import { Firestore, doc, getDoc } from '@angular/fire/firestore';
 import { authState } from 'rxfire/auth';
-import { from, map, switchMap } from 'rxjs';
+import { from, map, switchMap, of, catchError } from 'rxjs';
 
 export function roleGuard(expectedRole: string): CanActivateFn {
   return () => {
@@ -28,13 +28,20 @@ export function roleGuard(expectedRole: string): CanActivateFn {
           })
         ).pipe(
           map(docSnap => {
-            const role = docSnap.data()?.['role'];
+            const role = docSnap.exists() ? docSnap.data()?.['role'] : 'viewer';
             if (role === expectedRole) {
               return true;
             } else {
               router.navigate(['/unauthorized']);
               return false;
             }
+          }),
+          catchError(() => {
+            if (expectedRole === 'viewer') {
+              return of(true);
+            }
+            router.navigate(['/unauthorized']);
+            return of(false);
           })
         );
       })
