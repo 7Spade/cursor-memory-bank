@@ -138,5 +138,5 @@ Type 'PLAN' to switch to planning mode
 → If Level 2-4: Trigger PLAN Mode transition.
 ```
 
-**Next Step (Level 1):** Complete VAN Initialization (e.g., initialize graph bank if needed).
+**Next Step (Level 1):** Complete VAN Initialization (e.g., initialize Graph Bank if needed).
 **Next Step (Level 2-4):** Exit VAN mode and initiate PLAN mode. 

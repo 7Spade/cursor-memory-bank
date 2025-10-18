@@ -1,5 +1,5 @@
 ---
-description: Platform detection and command adaptation for isolation-focused graph bank
+description: Platform detection and command adaptation for isolation-focused Graph Bank
 globs: platform-awareness.mdc
 alwaysApply: false
 ---

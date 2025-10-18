@@ -5,8 +5,8 @@ alwaysApply: false
 ---
 # OPTIMIZED FILE VERIFICATION SYSTEM
 
-🚨 CRITICAL: graph bank VERIFICATION REQUIRED 🚨
-graph bank structure MUST exist before any file operations
+🚨 CRITICAL: GRAPH BANK VERIFICATION REQUIRED 🚨
+Graph Bank structure MUST exist before any file operations
 This check MUST be executed first in all verification processes
 
 > **TL;DR:** This system provides a structured approach to verify file structure integrity before task implementation, with emphasis on efficient checks and clear status reporting.
@@ -15,14 +15,14 @@ This check MUST be executed first in all verification processes
 
 ```mermaid
 graph TD
-    %% Critical graph bank verification - MUST be first
-    Start["Start File Verification"] --> MemBankCheck{"graph bank<br>Exists?"}
-    MemBankCheck -->|"No"| CreateMemBank["CREATE graph bank<br>[CRITICAL]"]
-    MemBankCheck -->|"Yes"| VerifyMemBankComplete["Verify graph bank<br>Structure Complete"]
+    %% Critical Graph Bank verification - MUST be first
+    Start["Start File Verification"] --> MemBankCheck{"Graph Bank<br>Exists?"}
+    MemBankCheck -->|"No"| CreateMemBank["CREATE GRAPH BANK<br>[CRITICAL]"]
+    MemBankCheck -->|"Yes"| VerifyMemBankComplete["Verify Graph Bank<br>Structure Complete"]
     CreateMemBank --> VerifyMemBankComplete
     
     VerifyMemBankComplete --> PassCheck{"All Critical<br>Checks Pass?"}
-    PassCheck -->|"No"| AbortAll["⛔ ABORT ALL OPERATIONS<br>Fix graph bank First"]
+    PassCheck -->|"No"| AbortAll["⛔ ABORT ALL OPERATIONS<br>Fix Graph Bank First"]
     PassCheck -->|"Yes"| MainVerification
 
     %% Regular verification flow continues here
@@ -56,18 +56,18 @@ graph TD
     style Complete fill:#10b981,stroke:#059669,color:white
 ```
 
-## 🧩 graph bank VERIFICATION - CRITICAL COMPONENT
+## 🧩 GRAPH BANK VERIFICATION - CRITICAL COMPONENT
 
-graph bank verification MUST be executed first in any file verification process:
+Graph Bank verification MUST be executed first in any file verification process:
 
 ```javascript
-function verifyMemoryBank() {
-  // Check if graph bank exists
+function verifyGraphBank() {
+  // Check if Graph Bank exists
   const memoryBankExists = checkDirectoryExists("graph-bank");
   if (!memoryBankExists) {
-    console.error("⛔ CRITICAL ERROR: graph bank does not exist");
-    createMemoryBankStructure();
-    return verifyMemoryBankCreation();
+    console.error("⛔ CRITICAL ERROR: Graph Bank does not exist");
+    createGraphBankStructure();
+    return verifyGraphBankCreation();
   }
   
   // Check required subdirectories
@@ -80,9 +80,9 @@ function verifyMemoryBank() {
   
   const missingDirs = requiredDirs.filter(dir => !checkDirectoryExists(dir));
   if (missingDirs.length > 0) {
-    console.error(`⛔ CRITICAL ERROR: Missing graph bank directories: ${missingDirs.join(", ")}`);
+    console.error(`⛔ CRITICAL ERROR: Missing Graph Bank directories: ${missingDirs.join(", ")}`);
     createMissingDirectories(missingDirs);
-    return verifyMemoryBankCreation();
+    return verifyGraphBankCreation();
   }
   
   // Check critical files
@@ -95,30 +95,30 @@ function verifyMemoryBank() {
   if (missingFiles.length > 0) {
     console.error(`⛔ CRITICAL ERROR: Missing critical files: ${missingFiles.join(", ")}`);
     createMissingFiles(missingFiles);
-    return verifyMemoryBankCreation();
+    return verifyGraphBankCreation();
   }
   
-  return true; // graph bank verification successful
+  return true; // Graph Bank verification successful
 }
 
 // MANDATORY: This must be called before any other verification
-const memoryBankVerified = verifyMemoryBank();
+const memoryBankVerified = verifyGraphBank();
 if (!memoryBankVerified) {
-  throw new Error("⛔ graph bank VERIFICATION FAILED - CANNOT PROCEED");
+  throw new Error("⛔ GRAPH BANK VERIFICATION FAILED - CANNOT PROCEED");
 }
 ```
 
-## 📋 graph bank VERIFICATION CHECKLIST
+## 📋 GRAPH BANK VERIFICATION CHECKLIST
 
 ```
-✓ graph bank VERIFICATION CHECKLIST
-- graph bank directory exists? [YES/NO]
+✓ GRAPH BANK VERIFICATION CHECKLIST
+- Graph Bank directory exists? [YES/NO]
 - Required subdirectories exist? [YES/NO]
 - Critical files exist? [YES/NO]
 - File content is valid? [YES/NO]
 
-→ If ALL YES: graph bank verification passed - Continue file verification
-→ If ANY NO: STOP ALL PROCESSING and FIX graph bank
+→ If ALL YES: Graph Bank verification passed - Continue file verification
+→ If ANY NO: STOP ALL PROCESSING and FIX GRAPH BANK
 ```
 
 ## 🔍 BATCH VERIFICATION WORKFLOW
@@ -210,7 +210,7 @@ Optimize template creation with a single script:
 # Windows - PowerShell
 $templates = @{
     "tasks.md" = @"
-# graph bank: Tasks
+# Graph Bank: Tasks
 
 ## Current Task
 [Task not yet defined]
@@ -226,7 +226,7 @@ $templates = @{
 "@
 
     "graph-bank\activeContext.md" = @"
-# graph bank: Active Context
+# Graph Bank: Active Context
 
 ## Current Focus
 [No active focus defined]
@@ -298,5 +298,5 @@ foreach ($file in $templates.Keys) {
 - Created files: [list]
 - All components verified
 
-graph bank system ready for use.
+Graph Bank system ready for use.
 ``` 

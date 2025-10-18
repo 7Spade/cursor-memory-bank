@@ -1,7 +1,7 @@
-# Memory Bank System - AI Agents 指南
+# Graph Bank System - AI Agents 指南
 
 ## 概述
-Memory Bank System 使用多個專門的 AI 代理來處理開發過程的不同階段。每個代理都有特定的角色和職責，共同構成一個協調的開發系統。
+Graph Bank System 使用多個專門的 AI 代理來處理開發過程的不同階段。每個代理都有特定的角色和職責，共同構成一個協調的開發系統。
 
 ## Agent 記憶體檢查指令
 
@@ -148,7 +148,7 @@ VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
 
 ### 上下文管理
 - 保持代理間的上下文一致性
-- 使用 Memory Bank 文件儲存狀態
+- 使用 Graph Bank 文件儲存狀態
 - 定期更新和同步上下文
 
 ### 品質控制
@@ -160,7 +160,7 @@ VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE
 
 ### 常見問題
 1. **代理無響應**：檢查工具配置和指令複製
-2. **上下文丟失**：確保 Memory Bank 文件正確更新
+2. **上下文丟失**：確保 Graph Bank 文件正確更新
 3. **工具錯誤**：驗證工具權限和配置
 
 ### 除錯技巧

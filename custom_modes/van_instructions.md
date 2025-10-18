@@ -1,6 +1,6 @@
-# ADAPTIVE MEMORY-BASED ASSISTANT SYSTEM - ENTRY POINT
+# ADAPTIVE GRAPH-BASED ASSISTANT SYSTEM - ENTRY POINT
 
-> **TL;DR:** I am an AI assistant implementing a structured Memory Bank system that maintains context across sessions through specialized modes that handle different phases of the development process.
+> **TL;DR:** I am an AI assistant implementing a structured Graph Bank system that maintains context across sessions through specialized modes that handle different phases of the development process.
 
 ```mermaid
 graph TD
@@ -20,91 +20,91 @@ graph TD
     Implement --> ImplResp["Respond: OK IMPLEMENT"]
     QA --> QAResp["Respond: OK QA"]
     
-    %% Memory Bank Check
-    VanResp --> CheckMB_Van["Check Memory Bank<br>& tasks.md Status"]
-    PlanResp --> CheckMB_Plan["Check Memory Bank<br>& tasks.md Status"]
-    CreativeResp --> CheckMB_Creative["Check Memory Bank<br>& tasks.md Status"]
-    ImplResp --> CheckMB_Impl["Check Memory Bank<br>& tasks.md Status"]
-    QAResp --> CheckMB_QA["Check Memory Bank<br>& tasks.md Status"]
+    %% Graph Bank Check
+    VanResp --> CheckGB_Van["Check Graph Bank<br>& tasks.md Status"]
+    PlanResp --> CheckGB_Plan["Check Graph Bank<br>& tasks.md Status"]
+    CreativeResp --> CheckGB_Creative["Check Graph Bank<br>& tasks.md Status"]
+    ImplResp --> CheckGB_Impl["Check Graph Bank<br>& tasks.md Status"]
+    QAResp --> CheckGB_QA["Check Graph Bank<br>& tasks.md Status"]
     
     %% Rule Loading
-    CheckMB_Van --> LoadVan["Load Rule:<br>isolation_rules/visual-maps/van_mode_split/van-mode-map"]
-    CheckMB_Plan --> LoadPlan["Load Rule:<br>isolation_rules/visual-maps/plan-mode-map"]
-    CheckMB_Creative --> LoadCreative["Load Rule:<br>isolation_rules/visual-maps/creative-mode-map"]
-    CheckMB_Impl --> LoadImpl["Load Rule:<br>isolation_rules/visual-maps/implement-mode-map"]
-    CheckMB_QA --> LoadQA["Load Rule:<br>isolation_rules/visual-maps/qa-mode-map"]
+    CheckGB_Van --> LoadVan["Load Rule:<br>isolation_rules/visual-maps/van_mode_split/van-mode-map"]
+    CheckGB_Plan --> LoadPlan["Load Rule:<br>isolation_rules/visual-maps/plan-mode-map"]
+    CheckGB_Creative --> LoadCreative["Load Rule:<br>isolation_rules/visual-maps/creative-mode-map"]
+    CheckGB_Impl --> LoadImpl["Load Rule:<br>isolation_rules/visual-maps/implement-mode-map"]
+    CheckGB_QA --> LoadQA["Load Rule:<br>isolation_rules/visual-maps/qa-mode-map"]
     
-    %% Rule Execution with Memory Bank Updates
+    %% Rule Execution with Graph Bank Updates
     LoadVan --> ExecVan["Execute Process<br>in Rule"]
     LoadPlan --> ExecPlan["Execute Process<br>in Rule"]
     LoadCreative --> ExecCreative["Execute Process<br>in Rule"]
     LoadImpl --> ExecImpl["Execute Process<br>in Rule"]
     LoadQA --> ExecQA["Execute Process<br>in Rule"]
     
-    %% Memory Bank Continuous Updates
-    ExecVan --> UpdateMB_Van["Update Memory Bank<br>& tasks.md"]
-    ExecPlan --> UpdateMB_Plan["Update Memory Bank<br>& tasks.md"]
-    ExecCreative --> UpdateMB_Creative["Update Memory Bank<br>& tasks.md"]
-    ExecImpl --> UpdateMB_Impl["Update Memory Bank<br>& tasks.md"]
-    ExecQA --> UpdateMB_QA["Update Memory Bank<br>& tasks.md"]
+    %% Graph Bank Continuous Updates
+    ExecVan --> UpdateGB_Van["Update Graph Bank<br>& tasks.md"]
+    ExecPlan --> UpdateGB_Plan["Update Graph Bank<br>& tasks.md"]
+    ExecCreative --> UpdateGB_Creative["Update Graph Bank<br>& tasks.md"]
+    ExecImpl --> UpdateGB_Impl["Update Graph Bank<br>& tasks.md"]
+    ExecQA --> UpdateGB_QA["Update Graph Bank<br>& tasks.md"]
     
-    %% Verification with Memory Bank Checks
-    UpdateMB_Van --> VerifyVan{"Process<br>Complete?"}
-    UpdateMB_Plan --> VerifyPlan{"Process<br>Complete?"}
-    UpdateMB_Creative --> VerifyCreative{"Process<br>Complete?"}
-    UpdateMB_Impl --> VerifyImpl{"Process<br>Complete?"}
-    UpdateMB_QA --> VerifyQA{"Process<br>Complete?"}
+    %% Verification with Graph Bank Checks
+    UpdateGB_Van --> VerifyVan{"Process<br>Complete?"}
+    UpdateGB_Plan --> VerifyPlan{"Process<br>Complete?"}
+    UpdateGB_Creative --> VerifyCreative{"Process<br>Complete?"}
+    UpdateGB_Impl --> VerifyImpl{"Process<br>Complete?"}
+    UpdateGB_QA --> VerifyQA{"Process<br>Complete?"}
     
     %% Outcomes
     VerifyVan -->|"Yes"| CompleteVan["VAN Process<br>Complete"]
     VerifyVan -->|"No"| RetryVan["Resume<br>VAN Process"]
-    RetryVan --- ReadMB_Van["Reference Memory Bank<br>for Context"]
-    ReadMB_Van --> ExecVan
+    RetryVan --- ReadGB_Van["Reference Graph Bank<br>for Context"]
+    ReadGB_Van --> ExecVan
     
     VerifyPlan -->|"Yes"| CompletePlan["PLAN Process<br>Complete"]
     VerifyPlan -->|"No"| RetryPlan["Resume<br>PLAN Process"]
-    RetryPlan --- ReadMB_Plan["Reference Memory Bank<br>for Context"]
-    ReadMB_Plan --> ExecPlan
+    RetryPlan --- ReadGB_Plan["Reference Graph Bank<br>for Context"]
+    ReadGB_Plan --> ExecPlan
     
     VerifyCreative -->|"Yes"| CompleteCreative["CREATIVE Process<br>Complete"]
     VerifyCreative -->|"No"| RetryCreative["Resume<br>CREATIVE Process"]
-    RetryCreative --- ReadMB_Creative["Reference Memory Bank<br>for Context"]
-    ReadMB_Creative --> ExecCreative
+    RetryCreative --- ReadGB_Creative["Reference Graph Bank<br>for Context"]
+    ReadGB_Creative --> ExecCreative
     
     VerifyImpl -->|"Yes"| CompleteImpl["IMPLEMENT Process<br>Complete"]
     VerifyImpl -->|"No"| RetryImpl["Resume<br>IMPLEMENT Process"]
-    RetryImpl --- ReadMB_Impl["Reference Memory Bank<br>for Context"]
-    ReadMB_Impl --> ExecImpl
+    RetryImpl --- ReadGB_Impl["Reference Graph Bank<br>for Context"]
+    ReadGB_Impl --> ExecImpl
     
     VerifyQA -->|"Yes"| CompleteQA["QA Process<br>Complete"]
     VerifyQA -->|"No"| RetryQA["Resume<br>QA Process"]
-    RetryQA --- ReadMB_QA["Reference Memory Bank<br>for Context"]
-    ReadMB_QA --> ExecQA
+    RetryQA --- ReadGB_QA["Reference Graph Bank<br>for Context"]
+    ReadGB_QA --> ExecQA
     
-    %% Final Memory Bank Updates at Completion
-    CompleteVan --> FinalMB_Van["Update Memory Bank<br>with Completion Status"]
-    CompletePlan --> FinalMB_Plan["Update Memory Bank<br>with Completion Status"]
-    CompleteCreative --> FinalMB_Creative["Update Memory Bank<br>with Completion Status"]
-    CompleteImpl --> FinalMB_Impl["Update Memory Bank<br>with Completion Status"]
-    CompleteQA --> FinalMB_QA["Update Memory Bank<br>with Completion Status"]
+    %% Final Graph Bank Updates at Completion
+    CompleteVan --> FinalGB_Van["Update Graph Bank<br>with Completion Status"]
+    CompletePlan --> FinalGB_Plan["Update Graph Bank<br>with Completion Status"]
+    CompleteCreative --> FinalGB_Creative["Update Graph Bank<br>with Completion Status"]
+    CompleteImpl --> FinalGB_Impl["Update Graph Bank<br>with Completion Status"]
+    CompleteQA --> FinalGB_QA["Update Graph Bank<br>with Completion Status"]
     
-    %% Mode Transitions with Memory Bank Preservation
-    FinalMB_Van -->|"Level 1"| TransToImpl["→ IMPLEMENT Mode"]
-    FinalMB_Van -->|"Level 2-4"| TransToPlan["→ PLAN Mode"]
-    FinalMB_Plan --> TransToCreative["→ CREATIVE Mode"]
-    FinalMB_Creative --> TransToImpl2["→ IMPLEMENT Mode"]
-    FinalMB_Impl --> TransToQA["→ QA Mode"]
+    %% Mode Transitions with Graph Bank Preservation
+    FinalGB_Van -->|"Level 1"| TransToImpl["→ IMPLEMENT Mode"]
+    FinalGB_Van -->|"Level 2-4"| TransToPlan["→ PLAN Mode"]
+    FinalGB_Plan --> TransToCreative["→ CREATIVE Mode"]
+    FinalGB_Creative --> TransToImpl2["→ IMPLEMENT Mode"]
+    FinalGB_Impl --> TransToQA["→ QA Mode"]
     
-    %% Memory Bank System
-    MemoryBank["MEMORY BANK<br>CENTRAL SYSTEM"] -.-> tasks["tasks.md<br>Source of Truth"]
-    MemoryBank -.-> projBrief["projectbrief.md<br>Foundation"]
-    MemoryBank -.-> active["activeContext.md<br>Current Focus"]
-    MemoryBank -.-> progress["progress.md<br>Implementation Status"]
+    %% Graph Bank System
+    GraphBank["GRAPH BANK<br>CENTRAL SYSTEM"] -.-> tasks["tasks.md<br>Source of Truth"]
+    GraphBank -.-> projBrief["projectbrief.md<br>Foundation"]
+    GraphBank -.-> active["activeContext.md<br>Current Focus"]
+    GraphBank -.-> progress["progress.md<br>Implementation Status"]
     
-    CheckMB_Van & CheckMB_Plan & CheckMB_Creative & CheckMB_Impl & CheckMB_QA -.-> MemoryBank
-    UpdateMB_Van & UpdateMB_Plan & UpdateMB_Creative & UpdateMB_Impl & UpdateMB_QA -.-> MemoryBank
-    ReadMB_Van & ReadMB_Plan & ReadMB_Creative & ReadMB_Impl & ReadMB_QA -.-> MemoryBank
-    FinalMB_Van & FinalMB_Plan & FinalMB_Creative & FinalMB_Impl & FinalMB_QA -.-> MemoryBank
+    CheckGB_Van & CheckGB_Plan & CheckGB_Creative & CheckGB_Impl & CheckGB_QA -.-> GraphBank
+    UpdateGB_Van & UpdateGB_Plan & UpdateGB_Creative & UpdateGB_Impl & UpdateGB_QA -.-> GraphBank
+    ReadGB_Van & ReadGB_Plan & ReadGB_Creative & ReadGB_Impl & ReadGB_QA -.-> GraphBank
+    FinalGB_Van & FinalGB_Plan & FinalGB_Creative & FinalGB_Impl & FinalGB_QA -.-> GraphBank
     
     %% Error Handling
     Error["⚠️ ERROR<br>DETECTION"] -->|"Todo App"| BlockCreative["⛔ BLOCK<br>creative-mode-map"]
@@ -150,7 +150,7 @@ graph TD
     style CompleteImpl fill:#8cff8c,stroke:#4dbb5f,color:black
     style CompleteQA fill:#8cff8c,stroke:#4dbb5f,color:black
     
-    style MemoryBank fill:#f9d77e,stroke:#d9b95c,stroke-width:2px,color:black
+    style GraphBank fill:#f9d77e,stroke:#d9b95c,stroke-width:2px,color:black
     style tasks fill:#f9d77e,stroke:#d9b95c,color:black
     style projBrief fill:#f9d77e,stroke:#d9b95c,color:black
     style active fill:#f9d77e,stroke:#d9b95c,color:black
@@ -162,7 +162,7 @@ graph TD
     style UseCorrectFn fill:#8cff8c,stroke:#4dbb5f,color:black
 ```
 
-## MEMORY BANK FILE STRUCTURE
+## GRAPH BANK FILE STRUCTURE
 
 ```mermaid
 flowchart TD

@@ -5,8 +5,8 @@ alwaysApply: false
 ---
 # VAN MODE: INITIALIZATION PROCESS MAP
 
-🚨 MANDATORY FIRST STEP: graph bank CREATION 🚨
-NO OPERATION CAN PROCEED WITHOUT graph bank STRUCTURE
+🚨 MANDATORY FIRST STEP: GRAPH BANK CREATION 🚨
+NO OPERATION CAN PROCEED WITHOUT GRAPH BANK STRUCTURE
 
 > **TL;DR:** This visual map defines the VAN mode process for project initialization, task analysis, and technical validation. It guides users through platform detection, file verification, complexity determination, and technical validation to ensure proper setup before implementation.
 
@@ -20,12 +20,12 @@ graph TD
     CheckPath --> AdaptCmds["Adapt Commands if Needed"]
     AdaptCmds --> PlatformCP["⛔ PLATFORM CHECKPOINT"]
     
-    %% Add Critical graph bank Checkpoint
-    PlatformCP --> MemoryBankCheck{"graph bank<br>Exists?"}
-    MemoryBankCheck -->|"No"| CreateMemoryBank["CREATE graph bank<br>[CRITICAL STEP]"]
-    MemoryBankCheck -->|"Yes"| BasicFileVerify["BASIC FILE VERIFICATION"]
-    CreateMemoryBank --> MemoryBankCP["⛔ graph bank VERIFICATION [REQUIRED]"]
-    MemoryBankCP --> BasicFileVerify
+    %% Add Critical Graph Bank Checkpoint
+    PlatformCP --> GraphBankCheck{"Graph Bank<br>Exists?"}
+    GraphBankCheck -->|"No"| CreateGraphBank["CREATE GRAPH BANK<br>[CRITICAL STEP]"]
+    GraphBankCheck -->|"Yes"| BasicFileVerify["BASIC FILE VERIFICATION"]
+    CreateGraphBank --> GraphBankCP["⛔ GRAPH BANK VERIFICATION [REQUIRED]"]
+    GraphBankCP --> BasicFileVerify
     
     %% Basic File Verification with checkpoint
     BasicFileVerify --> BatchCheck["Batch Check Essential Components"]
@@ -43,7 +43,7 @@ graph TD
     CRITICALGATE --> ForceExit["Exit to PLAN mode"]
     
     %% Level 1 continues normally
-    ComplexityCP --> InitSystem["INITIALIZE graph bank"]
+    ComplexityCP --> InitSystem["INITIALIZE GRAPH BANK"]
     InitSystem --> Complete1["LEVEL 1 INITIALIZATION COMPLETE"]
     
     %% For Level 2+ tasks after PLAN and CREATIVE modes
@@ -57,9 +57,9 @@ graph TD
     
     %% Style nodes
     style PlatformCP fill:#f55,stroke:#d44,color:white
-    style MemoryBankCP fill:#ff0000,stroke:#990000,color:white,stroke-width:3px
-    style MemoryBankCheck fill:#ff0000,stroke:#990000,color:white,stroke-width:3px
-    style CreateMemoryBank fill:#ff0000,stroke:#990000,color:white,stroke-width:3px
+    style GraphBankCP fill:#ff0000,stroke:#990000,color:white,stroke-width:3px
+    style GraphBankCheck fill:#ff0000,stroke:#990000,color:white,stroke-width:3px
+    style CreateGraphBank fill:#ff0000,stroke:#990000,color:white,stroke-width:3px
     style BasicFileCP fill:#f55,stroke:#d44,color:white
     style ComplexityCP fill:#f55,stroke:#d44,color:white
     style CRITICALGATE fill:#ff0000,stroke:#990000,color:white,stroke-width:3px
@@ -103,11 +103,11 @@ graph TD
 ```mermaid
 graph TD
     FV["File Verification"] --> CheckFiles["Check Essential Files"]
-    CheckFiles --> CheckMB["Check graph bank<br>Structure"]
-    CheckMB --> MBExists{"graph bank<br>Exists?"}
+    CheckFiles --> CheckMB["Check Graph Bank<br>Structure"]
+    CheckMB --> MBExists{"Graph Bank<br>Exists?"}
     
-    MBExists -->|"Yes"| VerifyMB["Verify graph bank<br>Contents"]
-    MBExists -->|"No"| CreateMB["Create graph bank<br>Structure"]
+    MBExists -->|"Yes"| VerifyMB["Verify Graph Bank<br>Contents"]
+    MBExists -->|"No"| CreateMB["Create Graph Bank<br>Structure"]
     
     CheckFiles --> CheckDocs["Check Documentation<br>Files"]
     CheckDocs --> DocsExist{"Docs<br>Exist?"}
@@ -115,7 +115,7 @@ graph TD
     DocsExist -->|"Yes"| VerifyDocs["Verify Documentation<br>Structure"]
     DocsExist -->|"No"| CreateDocs["Create Documentation<br>Structure"]
     
-    VerifyMB & CreateMB --> MBCP["graph bank<br>Checkpoint"]
+    VerifyMB & CreateMB --> MBCP["Graph Bank<br>Checkpoint"]
     VerifyDocs & CreateDocs --> DocsCP["Documentation<br>Checkpoint"]
     
     MBCP & DocsCP --> FileComplete["File Verification<br>Complete"]

@@ -162,7 +162,7 @@ graph LR
     style Doc fill:#4dbbbb,stroke:#368787,color:white
 ```
 
-## 🔄 INTEGRATION WITH graph bank
+## 🔄 INTEGRATION WITH GRAPH BANK
 
 ```mermaid
 graph TD
@@ -171,7 +171,7 @@ graph TD
     L3 --> TM["Structured<br>tasks.md"]
     L3 --> PM["Detailed<br>progress.md"]
     
-    PB & AC & TM & PM --> MB["graph bank<br>Integration"]
+    PB & AC & TM & PM --> MB["Graph Bank<br>Integration"]
     MB --> NextPhase["Proceed to<br>Implementation"]
 ```
 

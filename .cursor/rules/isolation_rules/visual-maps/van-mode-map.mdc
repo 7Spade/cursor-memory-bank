@@ -34,7 +34,7 @@ graph TD
     CRITICALGATE --> ForceExit["Exit to PLAN mode"]
     
     %% Level 1 continues normally
-    ComplexityCP --> InitSystem["INITIALIZE graph bank"]
+    ComplexityCP --> InitSystem["INITIALIZE GRAPH BANK"]
     InitSystem --> Complete1["LEVEL 1 INITIALIZATION COMPLETE"]
     
     %% For Level 2+ tasks after PLAN and CREATIVE modes
@@ -91,11 +91,11 @@ graph TD
 ```mermaid
 graph TD
     FV["File Verification"] --> CheckFiles["Check Essential Files"]
-    CheckFiles --> CheckMB["Check graph bank<br>Structure"]
-    CheckMB --> MBExists{"graph bank<br>Exists?"}
+    CheckFiles --> CheckMB["Check Graph Bank<br>Structure"]
+    CheckMB --> MBExists{"Graph Bank<br>Exists?"}
     
-    MBExists -->|"Yes"| VerifyMB["Verify graph bank<br>Contents"]
-    MBExists -->|"No"| CreateMB["Create graph bank<br>Structure"]
+    MBExists -->|"Yes"| VerifyMB["Verify Graph Bank<br>Contents"]
+    MBExists -->|"No"| CreateMB["Create Graph Bank<br>Structure"]
     
     CheckFiles --> CheckDocs["Check Documentation<br>Files"]
     CheckDocs --> DocsExist{"Docs<br>Exist?"}
@@ -103,7 +103,7 @@ graph TD
     DocsExist -->|"Yes"| VerifyDocs["Verify Documentation<br>Structure"]
     DocsExist -->|"No"| CreateDocs["Create Documentation<br>Structure"]
     
-    VerifyMB & CreateMB --> MBCP["graph bank<br>Checkpoint"]
+    VerifyMB & CreateMB --> MBCP["Graph Bank<br>Checkpoint"]
     VerifyDocs & CreateDocs --> DocsCP["Documentation<br>Checkpoint"]
     
     MBCP & DocsCP --> FileComplete["File Verification<br>Complete"]

@@ -24,7 +24,7 @@ graph LR
 
     %% Document connections for each phase (conceptual links to mode guidance)
     Init -.-> InitDocs["Core Rules & L3 Confirmation"]
-    DocSetup -.-> DocSetupDocs["graph bank Setup for L3"]
+    DocSetup -.-> DocSetupDocs["Graph Bank Setup for L3"]
     Plan -.-> PlanDocs["Comprehensive Feature Plan"]
     Creative -.-> CreativeDocs["Targeted Design Documents"]
     Impl -.-> ImplDocs["Feature Implementation & Testing"]
@@ -77,12 +77,12 @@ This phase is largely completed in VAN mode, which identifies the task as Level 
       * Relevant Core Rules loaded (e.g., `Core/graph-bank-paths.mdc`, `Core/main-optimized.mdc`).
   * **Steps within this Workflow File (Confirmation):**
     1.  Confirm task is Level 3 by checking `graph-bank/tasks.md`.
-    2.  Ensure core graph bank structure and paths are known (AI should have internalized from `main` rule).
+    2.  Ensure core Graph Bank structure and paths are known (AI should have internalized from `main` rule).
   * **Milestone Checkpoint:**
     ```
     ✓ INITIALIZATION CONFIRMED (L3)
     - Task correctly identified as Level 3 in tasks.md? [YES/NO]
-    - Core graph bank files (tasks.md, activeContext.md) accessible via canonical paths? [YES/NO]
+    - Core Graph Bank files (tasks.md, activeContext.md) accessible via canonical paths? [YES/NO]
 
     → If all YES: Proceed to Documentation Setup for L3.
     → If any NO: Revisit VAN mode or core file setup.
@@ -90,7 +90,7 @@ This phase is largely completed in VAN mode, which identifies the task as Level 
 
 ### Phase 2: DOCUMENTATION SETUP (L3 Specific)
 
-Prepare the graph bank for a Level 3 feature.
+Prepare the Graph Bank for a Level 3 feature.
 
 ```mermaid
 graph TD

@@ -658,7 +658,7 @@ Communicate architecture to stakeholders:
 [Description of how feedback will be collected and incorporated]
 ```
 
-## 📋 graph bank INTEGRATION
+## 📋 GRAPH BANK INTEGRATION
 
 ```mermaid
 flowchart TD
@@ -670,16 +670,16 @@ flowchart TD
     Architecture --> SP[systemPatterns.md]
     Architecture --> TC[techContext.md]
     
-    PB & PC & SP & TC --> MBI[graph bank<br>Integration]
+    PB & PC & SP & TC --> MBI[Graph Bank<br>Integration]
     MBI --> Next[Implementation<br>Phase]
     
     class PB,PC,SP,TC memfile
     class Architecture,MBI,Next process
 ```
 
-### graph bank Updates
+### Graph Bank Updates
 
-Update the following graph bank files during architectural planning:
+Update the following Graph Bank files during architectural planning:
 
 1. **projectbrief.md**
    - Update with architectural vision
@@ -756,7 +756,7 @@ Architecture Validation
 - Quality attribute scenarios assessed? [YES/NO]
 - Architecture review conducted? [YES/NO]
 
-graph bank Integration
+Graph Bank Integration
 - projectbrief.md updated? [YES/NO]
 - productContext.md updated? [YES/NO]
 - systemPatterns.md updated? [YES/NO]
@@ -794,7 +794,7 @@ For situations requiring a more compact architectural planning approach:
 - **Risk 1**: [Brief description] - **Mitigation**: [Brief approach]
 - **Risk 2**: [Brief description] - **Mitigation**: [Brief approach]
 
-### graph bank Updates
+### Graph Bank Updates
 - [Brief description of updates needed]
 ```
 

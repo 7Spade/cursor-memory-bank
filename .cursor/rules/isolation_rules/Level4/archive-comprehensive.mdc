@@ -32,7 +32,7 @@ flowchart TD
     OpDoc --> KnowledgeDoc[Create Knowledge<br>Transfer Documentation]
     KnowledgeDoc --> CrossRef[Create Cross-Reference<br>Documentation]
     CrossRef --> Archive[Archive All<br>Project Materials]
-    Archive --> UpdateMB[Update Memory<br>Bank]
+    Archive --> UpdateMB[Update Graph<br>Bank]
     UpdateMB --> Verification{Archiving<br>Verification}
     Verification -->|Pass| Complete([Archiving<br>Complete])
     Verification -->|Fail| Revise[Revise<br>Archiving]
@@ -467,7 +467,7 @@ flowchart TD
     Consolidate --> CrossRef[Create Cross-Reference<br>Index]
     CrossRef --> Version[Version All<br>Documentation]
     Version --> Archive[Archive in<br>Repository]
-    Archive --> UpdateMB[Update Memory<br>Bank]
+    Archive --> UpdateMB[Update Graph<br>Bank]
     UpdateMB --> AccessControl[Establish Access<br>Controls]
     AccessControl --> Announce[Announce<br>Availability]
     Announce --> Verification{Archiving<br>Verification}
@@ -478,7 +478,7 @@ flowchart TD
     Consolidate -.-> AllDocs((Consolidated<br>Documentation))
     CrossRef -.-> Index((Cross-Reference<br>Index))
     Archive -.-> Repo((Archive<br>Repository))
-    UpdateMB -.-> MB((Updated Memory<br>Bank))
+    UpdateMB -.-> MB((Updated Graph<br>Bank))
     
     class Start,Complete milestone
     class Consolidate,CrossRef,Version,Archive,UpdateMB,AccessControl,Announce,Revise step
@@ -491,12 +491,12 @@ flowchart TD
 2. Create a cross-reference index linking all documentation
 3. Version all documentation appropriately
 4. Archive in the designated repository
-5. Update graph bank with relevant information
+5. Update Graph Bank with relevant information
 6. Establish appropriate access controls
 7. Announce availability to relevant stakeholders
 8. Verify archiving completeness and accessibility
 
-## 📋 graph bank INTEGRATION
+## 📋 GRAPH BANK INTEGRATION
 
 ```mermaid
 flowchart TD
@@ -510,16 +510,16 @@ flowchart TD
     Archiving --> TC[techContext.md]
     Archiving --> P[progress.md]
     
-    PB & PC & AC & SP & TC & P --> MBI[graph bank<br>Integration]
+    PB & PC & AC & SP & TC & P --> MBI[Graph Bank<br>Integration]
     MBI --> Next[Repository of<br>Knowledge]
     
     class PB,PC,AC,SP,TC,P memfile
     class Archiving,MBI,Next process
 ```
 
-### graph bank Updates
+### Graph Bank Updates
 
-Specific updates to make to graph bank files:
+Specific updates to make to Graph Bank files:
 
 1. **projectbrief.md**
    - Update with final system description
@@ -622,8 +622,8 @@ Project History
 - Lessons learned documented? [YES/NO]
 - Future enhancements suggested? [YES/NO]
 
-graph bank Integration
-- All graph bank files updated? [YES/NO]
+Graph Bank Integration
+- All Graph Bank files updated? [YES/NO]
 - Cross-references created? [YES/NO]
 - Documentation properly versioned? [YES/NO]
 - Archive repository established? [YES/NO]
@@ -668,8 +668,8 @@ For situations requiring a more compact archiving approach:
 - **Critical Knowledge Areas**: [Areas requiring special expertise]
 - **Training Resources**: [Links to training materials]
 
-### graph bank Links
-- [Links to updated graph bank files]
+### Graph Bank Links
+- [Links to updated Graph Bank files]
 ```
 
 ## 🚨 ARCHIVING ENFORCEMENT PRINCIPLE

@@ -152,9 +152,9 @@ For minimal mode, use this format:
 ✓ REFS: [tasks.md, progress.md, activeContext.md]
 ```
 
-## 🔄 INTEGRATION WITH graph bank
+## 🔄 INTEGRATION WITH GRAPH BANK
 
-Archiving integrates with graph bank:
+Archiving integrates with Graph Bank:
 
 ```mermaid
 graph TD

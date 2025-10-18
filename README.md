@@ -1,4 +1,4 @@
-# Memory Bank System v0.7-beta
+# Graph Bank System v0.7-beta
 
 ## A Message from the Creator
 
@@ -32,7 +32,7 @@ A token-optimized, hierarchical task management system that integrates with Curs
 
 ```mermaid
 graph TD
-    Main["Memory Bank System"] --> Modes["Custom Modes"]
+    Main["Graph Bank System"] --> Modes["Custom Modes"]
     Main --> Rules["Hierarchical Rule Loading"]
     Main --> Visual["Visual Process Maps"]
     Main --> Token["Token Optimization"]
@@ -51,11 +51,11 @@ graph TD
     style Token fill:#ff9980,stroke:#ff5533,color:black
 ```
 
-> **Personal Note**: Memory Bank is my personal hobby project that I develop for my own use in coding projects. As this is a personal project, I don't maintain an issues tracker or actively collect feedback. However, if you're using these rules and encounter issues, one of the great advantages is that you can ask the Cursor AI directly to modify or update the rules to better suit your specific workflow. The system is designed to be adaptable by the AI, allowing you to customize it for your own needs without requiring external support.
+> **Personal Note**: Graph Bank is my personal hobby project that I develop for my own use in coding projects. As this is a personal project, I don't maintain an issues tracker or actively collect feedback. However, if you're using these rules and encounter issues, one of the great advantages is that you can ask the Cursor AI directly to modify or update the rules to better suit your specific workflow. The system is designed to be adaptable by the AI, allowing you to customize it for your own needs without requiring external support.
 
-## About Memory Bank
+## About Graph Bank
 
-Memory Bank is a personal project that provides a structured approach to development using specialized modes for different phases of the development process. It uses a hierarchical rule loading architecture that loads only the rules needed for each phase, optimizing token usage and providing tailored guidance.
+Graph Bank is a personal project that provides a structured approach to development using specialized modes for different phases of the development process. It uses a hierarchical rule loading architecture that loads only the rules needed for each phase, optimizing token usage and providing tailored guidance.
 
 ### Token-Optimized Architecture
 
@@ -66,15 +66,15 @@ Version 0.7-beta introduces significant token optimization improvements:
 - **Optimized Mode Transitions**: Preserves critical context efficiently between modes
 - **Level-Specific Workflows**: Adapts documentation requirements to task complexity
 
-See the [Memory Bank Optimizations](MEMORY_BANK_OPTIMIZATIONS.md) document for detailed information about all optimization approaches.
+See the [Graph Bank Optimizations](MEMORY_BANK_OPTIMIZATIONS.md) document for detailed information about all optimization approaches.
 
 ### Beyond Basic Custom Modes
 
-While Cursor's documentation describes custom modes as primarily standalone configurations with basic prompts and tool selections, Memory Bank significantly extends this concept:
+While Cursor's documentation describes custom modes as primarily standalone configurations with basic prompts and tool selections, Graph Bank significantly extends this concept:
 
 - **Graph-Based Mode Integration**: Modes are interconnected nodes in a development workflow rather than isolated tools
 - **Workflow Progression**: Modes are designed to transition from one to another in a logical sequence (VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE)
-- **Shared Memory**: Persistent state maintained across mode transitions via Memory Bank files
+- **Shared Memory**: Persistent state maintained across mode transitions via Graph Bank files
 - **Adaptive Behavior**: Each mode adjusts its recommendations based on project complexity
 - **Built-in QA Functions**: QA capabilities can be called from any mode for technical validation
 
@@ -82,14 +82,14 @@ This approach transforms custom modes from simple AI personalities into componen
 
 ### CREATIVE Mode and Claude's "Think" Tool
 
-The CREATIVE mode in Memory Bank is conceptually based on Anthropic's Claude "Think" tool methodology, as described in their [engineering blog](https://www.anthropic.com/engineering/claude-think-tool). The v0.7-beta implements an optimized version with:
+The CREATIVE mode in Graph Bank is conceptually based on Anthropic's Claude "Think" tool methodology, as described in their [engineering blog](https://www.anthropic.com/engineering/claude-think-tool). The v0.7-beta implements an optimized version with:
 
 - Progressive documentation with tabular option comparison
 - "Detail-on-demand" approach that preserves token efficiency
 - Structured templates that scale with complexity level
 - Efficient context preservation for implementation phases
 
-For a detailed explanation of how Memory Bank implements these principles, see the [CREATIVE Mode and Claude's "Think" Tool](creative_mode_think_tool.md) document.
+For a detailed explanation of how Graph Bank implements these principles, see the [CREATIVE Mode and Claude's "Think" Tool](creative_mode_think_tool.md) document.
 
 ## Key Features
 
@@ -222,13 +222,13 @@ QA is not a separate custom mode but rather a set of validation functions that c
 
 4. **Starting to work with your project**:
    
-After successfully installing Memory Bank...
+After successfully installing Graph Bank...
 
 ## Core Files and Their Purposes
 
 ```mermaid
 graph LR
-    subgraph "Memory Bank Files"
+    subgraph "Graph Bank Files"
         Tasks["tasks.md<br>Source of Truth"]
         Active["activeContext.md<br>Current Focus"]
         Progress["progress.md<br>Implementation Status"]
@@ -269,23 +269,23 @@ graph LR
 
 ## Version Information
 
-This is version v0.7-beta of the Memory Bank system. It introduces significant token optimization improvements over v0.6-beta while maintaining all functionality. See the [Release Notes](RELEASE_NOTES.md) for detailed information about the changes.
+This is version v0.7-beta of the Graph Bank system. It introduces significant token optimization improvements over v0.6-beta while maintaining all functionality. See the [Release Notes](RELEASE_NOTES.md) for detailed information about the changes.
 
 ### Ongoing Development
 
-The Memory Bank system is actively being developed and improved. Key points to understand:
+The Graph Bank system is actively being developed and improved. Key points to understand:
 
 - **Work in Progress**: This is a beta version with ongoing development. Expect regular updates, optimizations, and new features.
 - **Feature Optimization**: The modular architecture enables continuous refinement without breaking existing functionality.
 - **Previous Version Available**: If you prefer the stability of the previous version (v0.1-legacy), you can continue using it while this version matures.
-- **Architectural Benefits**: Before deciding which version to use, please read the [Memory Bank Upgrade Guide](memory_bank_upgrade_guide.md) to understand the significant benefits of the new architecture.
+- **Architectural Benefits**: Before deciding which version to use, please read the [Graph Bank Upgrade Guide](memory_bank_upgrade_guide.md) to understand the significant benefits of the new architecture.
 
 ## Resources
 
-- [Memory Bank Optimizations](MEMORY_BANK_OPTIMIZATIONS.md) - Detailed overview of token efficiency improvements
+- [Graph Bank Optimizations](MEMORY_BANK_OPTIMIZATIONS.md) - Detailed overview of token efficiency improvements
 - [Release Notes](RELEASE_NOTES.md) - Information about the latest changes
 - [Cursor Custom Modes Documentation](https://docs.cursor.com/chat/custom-modes)
-- [Memory Bank Upgrade Guide](memory_bank_upgrade_guide.md)
+- [Graph Bank Upgrade Guide](memory_bank_upgrade_guide.md)
 - [CREATIVE Mode and Claude's "Think" Tool](creative_mode_think_tool.md)
 - Mode-specific instruction files in the `custom_modes/` directory
 

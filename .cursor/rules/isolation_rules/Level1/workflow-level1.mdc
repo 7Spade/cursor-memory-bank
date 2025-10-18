@@ -124,9 +124,9 @@ For Level 1 tasks, use this minimal structure:
   - Files changed: [File paths]
 ```
 
-## 📋 graph bank UPDATES
+## 📋 GRAPH BANK UPDATES
 
-For Level 1 tasks, make minimal graph bank updates:
+For Level 1 tasks, make minimal Graph Bank updates:
 
 1. **tasks.md**: Update with fix details
 2. **activeContext.md**: Brief mention of fix if relevant
@@ -140,7 +140,7 @@ For Level 1 tasks, make minimal graph bank updates:
 - Fix implemented and verified? [YES/NO]
 - tasks.md updated? [YES/NO]
 - Solution documented? [YES/NO]
-- graph bank minimally updated? [YES/NO]
+- Graph Bank minimally updated? [YES/NO]
 
 → If all YES: Level 1 Task Successfully Completed
 → If any NO: Address outstanding items
@@ -165,7 +165,7 @@ Escalation indicators:
 3. Testing reveals broader issues
 4. Fix impacts core functionality
 
-## 🔄 INTEGRATION WITH graph bank
+## 🔄 INTEGRATION WITH GRAPH BANK
 
 ```mermaid
 graph TD
@@ -173,7 +173,7 @@ graph TD
     Workflow --> AC["Minimal Update<br>activeContext.md"]
     Workflow --> PM["Brief Update<br>progress.md"]
     
-    TM & AC & PM --> MB["graph bank<br>Integration"]
+    TM & AC & PM --> MB["Graph Bank<br>Integration"]
     MB --> NextTask["Transition to<br>Next Task"]
 ```
 

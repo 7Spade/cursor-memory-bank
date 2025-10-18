@@ -1,6 +1,6 @@
-# Memory Bank System Release Notes
+# Graph Bank System Release Notes
 
-> **Personal Note**: Memory Bank is my personal hobby project that I develop for my own use in coding projects. As this is a personal project, I don't maintain an issues tracker or actively collect feedback. However, if you're using these rules and encounter issues, one of the great advantages is that you can ask the Cursor AI directly to modify or update the rules to better suit your specific workflow. The system is designed to be adaptable by the AI, allowing you to customize it for your own needs without requiring external support.
+> **Personal Note**: Graph Bank is my personal hobby project that I develop for my own use in coding projects. As this is a personal project, I don't maintain an issues tracker or actively collect feedback. However, if you're using these rules and encounter issues, one of the great advantages is that you can ask the Cursor AI directly to modify or update the rules to better suit your specific workflow. The system is designed to be adaptable by the AI, allowing you to customize it for your own needs without requiring external support.
 
 ## Version 0.7-beta - Token-Optimized Workflows
 
@@ -86,17 +86,17 @@
 
 ### 🧠 The Determinism Challenge in AI Workflows
 
-While Memory Bank provides robust structure through visual maps and process flows, it's important to acknowledge an inherent limitation: the non-deterministic nature of AI agents. Despite our best efforts to create well-defined pathways and structured processes, language models fundamentally operate on probability distributions rather than fixed rules.
+While Graph Bank provides robust structure through visual maps and process flows, it's important to acknowledge an inherent limitation: the non-deterministic nature of AI agents. Despite our best efforts to create well-defined pathways and structured processes, language models fundamentally operate on probability distributions rather than fixed rules.
 
-This creates what I call the "determinism paradox" – we need structure for reliability, but rigidity undermines the adaptability that makes AI valuable. Memory Bank addresses this through:
+This creates what I call the "determinism paradox" – we need structure for reliability, but rigidity undermines the adaptability that makes AI valuable. Graph Bank addresses this through:
 
 - **Guiding rather than forcing**: Using visual maps that shape behavior without rigid constraints
 - **Bounded flexibility**: Creating structured frameworks within which creative problem-solving can occur
 - **Adaptive complexity**: Adjusting guidance based on task requirements rather than enforcing one-size-fits-all processes
 
-As a companion to Memory Bank, I'm developing an MCP Server (Model-Context-Protocol) project that aims to further address this challenge by integrating deterministic code checkpoints with probabilistic language model capabilities. This hybrid approach creates a system where AI can operate flexibly while still following predictable workflows – maintaining the balance between structure and adaptability that makes Memory Bank effective.
+As a companion to Graph Bank, I'm developing an MCP Server (Model-Context-Protocol) project that aims to further address this challenge by integrating deterministic code checkpoints with probabilistic language model capabilities. This hybrid approach creates a system where AI can operate flexibly while still following predictable workflows – maintaining the balance between structure and adaptability that makes Graph Bank effective.
 
-When using Memory Bank, you may occasionally need to guide the agent back to the intended workflow. This isn't a failure of the system but rather a reflection of the fundamental tension between structure and flexibility in AI systems.
+When using Graph Bank, you may occasionally need to guide the agent back to the intended workflow. This isn't a failure of the system but rather a reflection of the fundamental tension between structure and flexibility in AI systems.
 
 ### 🔜 Upcoming Features
 - Dynamic template generation based on task characteristics
@@ -114,14 +114,14 @@ When using Memory Bank, you may occasionally need to guide the agent back to the
 ### 🔧 Requirements
 - Requires Cursor version 0.48 or higher
 - Compatible with Claude 3.7 Sonnet (recommended) and newer models
-- Compatible with all existing Memory Bank v0.6-beta.1 installations
+- Compatible with all existing Graph Bank v0.6-beta.1 installations
 
 ### 📈 Optimization Approaches
 - **Rule Loading**: Hierarchical loading with core caching and specialized lazy-loading
 - **Creative Phase**: Progressive documentation with tabular comparisons
 - **Mode Transitions**: Unified context transfer with selective preservation
 - **Level 1 Workflow**: Ultra-compact templates with consolidated updates
-- **Memory Bank**: Differential updates and context compression
+- **Graph Bank**: Differential updates and context compression
 
 ---
 Released on: May 7, 2025

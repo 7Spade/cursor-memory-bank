@@ -6,7 +6,7 @@ alwaysApply: false
 
 # ARCHIVE MODE: TASK DOCUMENTATION PROCESS MAP
 
-> **TL;DR:** This visual map guides the ARCHIVE mode process, focusing on creating comprehensive documentation of the completed task, archiving relevant files, and updating the graph bank for future reference.
+> **TL;DR:** This visual map guides the ARCHIVE mode process, focusing on creating comprehensive documentation of the completed task, archiving relevant files, and updating the Graph Bank for future reference.
 
 ## 🧭 ARCHIVE MODE PROCESS FLOW
 
@@ -251,7 +251,7 @@ When archiving is complete, update tasks.md with:
 - activeContext.md updated for next task? [YES/NO]
 - Creative phase documents archived (Level 3-4)? [YES/NO/NA]
 
-→ If all YES: Archiving complete - graph bank reset for next task
+→ If all YES: Archiving complete - Graph Bank reset for next task
 → If any NO: Complete missing archive elements
 ```
 
@@ -264,9 +264,9 @@ When archiving is complete, notify user with:
 
 ✅ Archive document created in docs/archive/
 ✅ All task documentation preserved
-✅ graph bank updated with references
+✅ Graph Bank updated with references
 ✅ Task marked as COMPLETED
 
-→ graph bank is ready for the next task
+→ Graph Bank is ready for the next task
 → To start a new task, use VAN MODE
 ``` 

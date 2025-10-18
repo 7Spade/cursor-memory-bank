@@ -31,7 +31,7 @@ graph TD
     IntegrationTesting --> E2EFeatureTesting["7. End-to-End Feature Testing<br>(Validate against user stories & requirements)"]
     E2EFeatureTesting --> AccessibilityCheck["8. Accessibility & Responsiveness Check<br>(If UI is involved)"]
     AccessibilityCheck --> CodeCleanup["9. Code Cleanup & Refinement"]
-    CodeCleanup --> UpdateMB["10. Update graph bank<br>(`tasks.md` sub-tasks, `progress.md` details)"]
+    CodeCleanup --> UpdateMB["10. Update Graph Bank<br>(`tasks.md` sub-tasks, `progress.md` details)"]
     UpdateMB --> FinalFeatureReview["11. Final Feature Review (Conceptual Peer Review if possible)"]
     FinalFeatureReview --> ImplementationDone["L3 Implementation Complete<br>Ready for REFLECT Mode"]
 

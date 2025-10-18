@@ -396,9 +396,9 @@ Architectural Alignment
 - Architectural decisions documented? [YES/NO]
 ```
 
-## 📋 INTEGRATION WITH graph bank
+## 📋 INTEGRATION WITH GRAPH BANK
 
-Level 4 task tracking is tightly integrated with the graph bank:
+Level 4 task tracking is tightly integrated with the Graph Bank:
 
 1. **projectbrief.md**: System-level tasks are derived from and linked to the project brief
 2. **productContext.md**: Tasks are aligned with business context and objectives

@@ -14,7 +14,7 @@ alwaysApply: false
 graph TD
     FixComplete["Bug Fix<br>Complete"] --> Document["Document<br>Solution"]
     Document --> UpdateTasks["Update<br>tasks.md"]
-    UpdateTasks --> MinimalUpdates["Make Minimal<br>graph bank Updates"]
+    UpdateTasks --> MinimalUpdates["Make Minimal<br>Graph Bank Updates"]
     MinimalUpdates --> CrossReference["Create Simple<br>Cross-References"]
     CrossReference --> Complete["Documentation<br>Complete"]
 ```
@@ -76,9 +76,9 @@ For in-progress tasks:
   - Location: [Component/file]
 ```
 
-## 📋 graph bank UPDATES
+## 📋 GRAPH BANK UPDATES
 
-For Level 1 tasks, make these minimal graph bank updates:
+For Level 1 tasks, make these minimal Graph Bank updates:
 
 1. **tasks.md**:
    - Update with fix details as shown above
@@ -96,7 +96,7 @@ For Level 1 tasks, make these minimal graph bank updates:
    - [YYYY-MM-DD] Fixed [issue] in [component/file].
    ```
 
-Other graph bank files typically do not need updates for Level 1 tasks unless the fix reveals important system information.
+Other Graph Bank files typically do not need updates for Level 1 tasks unless the fix reveals important system information.
 
 ## 📋 COMMON BUG CATEGORIES
 
@@ -177,7 +177,7 @@ Tested login with various special characters in email addresses (test+user@examp
 - Files changed listed? [YES/NO]
 - Verification method described? [YES/NO]
 - tasks.md updated? [YES/NO]
-- graph bank minimally updated? [YES/NO]
+- Graph Bank minimally updated? [YES/NO]
 
 → If all YES: Documentation complete
 → If any NO: Complete missing information

@@ -1,5 +1,5 @@
 ---
-description: Command execution guidelines for isolation-focused graph bank
+description: Command execution guidelines for isolation-focused Graph Bank
 globs: command-execution.mdc
 alwaysApply: false
 ---

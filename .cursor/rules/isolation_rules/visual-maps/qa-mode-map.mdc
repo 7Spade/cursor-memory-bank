@@ -5,7 +5,7 @@ alwaysApply: false
 ---
 
 
-> **TL;DR:** This enhanced QA mode provides comprehensive validation at any stage of development. It automatically detects the current phase, validates graph bank consistency, verifies task tracking, and performs phase-specific technical validation to ensure project quality throughout the development lifecycle.
+> **TL;DR:** This enhanced QA mode provides comprehensive validation at any stage of development. It automatically detects the current phase, validates Graph Bank consistency, verifies task tracking, and performs phase-specific technical validation to ensure project quality throughout the development lifecycle.
 
 ## 🔍 ENHANCED QA MODE PROCESS FLOW
 
@@ -22,8 +22,8 @@ graph TD
     
     %% Universal checks that apply to all phases
     DetectPhase --> UniversalChecks["🔍 UNIVERSAL VALIDATION"]
-    UniversalChecks --> MemoryBankCheck["1️⃣ graph bank VERIFICATION<br>Check consistency & updates"]
-    MemoryBankCheck --> TaskTrackingCheck["2️⃣ TASK TRACKING VERIFICATION<br>Validate tasks.md as source of truth"]
+    UniversalChecks --> GraphBankCheck["1️⃣ GRAPH BANK VERIFICATION<br>Check consistency & updates"]
+    GraphBankCheck --> TaskTrackingCheck["2️⃣ TASK TRACKING VERIFICATION<br>Validate tasks.md as source of truth"]
     TaskTrackingCheck --> ReferenceCheck["3️⃣ REFERENCE VALIDATION<br>Verify cross-references between docs"]
     
     %% Phase-specific validations feed into comprehensive report
@@ -35,7 +35,7 @@ graph TD
     ValidationResults -->|"No"| FailureReport["⚠️ GENERATE FAILURE REPORT<br>With specific fix instructions"]
     
     %% Success Path
-    SuccessReport --> UpdateMB["📚 Update graph bank<br>Record successful validation"]
+    SuccessReport --> UpdateMB["📚 Update Graph Bank<br>Record successful validation"]
     UpdateMB --> ContinueProcess["🚦 CONTINUE: Phase processes<br>can proceed"]
     
     %% Failure Path
@@ -48,7 +48,7 @@ graph TD
     style Start fill:#4da6ff,stroke:#0066cc,color:white
     style DetectPhase fill:#f6ad55,stroke:#c27022,color:white
     style UniversalChecks fill:#f6546a,stroke:#c30052,color:white
-    style MemoryBankCheck fill:#10b981,stroke:#059669,color:white
+    style GraphBankCheck fill:#10b981,stroke:#059669,color:white
     style TaskTrackingCheck fill:#10b981,stroke:#059669,color:white
     style ReferenceCheck fill:#10b981,stroke:#059669,color:white
     style ValidationResults fill:#f6546a,stroke:#c30052,color:white
@@ -64,7 +64,7 @@ The enhanced QA mode first determines which phase the project is currently in:
 
 ```mermaid
 graph TD
-    PD["Phase Detection"] --> CheckMB["Analyze graph bank Files"]
+    PD["Phase Detection"] --> CheckMB["Analyze Graph Bank Files"]
     CheckMB --> CheckActive["Check activeContext.md<br>for current phase"]
     CheckActive --> CheckProgress["Check progress.md<br>for recent activities"]
     CheckProgress --> CheckTasks["Check tasks.md<br>for task status"]
@@ -82,13 +82,13 @@ graph TD
     style LoadChecks fill:#10b981,stroke:#059669,color:white
 ```
 
-## 📝 UNIVERSAL graph bank VERIFICATION
+## 📝 UNIVERSAL GRAPH BANK VERIFICATION
 
-This process ensures graph bank files are consistent and up-to-date regardless of phase:
+This process ensures Graph Bank files are consistent and up-to-date regardless of phase:
 
 ```mermaid
 graph TD
-    MBVS["graph bank<br>Verification"] --> CoreCheck["Check Core Files Exist"]
+    MBVS["Graph Bank<br>Verification"] --> CoreCheck["Check Core Files Exist"]
     CoreCheck --> CoreFiles["Verify Required Files:<br>projectbrief.md<br>activeContext.md<br>tasks.md<br>progress.md"]
     
     CoreFiles --> ContentCheck["Verify Content<br>Consistency"]
@@ -96,8 +96,8 @@ graph TD
     LastModified --> CrossRef["Validate Cross-<br>References"]
     
     CrossRef --> ConsistencyCheck{"All Files<br>Consistent?"}
-    ConsistencyCheck -->|"Yes"| PassMB["✅ graph bank<br>Verification Passed"]
-    ConsistencyCheck -->|"No"| FailMB["❌ graph bank<br>Inconsistencies Found"]
+    ConsistencyCheck -->|"Yes"| PassMB["✅ Graph Bank<br>Verification Passed"]
+    ConsistencyCheck -->|"No"| FailMB["❌ Graph Bank<br>Inconsistencies Found"]
     
     FailMB --> FixSuggestions["Generate Fix<br>Suggestions"]
     
@@ -235,10 +235,10 @@ graph TD
 
 ## 📋 UNIVERSAL VALIDATION COMMAND EXECUTION
 
-### graph bank Verification Commands:
+### Graph Bank Verification Commands:
 
 ```bash
-# Check graph bank file existence and recency
+# Check Graph Bank file existence and recency
 ls -la graph-bank/
 find graph-bank/ -type f -mtime -7 | sort
 
@@ -402,7 +402,7 @@ grep -i "script.*src=" index.html
 │                                                                               │
 │ ━━━━━━━━━━━━━━━━━━━━━━━━ UNIVERSAL VALIDATION RESULTS ━━━━━━━━━━━━━━━━━━━━━━━ │
 │                                                                               │
-│ 1️⃣ graph bank VERIFICATION                                                   │
+│ 1️⃣ GRAPH BANK VERIFICATION                                                   │
 │    ✓ Core Files: [Status]                                                     │
 │    ✓ Content Consistency: [Status]                                            │
 │    ✓ Last Modified: [Status]                                                  │
@@ -444,7 +444,7 @@ If validation fails, a detailed failure report is generated:
 │                                                                                 │
 │ ━━━━━━━━━━━━━━━━━━━━━━━━━━ FAILED CHECKS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ │
 │                                                                                 │
-│ ❌ graph bank ISSUES                                                           │
+│ ❌ GRAPH BANK ISSUES                                                           │
 │    • [Specific issue details]                                                   │
 │    • [Specific issue details]                                                   │
 │                                                                                 │

@@ -1,4 +1,4 @@
-# Memory Bank System - 記憶體檢查指令參考
+# Graph Bank System - 記憶體檢查指令參考
 
 ## 🚨 強制記憶體檢查協議
 
