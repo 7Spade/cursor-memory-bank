@@ -42,7 +42,7 @@ export const appConfig: ApplicationConfig = {
           getToken: async () => {
             // 返回 debug token
             return {
-              token: environment.appCheck.debugToken,
+              token: (environment.appCheck as any).debugToken,
               expireTimeMillis: Date.now() + 3600000 // 1小時後過期
             };
           }

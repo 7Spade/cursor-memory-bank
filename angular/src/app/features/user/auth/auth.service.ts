@@ -4,6 +4,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
+  signInWithPopup,
+  GoogleAuthProvider,
   UserCredential
 } from '@angular/fire/auth';
 
@@ -21,6 +23,24 @@ export class AuthService {
 
   logout(): Promise<void> {
     return signOut(this.auth);
+  }
+
+  /**
+   * Google 社交登入
+   */
+  signInWithGoogle(): Promise<UserCredential> {
+    const provider = new GoogleAuthProvider();
+    
+    // 添加額外的 scope (可選)
+    provider.addScope('https://www.googleapis.com/auth/userinfo.email');
+    provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
+    
+    // 設定自定義參數 (可選)
+    provider.setCustomParameters({
+      'login_hint': 'user@example.com'
+    });
+    
+    return signInWithPopup(this.auth, provider);
   }
 
   get user() {

@@ -1,6 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, from, of } from 'rxjs';
+import { map, catchError, switchMap } from 'rxjs/operators';
+import { Auth, User as FirebaseUser } from '@angular/fire/auth';
+import { Firestore, doc, getDoc, setDoc, updateDoc, deleteDoc } from '@angular/fire/firestore';
+import { Storage, ref, uploadBytes, getDownloadURL, deleteObject } from '@angular/fire/storage';
 import { 
   User, 
   CreateUserRequest, 
@@ -18,23 +22,67 @@ import {
 } from './user.model';
 
 /**
- * 用戶服務 - 對齊 GitHub Account API 設計
- * 實作完整的用戶管理功能
+ * 用戶服務 - Firebase 整合版本
+ * 精簡主義實現，直接使用 app.config.ts 中的 Firebase 配置
  */
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(Auth);
+  private readonly firestore = inject(Firestore);
+  private readonly storage = inject(Storage);
   private readonly baseUrl = '/api';
 
   // ==================== 用戶管理 API ====================
   
   /**
-   * 獲取當前用戶資訊 (對齊 GitHub: GET /user)
+   * 獲取當前用戶資訊 - Firebase 整合版本
    */
-  getCurrentUser(): Observable<User> {
-    return this.http.get<User>(`${this.baseUrl}/user`);
+  getCurrentUser(): Observable<User | null> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) {
+      return of(null);
+    }
+    
+    return from(getDoc(doc(this.firestore, 'users', currentUser.uid))).pipe(
+      map(docSnap => {
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          return {
+            id: currentUser.uid,
+            uid: currentUser.uid,
+            username: data['username'] || currentUser.displayName || '',
+            email: currentUser.email || '',
+            displayName: data['displayName'] || currentUser.displayName || '',
+            bio: data['bio'] || '',
+            status: data['status'] || 'active',
+            emailVerified: currentUser.emailVerified,
+            twoFactorEnabled: data['twoFactorEnabled'] || false,
+            createdAt: data['createdAt']?.toDate() || new Date(),
+            updatedAt: data['updatedAt']?.toDate() || new Date(),
+            socialAccounts: data['socialAccounts'] || [],
+            certificates: data['certificates'] || [],
+            organizationMemberships: data['organizationMemberships'] || [],
+            notificationPreferences: data['notificationPreferences'] || {
+              email: { enabled: true, frequency: 'daily', types: [] },
+              push: { enabled: true, types: [] },
+              inApp: { enabled: true, types: [] }
+            },
+            privacySettings: data['privacySettings'] || {
+              profileVisibility: 'public',
+              emailVisibility: 'private',
+              socialAccountsVisibility: 'public',
+              certificatesVisibility: 'public',
+              activityVisibility: 'public'
+            }
+          } as User;
+        }
+        return null;
+      }),
+      catchError(() => of(null))
+    );
   }
 
   /**
@@ -45,10 +93,54 @@ export class UserService {
   }
 
   /**
-   * 更新當前用戶資訊 (對齊 GitHub: PATCH /user)
+   * 更新當前用戶資訊 - Firebase 整合版本
    */
-  updateUser(updates: UpdateUserRequest): Observable<User> {
-    return this.http.patch<User>(`${this.baseUrl}/user`, updates);
+  updateUser(updates: UpdateUserRequest): Observable<User | null> {
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) {
+      return of(null);
+    }
+    
+    const userRef = doc(this.firestore, 'users', currentUser.uid);
+    const updateData = {
+      ...updates,
+      updatedAt: new Date()
+    };
+    
+    return from(updateDoc(userRef, updateData)).pipe(
+      map(() => {
+        // 返回更新後的用戶資料
+        return {
+          id: currentUser.uid,
+          uid: currentUser.uid,
+          username: currentUser.displayName || '',
+          email: currentUser.email || '',
+          displayName: updates.displayName || currentUser.displayName || '',
+          bio: updates.bio || '',
+          status: 'active',
+          emailVerified: currentUser.emailVerified,
+          twoFactorEnabled: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          socialAccounts: [],
+          certificates: [],
+          organizationMemberships: [],
+          notificationPreferences: {
+            email: { enabled: true, frequency: 'daily', types: [] },
+            push: { enabled: true, types: [] },
+            inApp: { enabled: true, types: [] }
+          },
+          privacySettings: {
+            profileVisibility: 'public',
+            emailVisibility: 'private',
+            socialAccountsVisibility: 'public',
+            certificatesVisibility: 'public',
+            activityVisibility: 'public'
+          }
+        } as User;
+      }),
+      catchError(() => of(null))
+    );
   }
 
   /**
@@ -224,12 +316,21 @@ export class UserService {
   }
 
   /**
-   * 上傳頭像
+   * 上傳頭像 - Firebase Storage 整合版本
    */
   uploadAvatar(file: File): Observable<{ avatarUrl: string }> {
-    const formData = new FormData();
-    formData.append('avatar', file);
-    return this.http.post<{ avatarUrl: string }>(`${this.baseUrl}/user/avatar`, formData);
+    const currentUser = this.auth.currentUser;
+    if (!currentUser) {
+      return of({ avatarUrl: '' });
+    }
+    
+    const avatarRef = ref(this.storage, `avatars/${currentUser.uid}/${file.name}`);
+    
+    return from(uploadBytes(avatarRef, file)).pipe(
+      switchMap(snapshot => from(getDownloadURL(snapshot.ref))),
+      map(url => ({ avatarUrl: url })),
+      catchError(() => of({ avatarUrl: '' }))
+    );
   }
 
   /**
@@ -240,5 +341,3 @@ export class UserService {
   }
 }
 
-// 導入 map 操作符
-import { map } from 'rxjs/operators';

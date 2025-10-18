@@ -451,49 +451,56 @@ export class ProfileManagementComponent implements OnInit {
   private loadUserData() {
     this.loading.set(true);
     
-    // 模擬載入用戶資料
-    setTimeout(() => {
-      this.user.set({
-        id: '1',
-        uid: 'firebase-uid',
-        username: 'testuser',
-        email: 'test@example.com',
-        displayName: '測試用戶',
-        bio: '這是一個測試用戶',
-        status: 'active',
-        emailVerified: true,
-        twoFactorEnabled: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        socialAccounts: [],
-        certificates: [],
-        organizationMemberships: [],
-        notificationPreferences: {
-          email: { enabled: true, frequency: 'daily', types: [] },
-          push: { enabled: true, types: [] },
-          inApp: { enabled: true, types: [] }
-        },
-        privacySettings: {
-          profileVisibility: 'public',
-          emailVisibility: 'private',
-          socialAccountsVisibility: 'public',
-          certificatesVisibility: 'public',
-          activityVisibility: 'public'
+    // 使用 Firebase 整合的 UserService
+    this.userService.getCurrentUser().subscribe({
+      next: (user) => {
+        if (user) {
+          this.user.set(user);
+          this.socialAccounts.set(user.socialAccounts || []);
+          
+          // 更新表單
+          this.profileForm.patchValue({
+            displayName: user.displayName,
+            bio: user.bio,
+            location: user.location,
+            company: user.company,
+            website: user.website,
+            blog: user.blog
+          });
+          
+          this.notificationForm.patchValue({
+            emailFrequency: user.notificationPreferences?.email?.frequency || 'daily'
+          });
         }
-      });
-      this.loading.set(false);
-    }, 1000);
+        this.loading.set(false);
+      },
+      error: (error) => {
+        console.error('載入用戶資料失敗:', error);
+        this.loading.set(false);
+      }
+    });
   }
 
   // Event handlers
   onUpdateProfile() {
     if (this.profileForm.valid) {
       this.loading.set(true);
-      // TODO: 實作更新個人資料
-      setTimeout(() => {
-        this.snackBar.open('個人資料更新成功', '關閉', { duration: 3000 });
-        this.loading.set(false);
-      }, 1000);
+      
+      const updates = this.profileForm.value;
+      this.userService.updateUser(updates).subscribe({
+        next: (updatedUser) => {
+          if (updatedUser) {
+            this.user.set(updatedUser);
+            this.snackBar.open('個人資料更新成功', '關閉', { duration: 3000 });
+          }
+          this.loading.set(false);
+        },
+        error: (error) => {
+          console.error('更新個人資料失敗:', error);
+          this.snackBar.open('更新失敗，請重試', '關閉', { duration: 3000 });
+          this.loading.set(false);
+        }
+      });
     }
   }
 
@@ -540,8 +547,38 @@ export class ProfileManagementComponent implements OnInit {
   }
 
   onAvatarUpload() {
-    // TODO: 實作頭像上傳功能
-    this.snackBar.open('頭像上傳功能開發中', '關閉', { duration: 3000 });
+    // 創建文件輸入元素
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    
+    input.onchange = (event: any) => {
+      const file = event.target.files[0];
+      if (file) {
+        this.loading.set(true);
+        
+        this.userService.uploadAvatar(file).subscribe({
+          next: (result) => {
+            if (result.avatarUrl) {
+              // 更新用戶頭像 URL
+              const currentUser = this.user();
+              if (currentUser) {
+                this.user.set({ ...currentUser, avatar: result.avatarUrl });
+              }
+              this.snackBar.open('頭像上傳成功', '關閉', { duration: 3000 });
+            }
+            this.loading.set(false);
+          },
+          error: (error) => {
+            console.error('頭像上傳失敗:', error);
+            this.snackBar.open('頭像上傳失敗，請重試', '關閉', { duration: 3000 });
+            this.loading.set(false);
+          }
+        });
+      }
+    };
+    
+    input.click();
   }
 
   // Utility methods

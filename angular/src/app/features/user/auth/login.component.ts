@@ -16,7 +16,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { AuthService } from './auth.service';
 import { Router } from '@angular/router';
-import { doc, getDoc, Firestore } from '@angular/fire/firestore';
+import { doc, getDoc, setDoc, Firestore } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-login',
@@ -60,6 +60,15 @@ import { doc, getDoc, Firestore } from '@angular/fire/firestore';
             <ng-template #spinner>
               <mat-spinner diameter="24"></mat-spinner>
             </ng-template>
+          </button>
+
+          <div class="divider">
+            <span>或</span>
+          </div>
+
+          <button mat-stroked-button color="warn" class="google-btn" (click)="onGoogleLogin()" [disabled]="loading">
+            <mat-icon>login</mat-icon>
+            <span>使用 Google 登入</span>
           </button>
         </form>
       </mat-card>
@@ -130,6 +139,55 @@ import { doc, getDoc, Firestore } from '@angular/fire/firestore';
     mat-icon {
       margin-left: 12px;
     }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e0e0e0;
+    }
+
+    .divider span {
+      padding: 0 16px;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .google-btn {
+      width: 100%;
+      padding: 25px;
+      font-weight: 500;
+      font-size: 16px;
+      text-transform: none;
+      border-radius: 8px;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      background-color: #fff;
+      border: 1px solid #dadce0;
+      color: #3c4043;
+    }
+
+    .google-btn:hover {
+      background-color: #f8f9fa;
+      border-color: #dadce0;
+      box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+    }
+
+    .google-btn mat-icon {
+      margin: 0;
+      color: #4285f4;
+    }
   `]
 })
 export class LoginComponent {
@@ -171,6 +229,52 @@ export class LoginComponent {
       })
       .catch(err => {
         console.error('❌ Login failed:', err);
+        this.loading = false;
+      });
+  }
+
+  onGoogleLogin() {
+    this.loading = true;
+
+    this.authService.signInWithGoogle()
+      .then(res => {
+        runInInjectionContext(this.injector, async () => {
+          const firestore = inject(Firestore);
+          const uid = res.user.uid;
+          
+          // 檢查用戶文檔是否存在
+          const userDoc = await getDoc(doc(firestore, 'users', uid));
+
+          if (!userDoc.exists()) {
+            // 如果用戶文檔不存在，創建一個新的
+            await setDoc(doc(firestore, 'users', uid), {
+              uid,
+              email: res.user.email,
+              displayName: res.user.displayName,
+              photoURL: res.user.photoURL,
+              role: 'viewer',
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+            console.log('✅ Google 登入成功，已創建用戶文檔');
+          } else {
+            console.log('✅ Google 登入成功，用戶文檔已存在');
+          }
+
+          // 根據角色導航
+          const role = userDoc.data()?.['role'] || 'viewer';
+          switch (role) {
+            case 'admin': this.router.navigate(['/admin']); break;
+            case 'editor': this.router.navigate(['/editor']); break;
+            case 'viewer': this.router.navigate(['/viewer']); break;
+            default: this.router.navigate(['/viewer']);
+          }
+
+          this.loading = false;
+        });
+      })
+      .catch(err => {
+        console.error('❌ Google 登入失敗:', err);
         this.loading = false;
       });
   }
