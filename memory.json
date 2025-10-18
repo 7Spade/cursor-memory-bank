@@ -1,1 +1,231 @@
-[]
+{
+  "entities": [
+    {
+      "name": "Memory_Bank_System",
+      "entityType": "project",
+      "observations": [
+        "AI Agent Collaboration Framework",
+        "使用繁體中文進行交流",
+        "基於 Cursor 的記憶銀行系統",
+        "提供分層任務管理和自定義模式整合",
+        "開發環境：Windows 11",
+        "包管理器：yarn",
+        "編輯器：Cursor (版本 0.48 或更高)",
+        "AI 模型：Claude 4 Sonnet 或 Claude 4 Opus"
+      ]
+    },
+    {
+      "name": "VAN_Agent",
+      "entityType": "agent",
+      "observations": [
+        "初始化代理",
+        "專案分析師和初始化專家",
+        "分析專案結構和複雜度",
+        "確定任務級別 (Level 1-4)",
+        "建立專案上下文",
+        "識別技術棧和依賴關係"
+      ]
+    },
+    {
+      "name": "PLAN_Agent", 
+      "entityType": "agent",
+      "observations": [
+        "規劃代理",
+        "專案規劃師和任務分解專家",
+        "將複雜任務分解為可管理的子任務",
+        "建立詳細的實施計劃",
+        "識別依賴關係和優先級",
+        "預估時間和資源需求"
+      ]
+    },
+    {
+      "name": "CREATIVE_Agent",
+      "entityType": "agent", 
+      "observations": [
+        "創意代理",
+        "設計決策專家",
+        "探索設計選項和替代方案",
+        "進行技術選型分析",
+        "建立設計決策文件",
+        "提供創意解決方案"
+      ]
+    },
+    {
+      "name": "IMPLEMENT_Agent",
+      "entityType": "agent",
+      "observations": [
+        "實施代理",
+        "代碼實施專家",
+        "系統性地實施計劃的組件",
+        "編寫高品質的代碼",
+        "遵循最佳實踐和編碼標準",
+        "進行代碼優化和重構"
+      ]
+    },
+    {
+      "name": "REFLECT_Agent",
+      "entityType": "agent",
+      "observations": [
+        "反思代理",
+        "代碼審查和學習專家",
+        "審查實施的代碼品質",
+        "識別改進機會",
+        "記錄經驗教訓",
+        "提供優化建議"
+      ]
+    },
+    {
+      "name": "ARCHIVE_Agent",
+      "entityType": "agent",
+      "observations": [
+        "歸檔代理",
+        "文件管理專家",
+        "建立全面的專案文件",
+        "整理和歸檔專案資產",
+        "建立知識庫",
+        "維護專案歷史"
+      ]
+    },
+    {
+      "name": "User_Preferences",
+      "entityType": "preferences",
+      "observations": [
+        "語言：繁體中文",
+        "溝通風格：專業且友善",
+        "開發環境：Windows 11",
+        "包管理器：yarn",
+        "偏好 AI：Claude 4 Sonnet"
+      ]
+    },
+    {
+      "name": "Workflow_Level_1",
+      "entityType": "workflow",
+      "observations": [
+        "快速錯誤修復",
+        "工作流程：VAN → IMPLEMENT",
+        "適用於單一組件或 UI 元素",
+        "完成時間：分鐘到小時",
+        "風險：低，隔離變更"
+      ]
+    },
+    {
+      "name": "Workflow_Level_2",
+      "entityType": "workflow", 
+      "observations": [
+        "簡單增強",
+        "工作流程：VAN → PLAN → IMPLEMENT → REFLECT",
+        "適用於單一組件或子系統",
+        "完成時間：小時到 1-2 天",
+        "風險：中等，限制在特定區域"
+      ]
+    },
+    {
+      "name": "Workflow_Level_3_4",
+      "entityType": "workflow",
+      "observations": [
+        "中級功能/複雜系統",
+        "工作流程：VAN → PLAN → CREATIVE → IMPLEMENT → REFLECT → ARCHIVE",
+        "適用於多個組件或完整功能",
+        "完成時間：天到週",
+        "風險：高，架構影響"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "from": "VAN_Agent",
+      "to": "Memory_Bank_System",
+      "relationType": "analyzes"
+    },
+    {
+      "from": "PLAN_Agent",
+      "to": "Memory_Bank_System", 
+      "relationType": "plans"
+    },
+    {
+      "from": "CREATIVE_Agent",
+      "to": "Memory_Bank_System",
+      "relationType": "designs"
+    },
+    {
+      "from": "IMPLEMENT_Agent",
+      "to": "Memory_Bank_System",
+      "relationType": "implements"
+    },
+    {
+      "from": "REFLECT_Agent",
+      "to": "Memory_Bank_System",
+      "relationType": "reviews"
+    },
+    {
+      "from": "ARCHIVE_Agent",
+      "to": "Memory_Bank_System",
+      "relationType": "archives"
+    },
+    {
+      "from": "User_Preferences",
+      "to": "Memory_Bank_System",
+      "relationType": "configures"
+    },
+    {
+      "from": "Workflow_Level_1",
+      "to": "VAN_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_1",
+      "to": "IMPLEMENT_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_2",
+      "to": "VAN_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_2",
+      "to": "PLAN_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_2",
+      "to": "IMPLEMENT_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_2",
+      "to": "REFLECT_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_3_4",
+      "to": "VAN_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_3_4",
+      "to": "PLAN_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_3_4",
+      "to": "CREATIVE_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_3_4",
+      "to": "IMPLEMENT_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_3_4",
+      "to": "REFLECT_Agent",
+      "relationType": "uses"
+    },
+    {
+      "from": "Workflow_Level_3_4",
+      "to": "ARCHIVE_Agent",
+      "relationType": "uses"
+    }
+  ]
+}
