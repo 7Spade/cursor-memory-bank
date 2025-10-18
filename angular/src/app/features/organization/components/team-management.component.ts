@@ -1,13 +1,15 @@
-import { Component, Input, Output, EventEmitter, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTreeModule } from '@angular/material/tree';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { Team } from '../models/organization.model';
+import { TeamCreateDialogComponent } from '../../../core/components/team-create-dialog.component';
+import { TeamCreatedEvent } from '../../../core/models/team-create.model';
 
 /**
  * 團隊節點介面
@@ -345,12 +347,16 @@ interface TeamNode extends Team {
 })
 export class TeamHierarchyComponent {
   @Input() teams = signal<Team[]>([]);
+  @Input() organizationId!: string;
   
   @Output() createTeam = new EventEmitter<{ parentTeamId?: string }>();
   @Output() viewTeam = new EventEmitter<Team>();
   @Output() editTeam = new EventEmitter<Team>();
   @Output() manageMembers = new EventEmitter<Team>();
   @Output() deleteTeam = new EventEmitter<Team>();
+
+  // 服務注入
+  private dialog = inject(MatDialog);
 
   // 樹狀結構轉換器
   treeFlattener = new MatTreeFlattener(
@@ -461,14 +467,14 @@ export class TeamHierarchyComponent {
    * 新增團隊
    */
   onCreateTeam(): void {
-    this.createTeam.emit({});
+    this.openCreateTeamDialog();
   }
 
   /**
    * 新增子團隊
    */
   onCreateSubTeam(parentTeam: Team): void {
-    this.createTeam.emit({ parentTeamId: parentTeam.id });
+    this.openCreateTeamDialog(parentTeam.id);
   }
 
   /**
@@ -497,6 +503,43 @@ export class TeamHierarchyComponent {
    */
   onDeleteTeam(team: Team): void {
     this.deleteTeam.emit(team);
+  }
+
+  /**
+   * 打開建立團隊對話框
+   */
+  private openCreateTeamDialog(parentTeamId?: string): void {
+    if (!this.organizationId) {
+      console.error('Organization ID is required to create a team');
+      return;
+    }
+
+    const dialogRef = this.dialog.open(TeamCreateDialogComponent, {
+      width: '600px',
+      maxWidth: '90vw',
+      disableClose: false,
+      data: {
+        organizationId: this.organizationId,
+        parentTeamId: parentTeamId
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.success) {
+        // 發射事件通知父組件團隊已建立
+        this.createTeam.emit({ parentTeamId });
+        // 重新載入團隊列表
+        this.loadTeams();
+      }
+    });
+  }
+
+  /**
+   * 載入團隊列表
+   */
+  private loadTeams(): void {
+    // TODO: 實現載入團隊列表的邏輯
+    console.log('Reloading teams...');
   }
 }
 
