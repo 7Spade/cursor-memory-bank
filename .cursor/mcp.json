@@ -113,21 +113,17 @@
         "maxDelay": 12000
       }
     },
-    "repomix": {
-      "command": "npx",
+    "repomix-docker": {
+      "command": "docker",
       "args": [
-        "-y",
-        "repomix",
+        "run",
+        "-i",
+        "--rm",
+        "ghcr.io/yamadashy/repomix",
         "--mcp"
       ],
       "disabled": false,
-      "autoApprove": [
-        "pack_codebase",
-        "pack_remote_repository",
-        "read_repomix_output",
-        "grep_repomix_output",
-        "read_file_from_filesystem"
-      ],
+      "autoApprove": [],
       "retry": {
         "enabled": true,
         "maxAttempts": 3,
