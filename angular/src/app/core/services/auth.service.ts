@@ -204,7 +204,7 @@ export class AuthService {
       const userRef = doc(this.firestore, `accounts/${firebaseUser.uid}`);
       
       // 檢查用戶是否已存在
-      const userDoc = await firstValueFrom(docData(userRef, { idField: 'id' }));
+      const userDoc = await firstValueFrom(docData(userRef, { idField: 'id' })) as User | null;
       const login = firebaseUser.email?.split('@')[0] || firebaseUser.uid;
       
       // 建立或更新 ProfileVO
@@ -242,7 +242,7 @@ export class AuthService {
       };
       
       // 準備用戶資料
-      const userData = {
+      const userData: Partial<User> = {
         id: firebaseUser.uid,
         type: 'user',
         login: login,
@@ -252,20 +252,20 @@ export class AuthService {
         projectsOwned: userDoc?.projectsOwned || [],
         uid: firebaseUser.uid,
         displayName: firebaseUser.displayName || login,
-        photoURL: firebaseUser.photoURL,
+        photoURL: firebaseUser.photoURL || undefined,
         certificates: userDoc?.certificates || [],
         socialRelations: userDoc?.socialRelations || {
           followers: [],
           following: [],
           connections: []
         },
-        organizationMemberships: userDoc?.organizationMemberships || {},
+        organizationMemberships: userDoc?.organizationMemberships || new Map<string, string>(),
         updatedAt: new Date()
       };
       
       // 如果是新用戶，添加創建時間
       if (!userDoc) {
-        userData['createdAt'] = new Date();
+        userData.createdAt = new Date();
       }
       
       // 使用事務確保資料一致性

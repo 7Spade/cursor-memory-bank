@@ -13,7 +13,6 @@ import { RouterModule } from '@angular/router';
 
 import { AuthService } from '../../../core/services/auth.service';
 import { Router } from '@angular/router';
-import { Nl2brPipe } from '../../../shared/pipes/nl2br.pipe';
 
 @Component({
   selector: 'app-signup',
@@ -30,7 +29,6 @@ import { Nl2brPipe } from '../../../shared/pipes/nl2br.pipe';
     MatProgressSpinnerModule,
     MatCheckboxModule,
     RouterModule,
-    Nl2brPipe
   ],
   template: `
     <div class="signup-wrapper">
@@ -83,7 +81,7 @@ import { Nl2brPipe } from '../../../shared/pipes/nl2br.pipe';
           @if (error()) {
             <div class="error-message">
               <mat-icon>error</mat-icon>
-              <span [innerHTML]="error() | nl2br"></span>
+              <span [innerHTML]="error()"></span>
             </div>
           }
 
