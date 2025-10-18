@@ -1,7 +1,384 @@
 # Memory Bank: Tasks
 
 ## Current Task
-BUILD 模式 - 修復 .cursorrules 和 AGENTS.md 中的矛盾、衝突和混淆問題
+PLAN 模式 - 專案當前情況分析完成，制定詳細實施任務
+
+## Status
+- [x] 使用 sequential-thinking 分析專案當前情況
+- [x] 識別重複的認證組件和服務問題
+- [x] 評估模型不一致和服務層混亂問題
+- [x] 制定 Phase 1: 基礎清理與現代化任務
+- [ ] 制定 Phase 2: 核心服務現代化任務
+- [ ] 制定 Phase 3: UI 元件現代化任務
+- [ ] 制定 Phase 4: 安全規則和測試任務
+
+## PLAN 模式分析結果
+
+### 🔍 專案當前情況分析
+- ✅ **專案結構確認**：Angular 專案在 `angular/` 子目錄中
+- ✅ **構建狀態**：構建成功但有預算警告 (1.11 MB > 1.00 MB)
+- ✅ **依賴狀態**：Angular 20.1.0 + Firebase 11.10.0 配置正確
+- ✅ **問題識別**：發現多個重複和架構問題
+
+### ⚠️ 發現的關鍵問題
+
+#### 1. 重複的認證組件和服務
+- **問題**：存在三個不同的 AuthService 實現
+  - `app/auth/auth.service.ts` - 基礎版本
+  - `features/user/auth/auth.service.ts` - 擴展版本
+  - `core/services/auth.service.ts` - 現代化版本
+- **影響**：依賴注入衝突、維護困難
+- **解決方案**：統一使用 `core/services/auth.service.ts`
+
+#### 2. 重複的認證組件
+- **問題**：`app/auth/` 與 `features/user/auth/` 重複
+- **影響**：代碼重複、路由混亂
+- **解決方案**：刪除 `app/auth/` 目錄，統一使用 `features/user/auth/`
+
+#### 3. 模型不一致
+- **問題**：多個不同的模型定義
+  - `core/models/auth.model.ts` - 基礎模型
+  - `features/organization/models/github-aligned-organization.model.ts` - 不同組織模型
+- **影響**：類型不匹配、服務層混亂
+- **解決方案**：統一使用 account.md 設計的模型
+
+#### 4. 服務層架構混亂
+- **問題**：多個不同的服務實現
+  - `core/services/organization.service.ts` - Firestore 實現
+  - `features/organization/services/github-aligned-api.service.ts` - HTTP API 實現
+- **影響**：架構不一致、維護困難
+- **解決方案**：統一服務層架構
+
+#### 5. 缺少 account.md 設計實現
+- **問題**：沒有實現 account.md 中的設計
+  - 缺少 Value Objects (ProfileVO, PermissionVO, SettingsVO)
+  - 缺少 AccountState 類別
+  - 缺少 Repository 相關介面
+  - 缺少 ValidationUtils 工具類別
+- **影響**：不符合 GitHub 式設計、功能不完整
+- **解決方案**：按照 account.md 重構整個系統
+
+## Phase 1: 基礎清理與現代化 (8個任務)
+
+### 🗑️ 清理重複檔案
+- [ ] **task-1-1**: 刪除 `app/auth/` 整個目錄
+  - 刪除 `app/auth/auth.guard.ts`
+  - 刪除 `app/auth/auth.service.ts`
+  - 刪除 `app/auth/login.component.ts`
+  - 刪除 `app/auth/role.guard.ts`
+  - 刪除 `app/auth/signup.component.ts`
+  - 刪除 `app/auth/unauthorized.component.ts`
+
+### 🏗️ 實現 account.md 設計的 auth.model.ts
+- [ ] **task-1-2**: 更新 `core/models/auth.model.ts` 實現 account.md 設計
+  - 添加 Value Objects (ProfileVO, PermissionVO, SettingsVO)
+  - 添加 AccountState 類別使用 Signals
+  - 添加 Repository 相關介面
+  - 添加 ValidationUtils 工具類別
+  - 添加 CertificateVO, SocialRelationVO, BusinessLicenseVO
+
+### 🔧 實現 ValidationUtils 工具類別
+- [ ] **task-1-3**: 建立 `core/utils/validation.utils.ts`
+  - 實現 validateEmail() 方法
+  - 實現 validateProfile() 方法
+  - 實現 validatePermission() 方法
+  - 添加其他驗證工具方法
+
+### 🔄 統一 AuthService 實現
+- [ ] **task-1-4**: 更新 `core/services/auth.service.ts` 使用 AccountState
+  - 實現 AccountState 狀態管理
+  - 使用 Signals 和 Computed Signals
+  - 實現 syncUserProfile() 方法
+  - 添加權限檢查方法
+
+### 🔄 更新認證組件
+- [ ] **task-1-5**: 修改 `features/user/auth/login.component.ts`
+  - 使用新的 `core/services/auth.service`
+  - 修復 loading 狀態重置問題
+  - 使用 Control Flow (@if, @for) 替代傳統結構指令
+
+- [ ] **task-1-6**: 修改 `features/user/auth/signup.component.ts`
+  - 使用新的 `core/services/auth.service`
+  - 修復 loading 狀態重置問題
+  - 使用 Control Flow (@if, @for) 替代傳統結構指令
+
+### 🔄 更新路由守衛
+- [ ] **task-1-7**: 修改 `features/user/auth/role.guard.ts`
+  - 使用 accounts 模型替代舊模型
+  - 使用新的 auth.service
+  - 實現正確的角色檢查邏輯
+
+### 🔄 更新路由配置
+- [ ] **task-1-8**: 更新 `app.routes.ts`
+  - 確保所有路由使用正確的組件
+  - 移除對已刪除組件的引用
+  - 添加組織/團隊/Repository 結構支援
+
+## Phase 2: 核心服務現代化 (6個任務)
+
+### 🛡️ 實現 PermissionService
+- [ ] **task-2-1**: 建立 `core/services/permission.service.ts`
+  - 使用 Signals 管理權限狀態
+  - 實現 can() 權限檢查方法
+  - 實現 canManageTeam() 團隊權限檢查
+  - 實現 canAccessRepository() Repository 權限檢查
+  - 替代現有的 permission-calculation.service
+
+### 🔒 實現權限守衛
+- [ ] **task-2-2**: 建立 `core/guards/permission.guard.ts`
+  - 實現 permissionGuard 函數
+  - 使用 PermissionService 進行權限檢查
+  - 實現錯誤處理和重定向
+
+### 🏢 更新 OrganizationService
+- [ ] **task-2-3**: 更新 `core/services/organization.service.ts`
+  - 使用 Value Objects (ProfileVO, PermissionVO, SettingsVO)
+  - 實現 createOrganization() 使用 ValidationUtils
+  - 實現完整的 CRUD 操作
+  - 使用 Signals 狀態管理
+
+### 🔄 更新現有路由守衛
+- [ ] **task-2-4**: 修改 `features/user/auth/role.guard.ts`
+  - 使用 accounts 模型
+  - 整合 PermissionService
+  - 實現正確的權限檢查邏輯
+
+### 🔗 整合權限到路由
+- [ ] **task-2-5**: 更新所有路由使用 Permission 守衛
+  - 更新 `app.routes.ts` 使用 permissionGuard
+  - 更新 `features/organization/routes/organization.routes.ts`
+  - 添加權限檢查到所有受保護路由
+
+### 🔄 更新所有服務使用 Signals
+- [ ] **task-2-6**: 更新所有服務使用 Signals 狀態管理
+  - 確保所有服務使用 inject() 函數
+  - 實現 Signals 基礎的狀態管理
+  - 添加 Computed Signals 用於衍生狀態
+
+## Phase 3: Repository 管理系統 (7個任務)
+
+### 📁 實現 Repository 模型
+- [ ] **task-3-1**: 更新 `core/models/auth.model.ts` 添加 Repository 介面
+  - 添加 Repository 介面
+  - 添加 RepositoryCollaborator 介面
+  - 添加 RepositoryTeamAccess 介面
+  - 添加相關的權限和角色定義
+
+### 🔧 實現 RepositoryService
+- [ ] **task-3-2**: 建立 `core/services/repository.service.ts`
+  - 實現 Repository CRUD 操作
+  - 實現協作者管理
+  - 實現團隊訪問管理
+  - 使用 Signals 狀態管理
+
+### 🖥️ 實現 Repository UI 元件
+- [ ] **task-3-3**: 建立 `routes/repository-detail/repository-detail.component.ts`
+  - 使用 Control Flow (@if, @for, @switch)
+  - 實現權限驅動的 UI
+  - 使用 Signals 狀態管理
+
+- [ ] **task-3-4**: 建立 `routes/repository-settings/repository-settings.component.ts`
+  - 實現 Repository 設定功能
+  - 使用 Control Flow 和 Signals
+
+- [ ] **task-3-5**: 建立 `routes/collaborators-list/collaborators-list.component.ts`
+  - 實現協作者管理功能
+  - 使用 Control Flow 和 Signals
+
+- [ ] **task-3-6**: 建立 `routes/team-access-list/team-access-list.component.ts`
+  - 實現團隊訪問管理功能
+  - 使用 Control Flow 和 Signals
+
+### 🔗 更新路由支援 Repository
+- [ ] **task-3-7**: 更新路由支援 Repository 管理
+  - 更新 `app.routes.ts` 添加 Repository 路由
+  - 實現完整的路由層級和導航邏輯
+  - 整合權限控制到所有 Repository 路由
+
+## Phase 4: 組織/團隊管理 UI (6個任務)
+
+### 🖥️ 實現組織管理 UI 元件
+- [ ] **task-4-1**: 建立 `routes/organization-detail/organization-detail.component.ts`
+  - 使用 Control Flow (@if, @for, @switch)
+  - 實現權限驅動的 UI
+  - 使用 Signals 狀態管理
+
+- [ ] **task-4-2**: 建立 `routes/members-list/members-list.component.ts`
+  - 實現成員管理功能
+  - 使用 Control Flow 和 Signals
+
+- [ ] **task-4-3**: 建立 `routes/teams-list/teams-list.component.ts`
+  - 實現團隊列表功能
+  - 使用 Control Flow 和 Signals
+
+- [ ] **task-4-4**: 建立 `routes/team-create/team-create.component.ts`
+  - 實現團隊建立功能
+  - 使用 Control Flow 和 Signals
+
+- [ ] **task-4-5**: 建立 `routes/organization-settings/organization-settings.component.ts`
+  - 實現組織設定功能
+  - 使用 Control Flow 和 Signals
+
+- [ ] **task-4-6**: 建立 `routes/organization-dashboard/organization-dashboard.component.ts`
+  - 實現組織儀表板功能
+  - 使用 Control Flow 和 Signals
+
+## Phase 5: 路由與權限整合 (5個任務)
+
+### 🔗 更新應用程式路由
+- [ ] **task-5-1**: 更新 `app.routes.ts` 支援完整結構
+  - 添加組織/團隊/Repository 路由
+  - 實現 GitHub 式路由結構
+  - 整合權限控制
+
+### 🔗 更新組織路由
+- [ ] **task-5-2**: 更新 `features/organization/routes/organization.routes.ts`
+  - 整合 Permission 守衛
+  - 實現完整的組織路由結構
+  - 添加權限檢查
+
+### 🧭 實現路由層級和導航
+- [ ] **task-5-3**: 建立完整的路由層級和導航邏輯
+  - 實現組織 → 團隊 → Repository 的導航
+  - 添加麵包屑導航
+  - 實現權限驅動的導航
+
+### 🛡️ 整合權限控制
+- [ ] **task-5-4**: 整合權限控制到所有路由
+  - 確保所有路由都有適當的權限保護
+  - 實現權限檢查和重定向
+  - 添加錯誤處理
+
+### 🔄 更新路由守衛
+- [ ] **task-5-5**: 更新所有路由守衛使用 PermissionService
+  - 確保所有守衛使用統一的權限檢查
+  - 實現一致的錯誤處理
+  - 添加日誌記錄
+
+## Phase 6: 安全規則與測試 (7個任務)
+
+### 🔒 實現 Firestore 安全規則
+- [ ] **task-6-1**: 建立 `firebase.rules` 實現 accounts 集合規則
+  - 實現統一的 accounts 集合安全規則
+  - 實現組織成員權限檢查
+  - 實現團隊權限檢查
+
+- [ ] **task-6-2**: 實現 Repository 安全規則
+  - 實現 Repository 讀寫權限
+  - 實現協作者權限檢查
+  - 實現團隊訪問權限檢查
+
+- [ ] **task-6-3**: 實現組織/團隊/成員權限規則
+  - 實現完整的權限層級檢查
+  - 實現輔助函數
+  - 添加安全規則測試
+
+### 🧪 實現測試策略
+- [ ] **task-6-4**: 實現單元測試
+  - 測試 auth.service
+  - 測試 permission.service
+  - 測試 organization.service
+  - 測試 ValidationUtils
+
+- [ ] **task-6-5**: 實現整合測試
+  - 測試路由守衛
+  - 測試權限檢查
+  - 測試服務整合
+
+- [ ] **task-6-6**: 實現 E2E 測試
+  - 測試完整用戶流程
+  - 測試權限控制
+  - 測試 UI 互動
+
+- [ ] **task-6-7**: 進行完整功能測試和驗證
+  - 測試所有功能
+  - 驗證權限系統
+  - 性能測試
+  - 安全測試
+
+## 驗收標準
+
+### Phase 1 驗收標準
+- ✅ AccountState 類別正確使用 Signals 管理狀態
+- ✅ ValidationUtils 提供完整的驗證功能
+- ✅ auth.service 使用 AccountState 和 Signals
+- ✅ Login/Signup 組件正常工作
+- ✅ Loading 狀態正確重置
+- ✅ 重複的 app/auth/ 組件已刪除
+
+### Phase 2 驗收標準
+- ✅ PermissionService 正確計算權限
+- ✅ permissionGuard 正確保護路由
+- ✅ organization.service 使用 Value Objects
+- ✅ 所有服務使用 Signals 狀態管理
+- ✅ 權限檢查與 UI 邏輯分離
+
+### Phase 3 驗收標準
+- ✅ Repository 服務 CRUD 操作正常
+- ✅ Repository UI 元件功能完整
+- ✅ 協作者和團隊訪問管理正常
+- ✅ 路由支援 Repository 管理
+
+### Phase 4 驗收標準
+- ✅ 所有 UI 元件使用 Control Flow (@if, @for)
+- ✅ 權限檢查與 Signals 整合
+- ✅ 組織/團隊管理功能完整
+- ✅ UI 響應式且用戶友好
+
+### Phase 5 驗收標準
+- ✅ 路由結構符合 GitHub 式設計
+- ✅ 所有路由都有權限保護
+- ✅ 導航邏輯正確
+- ✅ 權限控制整合到所有路由
+
+### Phase 6 驗收標準
+- ✅ Firestore 安全規則正確保護資料
+- ✅ 測試覆蓋率達標
+- ✅ 完整功能測試通過
+- ✅ 安全規則和權限系統驗證通過
+
+## 風險評估與依賴關係
+
+### 高風險項目
+1. **Signals 狀態管理複雜化**：AccountState 和 PermissionService 使用 Signals
+   - **風險**：狀態管理邏輯複雜，可能導致性能問題
+   - **緩解**：詳細測試和性能監控
+
+2. **Repository 系統新增功能**：完整的 Repository 管理系統
+   - **風險**：功能複雜度高，可能影響現有系統
+   - **緩解**：分階段實施，保持向後相容
+
+3. **權限系統重構**：ACLService → PermissionService
+   - **風險**：權限邏輯變更可能導致安全問題
+   - **緩解**：詳細測試與安全規則驗證
+
+4. **路由結構重構**：大量路由變更
+   - **風險**：可能破壞現有導航
+   - **緩解**：分階段實施，保持向後相容
+
+### 依賴關係
+- **Phase 1** → **Phase 2**：核心服務依賴基礎清理
+- **Phase 2** → **Phase 3**：Repository 服務依賴 Permission 服務
+- **Phase 2** → **Phase 4**：UI 元件依賴 Permission 服務
+- **Phase 3** → **Phase 5**：路由整合依賴 Repository 功能
+- **Phase 4** → **Phase 5**：路由整合依賴 UI 元件
+- **Phase 5** → **Phase 6**：測試依賴完整功能
+
+### 建議實施順序
+1. **Phase 1** (基礎清理) - 風險低，影響小
+2. **Phase 2** (核心服務) - 風險中，影響中
+3. **Phase 3** (Repository 系統) - 風險中，影響大
+4. **Phase 4** (UI 元件) - 風險中，影響大
+5. **Phase 5** (路由整合) - 風險高，影響大
+6. **Phase 6** (安全規則與測試) - 風險高，影響大
+
+## 當前狀態
+- Phase: PLAN Mode - 專案當前情況分析完成
+- Status: Level 4 複雜度，39個任務，6個 Phase
+- Blockers: 無
+- Next: 準備進入 IMPLEMENT 模式開始實施
+
+---
 
 ## Status
 - [x] 修復圖標混淆：為 REFLECT 模式分配唯一圖標 (🔍 → 📝)
