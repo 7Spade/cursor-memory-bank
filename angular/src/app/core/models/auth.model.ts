@@ -58,7 +58,7 @@ export interface User extends Account {
   photoURL?: string;
   certificates?: CertificateVO[];        // 用戶證書
   socialRelations?: SocialRelationVO;   // 社交關係
-  organizationMemberships?: Map<string, string>; // orgId → role
+  organizationMemberships?: { [orgId: string]: string }; // orgId → role
 }
 
 // Organization 繼承 Account

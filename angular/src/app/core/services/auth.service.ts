@@ -259,7 +259,7 @@ export class AuthService {
           following: [],
           connections: []
         },
-        organizationMemberships: userDoc?.organizationMemberships || new Map<string, string>(),
+        organizationMemberships: userDoc?.organizationMemberships || {} as { [orgId: string]: string },
         updatedAt: new Date()
       };
       
